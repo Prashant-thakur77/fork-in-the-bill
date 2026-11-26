@@ -323,6 +323,18 @@ async def _heartbeat(q: TaskQueue, lease: Lease) -> None:
         await asyncio.to_thread(q.heartbeat, lease.msg_id)
 
 
+def reap_once(ctx: RunCtx, q: TaskQueue) -> None:
+    """Re-queue tasks whose worker died; a task that already used its retry is excluded."""
+    for iid in reap(q, min_idle_ms=150_000):
+        ctx.ledger.append(LedgerKind.exclusion, {"identity": identity_for(iid), "reason": "lease expired twice"})
+
+
+async def reap_forever(ctx: RunCtx, q: TaskQueue, every: float = 120.0) -> None:
+    while not ctx.stop.is_set():
+        await asyncio.sleep(every)
+        await asyncio.to_thread(reap_once, ctx, q)
+
+
 def validation_status(reports: list[Path], pool: set[str]) -> tuple[set[str], set[str]]:
     """(valid, decided) pool ids across validation reports; for an id in several reports the
     most recent `validated_at` wins. Missing report files count as empty."""
@@ -442,14 +454,17 @@ def run(
     async def main() -> None:
         loop = asyncio.get_running_loop()
         loop.add_signal_handler(signal.SIGTERM, ctx.stop.set)
-        for iid in reap(q, min_idle_ms=150_000):
-            ctx.ledger.append(LedgerKind.exclusion, {"identity": identity_for(iid), "reason": "lease expired twice"})
+        reap_once(ctx, q)
         budget_left = [limit]
         feeders = []
         if valid_report:
             ctx.feeding = True
             feeders.append(feed_validated(ctx, q, valid_report))
-        await asyncio.gather(*feeders, *(worker_loop(ctx, q, i, budget_left) for i in range(concurrency)))
+        reaper = asyncio.create_task(reap_forever(ctx, q))
+        try:
+            await asyncio.gather(*feeders, *(worker_loop(ctx, q, i, budget_left) for i in range(concurrency)))
+        finally:
+            reaper.cancel()
 
     try:
         asyncio.run(main())
