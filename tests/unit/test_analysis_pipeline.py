@@ -109,15 +109,11 @@ def test_srm_fixture_flagged(tmp_path: Path) -> None:
     assert n["exp1"]["cuped"]["variance_reduction_pct"] is None  # no pilot in this fixture
 
 
-def test_formats() -> None:
-    assert fmt_value(1.234, "usd2") == "$1.23"
-    assert fmt_value(-0.24097, "usd4") == "-$0.2410"
-    assert fmt_value(-28.62, "pct1") == "-28.6%"
-    assert fmt_value(-0.79, "pp1") == "-0.8 pp"
-    assert fmt_value(1234, "int") == "1,234"
-    assert fmt_value(0.12345, "f3") == "0.123"
-    assert fmt_value(0.7479, "prob1") == "74.8%"
-    assert fmt_value("abcdef0123456789", "hash12") == "abcdef012345"
+def test_formats_match_shared_fixture() -> None:
+    """The board's formatter reads the same fixture (board/web/test/format.test.ts)."""
+    cases = json.loads((Path(__file__).parents[1] / "fixtures" / "formats.json").read_text())
+    for value, fmt, expected in cases:
+        assert fmt_value(value, fmt) == expected, (value, fmt)
     assert fmt_value(None, "usd2") == "n/a"
 
 

@@ -1,0 +1,18 @@
+{
+  "name": "fork-in-the-bill-board-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "db:migrate:local": "wrangler d1 migrations apply board --local",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "sign": "node scripts/sign.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261125.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.2",
+    "wrangler": "^4.168.0"
+  }
+}

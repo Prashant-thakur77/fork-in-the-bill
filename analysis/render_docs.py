@@ -18,6 +18,9 @@ This module also owns the generated block of analysis/results.md between
 
 from __future__ import annotations
 
+import math
+from decimal import ROUND_HALF_UP, Decimal
+
 import json
 import re
 from dataclasses import dataclass, field
@@ -52,6 +55,20 @@ def lookup(numbers: Any, key: str) -> Any:
     return node
 
 
+MINUS = "\u2212"
+
+
+def _fixed(x: float, places: int) -> str:
+    """JavaScript Number.prototype.toFixed for x >= 0: exact binary value, ties away from zero."""
+    q = Decimal(1).scaleb(-places)
+    return str(Decimal(x).quantize(q, rounding=ROUND_HALF_UP))
+
+
+def _grouped(x: float, places: int) -> str:
+    whole, _, frac = _fixed(x, places).partition(".")
+    return f"{int(whole):,}" + (f".{frac}" if frac else "")
+
+
 def fmt_value(value: Any, fmt: str) -> str:
     if fmt not in FORMATS:
         raise ValueError(f"unknown format {fmt!r}")
@@ -64,20 +81,23 @@ def fmt_value(value: Any, fmt: str) -> str:
     if isinstance(value, bool) or not isinstance(value, int | float):
         raise ValueError(f"format {fmt} needs a number, got {type(value).__name__}")
     v = float(value)
-    sign = "-" if v < 0 else ""
+    # Same strings as board/web/src/data/format.ts: U+2212 minus, explicit plus on signed deltas.
+    minus = MINUS if v < 0 else ""
+    signed = MINUS if v < 0 else "+" if v > 0 else ""
     if fmt == "usd2":
-        return f"{sign}${abs(v):,.2f}"
+        return f"{minus}${_grouped(abs(v), 2)}"
     if fmt == "usd4":
-        return f"{sign}${abs(v):,.4f}"
+        return f"{minus}${_fixed(abs(v), 4)}"
     if fmt == "pct1":
-        return f"{v:.1f}%"
+        return f"{signed}{_fixed(abs(v), 1)}%"
     if fmt == "pp1":
-        return f"{v:.1f} pp"
+        return f"{signed}{_fixed(abs(v), 1)} pp"
     if fmt == "int":
-        return f"{round(v):,}"
+        return f"{math.floor(v + 0.5):,}"  # Math.round
     if fmt == "f3":
-        return f"{v:.3f}"
-    return f"{v * 100:.1f}%"  # prob1
+        return f"{minus}{_fixed(abs(v), 3)}"
+    p = v * 100
+    return f"{MINUS if p < 0 else ''}{_fixed(abs(p), 1)}%"  # prob1
 
 
 def marker(key: str, fmt: str, numbers: Any) -> str:
