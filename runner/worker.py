@@ -374,7 +374,7 @@ def enqueue(exp: Annotated[str, typer.Option()], pool: Annotated[Path, typer.Opt
 @app.command()
 def run(
     exp: Annotated[str, typer.Option()],
-    pool: Annotated[Path, typer.Option()],
+    pool: Annotated[list[Path], typer.Option(help="pool file; repeat to run several pools as one experiment")],
     concurrency: Annotated[int, typer.Option()] = 4,
     force_policy: Annotated[str | None, typer.Option(help="run outside the experiment with this policy")] = None,
     limit: Annotated[int, typer.Option(help="stop after this many leases (-1: no limit)")] = -1,
@@ -390,20 +390,20 @@ def run(
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     run_dir = Path("runs") / exp
     run_dir.mkdir(parents=True, exist_ok=True)
-    instances = {i.instance_id: i for i in read_pool(pool)}
+    instances = {i.instance_id: i for p in pool for i in read_pool(p)}
     q = TaskQueue(_redis(), exp)
     if not valid_report:
         q.enqueue(list(instances))
     fs: FlagsmithLike | None = None if force_policy else SerialFlagsmith(make_client())
     ledger = Ledger(run_dir / "ledger.jsonl")
-    pool_sha = hashlib.sha256(pool.read_bytes()).hexdigest()
+    pool_sha = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in pool}
     meta_path = run_dir / "meta.json"
     if not meta_path.exists():
         meta_path.write_text(
             json.dumps(
                 {
                     "experiment": exp,
-                    "pool_file": str(pool),
+                    "pool_file": [str(p) for p in pool],
                     "pool_sha256": pool_sha,
                     "force_policy": force_policy,
                     "started_at": now(),

@@ -34,6 +34,7 @@ from analysis.render_docs import process as render_process
 from analysis.to_parquet import convert_all, read_jsonl
 from integrity.verify_ledger import verify as verify_ledger
 from tasks.model import TaskInstance
+from tasks.sources import read_pool
 
 SEED = 20_260_201
 N_BOOT = 10_000
@@ -218,23 +219,29 @@ class RidgeModel:
 
 
 def load_pool_lengths(run_dir: Path, repo_root: Path) -> dict[str, int]:
-    """instance_id -> len(problem_statement), from the pool named in meta.json."""
+    """instance_id -> len(problem_statement), from the pool file(s) named in meta.json."""
     meta_path = run_dir / "meta.json"
     if not meta_path.exists():
         return {}
-    pool = json.loads(meta_path.read_text(encoding="utf-8")).get("pool_file")
-    if not pool:
+    pools = json.loads(meta_path.read_text(encoding="utf-8")).get("pool_file")
+    if not pools:
         return {}
-    pool_path = Path(pool)
-    candidates = [pool_path] if pool_path.is_absolute() else [repo_root / pool_path, run_dir / pool_path]
-    for cand in candidates:
-        if cand.exists() and cand.suffix == ".jsonl":
-            out: dict[str, int] = {}
-            for rec in read_jsonl(cand):
-                inst = TaskInstance.model_validate(rec)
-                out[inst.instance_id] = len(inst.problem_statement)
-            return out
-    return {}
+    out: dict[str, int] = {}
+    for pool in [pools] if isinstance(pools, str) else pools:
+        pool_path = Path(pool)
+        candidates = [pool_path] if pool_path.is_absolute() else [repo_root / pool_path, run_dir / pool_path]
+        for cand in candidates:
+            if not cand.exists():
+                continue
+            if cand.name.endswith(".jsonl.gz"):
+                insts = read_pool(cand)
+            elif cand.suffix == ".jsonl":
+                insts = [TaskInstance.model_validate(rec) for rec in read_jsonl(cand)]
+            else:
+                continue
+            out |= {i.instance_id: len(i.problem_statement) for i in insts}
+            break
+    return out
 
 
 def _num(v: Any) -> float:

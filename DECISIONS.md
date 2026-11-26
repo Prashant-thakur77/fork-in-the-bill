@@ -127,3 +127,7 @@ Validating a task means building it and running its tests with the gold patch. T
 ## D21. Environment snapshots
 
 `integrity/snapshot_env.py` saves the Flagsmith environment document at the start of the run, every 15 minutes during it, and at the end. It removes the organisation and project names first, and it writes each snapshot's SHA-256 and a summary of the routing flags to the run's ledger. If the flag or the split changed mid-run, the snapshots would show it.
+
+## D22. Experiment 1 grows by amendment to clear Flagsmith's 50-per-variant floor
+
+Flagsmith reports no inference for a metric until each variant has 50 identities (`RESULTS_MIN_IDENTITIES_PER_VARIANT` in the Flagsmith API source). The fresh pool would give about 43 per arm, so the decision rule's Flagsmith condition could never pass. `prereg/experiment-1-amendment-1.md` adds the next 80 pre-cutoff tasks from the same seeded order. It was written after three tasks had finished, and before any result per arm had been seen. The fresh tier is still reported on its own. Experiment 2 is sized from the start to clear the floor.

@@ -255,3 +255,29 @@ def test_f2p_passing_before_gold_is_not_disqualifying() -> None:
     assert not is_valid({"valid": False, "reason": "f2p_pass_before_gold:1;gold:f2p_not_passing:0fail/2missing"})
     assert not is_valid({"valid": False, "reason": "gold:p2p_broken:5fail/0missing"})
     assert is_valid({"valid": True, "reason": None})
+
+
+def test_exp1b_extension_leaves_other_pools_unchanged() -> None:
+    insts = corpus()
+    base = select_pools(insts, seed=7, sizes=PoolSizes(pilot=2, rollout=2, exp2=3, exp1=None))
+    ext = select_pools(insts, seed=7, sizes=PoolSizes(pilot=2, rollout=2, exp2=3, exp1=None, exp1b=2))
+    for name in ("pilot", "rollout", "exp2", "exp1"):
+        assert [i.instance_id for i in ext.pools[name]] == [i.instance_id for i in base.pools[name]]
+    taken = {i.instance_id for n, p in ext.pools.items() if n != "exp1b" for i in p}
+    assert ext.pools["exp1b"] and not taken & {i.instance_id for i in ext.pools["exp1b"]}
+
+
+def test_pool_lengths_read_gzip_and_lists(tmp_path: Path) -> None:
+
+    from analysis.analyse import load_pool_lengths
+    from tasks.sources import write_pool
+
+    write_pool(tmp_path / "a.jsonl.gz", [make("x1", problem="abc")])
+    write_pool(tmp_path / "b.jsonl.gz", [make("x2", problem="abcdef")])
+    run = tmp_path / "run"
+    run.mkdir()
+    both = [str(tmp_path / "a.jsonl.gz"), str(tmp_path / "b.jsonl.gz")]
+    (run / "meta.json").write_text(json.dumps({"pool_file": both}))
+    assert load_pool_lengths(run, tmp_path) == {"x1": 3, "x2": 6}
+    (run / "meta.json").write_text(json.dumps({"pool_file": str(tmp_path / "a.jsonl.gz")}))
+    assert load_pool_lengths(run, tmp_path) == {"x1": 3}
