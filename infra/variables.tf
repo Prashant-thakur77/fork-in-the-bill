@@ -100,6 +100,7 @@ variable "budget_usd" {
 }
 
 variable "budget_email" {
-  description = "Email address that receives the budget alerts."
+  description = "Email address that receives the budget alerts. Empty: the budget is created without email alerts."
   type        = string
+  default     = ""
 }
