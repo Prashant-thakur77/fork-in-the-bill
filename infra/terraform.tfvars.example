@@ -3,10 +3,10 @@ region         = "us-east-1"
 operator_cidr  = "203.0.113.7/32" # your public IP, e.g. "$(curl -s https://checkip.amazonaws.com)/32"
 ssh_public_key = "ssh-ed25519 AAAA... operator@laptop"
 
-instance_type  = "m7i.4xlarge"
-use_spot       = true # false = on-demand fallback
+instance_type  = "r7i.2xlarge"
+use_spot       = false # true = spot (cheaper, can be reclaimed mid-run)
 spot_max_price = ""   # empty = capped at the on-demand price
-root_volume_gb = 400
+root_volume_gb = 1500
 
 repo_url = "https://github.com/OWNER/fork-in-the-bill.git"
 repo_ref = "main"

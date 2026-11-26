@@ -81,3 +81,7 @@ The agent works in a container with networking disabled. Grading happens afterwa
 Read from Flagsmith's open-source `api/experimentation/stats.py` and `results_query.py`, then checked against a Cloud response. For each metric and variant the warehouse returns `n`, `sum` and `sum_squares` over exposed identities. It counts only events at or after an identity's first exposure. Inference is a normal approximation to the relative lift (delta method). `chance_to_win` is the normal probability that the lift is above zero, flipped for metrics whose direction is `down`. The 95% interval is lift ± 1.96 standard errors. The SRM p-value is a chi-square test.
 
 Our replication deliberately uses different methods: a percentile bootstrap for mean cost, and Beta(1,1) posteriors for solve rate. Agreement between the two is therefore evidence that the result isn't an artefact of one statistical method. `analysis/pull_results.py` parses the documented shape, and `numbers.json` reports both results side by side.
+
+## D13. Runner VM: on-demand r7i.2xlarge
+
+The first runner was a spot m7i.4xlarge. AWS reclaimed it about 15 minutes into validation and the in-progress work was lost. An on-demand 16-vCPU replacement exceeded the account's 16-vCPU on-demand quota, half of which other instances already use. The runner is now an on-demand r7i.2xlarge (8 vCPU, 64 GB, about $0.53 an hour in us-east-1, estimated) with a 1.5 TB gp3 volume, so validated images stay cached for the runs. Results are copied off the VM every 5 minutes.
