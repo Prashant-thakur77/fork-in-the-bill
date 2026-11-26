@@ -15,7 +15,7 @@ A phase is done only when its gate passes. Evidence is command output, file path
 | 9 | Exp2 prereg and run | blocked on 8 | |
 | 10 | Analysis, Merkle root, consistency gate | in progress (code) | |
 | 11 | Self-hosted portability demo, kit, board polish | in progress | |
-| 12 | README, video, compliance check, competitor re-scan, submit | not started | |
+| 12 | README, video, rules check, submit | not started | |
 
 ## Log
 

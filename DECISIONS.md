@@ -1,6 +1,6 @@
 # Decisions
 
-Choices that differ from, or sharpen, the original design. Each one records why.
+Design choices made while building and running the experiments. Each one records what was chosen and why.
 
 ## D1. Task pools: fresh tier for experiment 1, newest pre-cutoff tier for the rest
 
@@ -31,7 +31,7 @@ The API offers a fallback that re-runs a refused request on another model inside
 
 ## D4. The delegate has its own short tool loop
 
-In the original design the delegate answered from preloaded files. Grunt work that's worth delegating (finding call sites, running a test suite, reading a build log) needs a shell, so the delegate gets read-only use of `bash` in the same container, up to 12 turns, and still returns the `{summary, findings[], confidence}` JSON. The main lane never sees the delegate's transcript. The setup is identical in both arms.
+At first the delegate answered only from files preloaded into its prompt. Grunt work that's worth delegating (finding call sites, running a test suite, reading a build log) needs a shell, so the delegate gets read-only use of `bash` in the same container, up to 12 turns, and still returns the `{summary, findings[], confidence}` JSON. The main lane never sees the delegate's transcript. The setup is identical in both arms.
 
 ## D5. Kill switch tasks carry no exposure
 
@@ -113,7 +113,7 @@ The experiment's question is unchanged: whether the worker can be a small model 
 
 ## D19. The guardrail margin is 20 points, because the fresh pool is small
 
-The plan asked for N to come from the power analysis. But N is capped by supply: every task in the fresh tier (created after the models' cutoff, inside the stratum) is already in the exp1 pool, and about 62% of them validate. That gives about 43 tasks per arm. With those numbers, `analysis/power.py` on the pilot shows:
+N was meant to come from the power analysis, but it is capped by supply: every task in the fresh tier (created after the models' cutoff, inside the stratum) is already in the exp1 pool, and about 62% of them validate. That gives about 43 tasks per arm. With those numbers, `analysis/power.py` on the pilot shows:
 
 - the cost question is well powered: 95% power at the pilot's 37% cut;
 - the solve-rate guardrail is not: only a drop of about 25 points is detectable.
