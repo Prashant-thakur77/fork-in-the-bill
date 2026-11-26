@@ -190,7 +190,61 @@ def _variant_entries(block: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return out
 
 
+IDS_PATH = Path("flagsmith/ids.json")
+SRM_ALPHA = 0.001
+
+
+def _metric_ids(ids_path: Path = IDS_PATH) -> dict[int, str]:
+    if not ids_path.exists():
+        return {}
+    data = json.loads(ids_path.read_text())
+    return {int(v): k for k, v in data.get("metrics", {}).items()}
+
+
+def extract_flagsmith_shape(
+    raw: Any, control: str, treatment: str, metric_names: dict[int, str]
+) -> FlagsmithSummary | None:
+    """The response shape Flagsmith returns (checked against Cloud and api/experimentation/stats.py):
+    results.payload.metrics[] = {metric_id, variants: {key: {n, sum, sum_squares}},
+    inference: {key: {lift, ci_low, ci_high, chance_to_win} | null}}; results.payload.srm_p_value.
+    For a metric with direction "down", chance_to_win is already the chance of being lower."""
+    payload = raw.get("results", {}).get("payload") if isinstance(raw, dict) else None
+    if not isinstance(payload, dict) or not isinstance(payload.get("metrics"), list):
+        return None
+    s = FlagsmithSummary()
+    for m in payload["metrics"]:
+        name = metric_names.get(int(m.get("metric_id", -1)))
+        variants = m.get("variants") or {}
+        inference = (m.get("inference") or {}).get(treatment) or {}
+        means = {k: v["sum"] / v["n"] for k, v in variants.items() if v.get("n")}
+        if name == COST_METRIC:
+            s.cost_mean_by_variant.update(means)
+            if inference:
+                s.chance_to_beat_control_cost = float(inference["chance_to_win"])
+                s.lift_cost = float(inference["lift"])
+                s.ci_cost = [float(inference["ci_low"]), float(inference["ci_high"])]
+        elif name == SOLVED_METRIC:
+            s.solve_rate_by_variant.update(means)
+            if inference:
+                p = float(inference["chance_to_win"])
+                # Flagsmith marks a variation "Losing" below a 5% chance to beat control.
+                s.guardrail_loss = p < 0.05
+                s.solve_rate_status = "losing" if s.guardrail_loss else "winning" if p > 0.95 else "inconclusive"
+            elif control in variants and treatment in variants:
+                s.solve_rate_status = "collecting_data"
+    srm = payload.get("srm_p_value")
+    s.srm_flag = None if srm is None else float(srm) < SRM_ALPHA
+    return s
+
+
 def extract_summary(raw: Any, control: str = "control", treatment: str = "lanes_v1") -> FlagsmithSummary:
+    real = extract_flagsmith_shape(raw, control, treatment, _metric_ids())
+    if real is not None:
+        return real
+    return _extract_generic(raw, control, treatment)
+
+
+def _extract_generic(raw: Any, control: str = "control", treatment: str = "lanes_v1") -> FlagsmithSummary:
     """Pull the fields the decision rule needs out of a Flagsmith results response.
 
     Assumed (unconfirmed) shape: somewhere in the response a block names the metric

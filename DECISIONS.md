@@ -75,3 +75,9 @@ Pool files are stored as gzip with a fixed timestamp, so the same seed produces 
 ## D11. Grading runs with network access; the agent's container does not
 
 The agent works in a container with networking disabled. Grading happens afterwards, in a fresh container built from the same image, with networking on, as the official SWE-bench-Live harness does: many rebuild steps download dependencies, and some PASS_TO_PASS tests (for example c-ares' DNS tests) make live lookups. Because grading starts from a clean container after the agent has finished, network access during grading can't help the agent.
+
+## D12. How Flagsmith computes the verdict, and how our replication differs
+
+Read from Flagsmith's open-source `api/experimentation/stats.py` and `results_query.py`, then checked against a Cloud response. For each metric and variant the warehouse returns `n`, `sum` and `sum_squares` over exposed identities. It counts only events at or after an identity's first exposure. Inference is a normal approximation to the relative lift (delta method). `chance_to_win` is the normal probability that the lift is above zero, flipped for metrics whose direction is `down`. The 95% interval is lift ± 1.96 standard errors. The SRM p-value is a chi-square test.
+
+Our replication deliberately uses different methods: a percentile bootstrap for mean cost, and Beta(1,1) posteriors for solve rate. Agreement between the two is therefore evidence that the result isn't an artefact of one statistical method. `analysis/pull_results.py` parses the documented shape, and `numbers.json` reports both results side by side.
