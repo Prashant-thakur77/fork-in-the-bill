@@ -50,3 +50,21 @@ def test_from_env_requires_cap(monkeypatch):
     monkeypatch.delenv("BUDGET_USD_TOTAL", raising=False)
     with pytest.raises(RuntimeError):
         b.from_env()
+
+
+def test_phase_cap_inside_global(monkeypatch, tmp_path):
+    from harness import budget as b
+
+    monkeypatch.delenv("REDIS_URL", raising=False)
+    monkeypatch.setenv("BUDGET_DIR", str(tmp_path))
+    monkeypatch.setenv("BUDGET_USD_TOTAL", "1.0")
+    monkeypatch.setenv("BUDGET_USD_PILOT", "0.3")
+    bud = b.from_env("pilot")
+    r = bud.reserve(0.25)
+    with pytest.raises(BudgetExceeded):
+        bud.reserve(0.1)  # phase cap, although global has room
+    bud.settle(r, 0.25)
+    other = b.from_env("exp1")
+    other.reserve(0.7)  # global 0.25 spent + 0.7 <= 1.0
+    with pytest.raises(BudgetExceeded):
+        other.reserve(0.1)

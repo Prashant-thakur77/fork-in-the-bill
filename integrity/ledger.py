@@ -3,22 +3,14 @@
 from __future__ import annotations
 
 import fcntl
-import hashlib
 import json
 from datetime import UTC, datetime
 from pathlib import Path
 
 from harness.schema import LedgerKind, LedgerRecord
+from integrity.canonical import GENESIS, canonical_json, record_hash
 
-GENESIS = "0" * 64
-
-
-def canonical_json(obj: object) -> bytes:
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
-
-
-def record_hash(prev_hash: str, payload: dict[str, object]) -> str:
-    return hashlib.sha256(prev_hash.encode() + canonical_json(payload)).hexdigest()
+__all__ = ["GENESIS", "Ledger", "canonical_json", "record_hash"]
 
 
 class Ledger:

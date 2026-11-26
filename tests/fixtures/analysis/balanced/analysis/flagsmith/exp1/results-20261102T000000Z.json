@@ -1,0 +1,42 @@
+{
+  "_fixture": "synthetic Flagsmith results response used by the analysis tests",
+  "metrics": [
+    {
+      "metric": {
+        "name": "task_cost"
+      },
+      "variations": [
+        {
+          "key": "control",
+          "mean": 0.84
+        },
+        {
+          "chance_to_beat_control": 99.1,
+          "credible_interval": [
+            -0.36,
+            -0.2
+          ],
+          "key": "lanes_v1",
+          "lift": -0.28,
+          "mean": 0.6
+        }
+      ]
+    },
+    {
+      "metric": {
+        "name": "task_solved"
+      },
+      "variations": [
+        {
+          "key": "control",
+          "rate": 0.42
+        },
+        {
+          "key": "lanes_v1",
+          "rate": 0.41,
+          "status": "inconclusive"
+        }
+      ]
+    }
+  ]
+}

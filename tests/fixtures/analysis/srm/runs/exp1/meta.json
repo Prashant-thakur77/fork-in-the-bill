@@ -1,0 +1,9 @@
+{
+  "experiment": "exp1",
+  "fixture": true,
+  "pool_file": "tasks/pools/exp1.jsonl",
+  "pool_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "prereg_tag": "prereg-exp1",
+  "flagsmith_experiment_id": 1,
+  "started_at": "2026-11-01T00:00:00+00:00"
+}
