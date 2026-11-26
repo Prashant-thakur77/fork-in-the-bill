@@ -1,0 +1,18 @@
+{
+  "api_url": "https://api.flagsmith.com",
+  "features": {
+    "agent_routing": 306193,
+    "routing_kill": 306194
+  },
+  "variants": {
+    "agent_routing": {
+      "lanes_v1": 37431
+    }
+  },
+  "metrics": {
+    "task_cost": 737,
+    "task_solved": 738,
+    "task_turns": 739,
+    "task_seconds": 740
+  }
+}
