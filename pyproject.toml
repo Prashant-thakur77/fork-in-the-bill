@@ -58,7 +58,7 @@ target-version = "py312"
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 
 [tool.pyright]
-include = ["harness", "runner", "integrity", "analysis", "tasks", "kit/forkbill", "tests"]
+include = ["harness", "runner", "integrity", "analysis", "tasks", "otel_setup", "kit/forkbill", "tests"]
 pythonVersion = "3.12"
 typeCheckingMode = "standard"
 venvPath = "."
@@ -67,3 +67,4 @@ venv = ".venv"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = ["docker: needs a Docker daemon"]

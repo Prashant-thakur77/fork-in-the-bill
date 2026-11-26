@@ -1,0 +1,97 @@
+#cloud-config
+package_update: true
+package_upgrade: false
+packages:
+  - ca-certificates
+  - curl
+  - git
+  - gnupg
+  - jq
+  - make
+  - unzip
+  - htop
+
+write_files:
+  - path: /etc/docker/daemon.json
+    permissions: "0644"
+    content: |
+      {
+        "log-driver": "json-file",
+        "log-opts": {"max-size": "50m", "max-file": "3"},
+        "live-restore": true
+      }
+
+  - path: /usr/local/sbin/fib-bootstrap.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      exec > >(tee -a /var/log/fib-bootstrap.log) 2>&1
+
+      REPO_URL='${repo_url}'
+      REPO_REF='${repo_ref}'
+      UV_VERSION='${uv_version}'
+      PREPULL='${join(" ", prepull_images)}'
+      REDIS_IMAGE='redis:8.12.0-alpine@sha256:5af80107c1eeecb484a2269b80a26d12bfa6521787da4663bd9f19f60a163483'
+      APP_USER=ubuntu
+      APP_DIR=/home/ubuntu/fork-in-the-bill
+
+      echo "[fib] docker engine"
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+      CODENAME="$(. /etc/os-release && echo "$VERSION_CODENAME")"
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $CODENAME stable" \
+        > /etc/apt/sources.list.d/docker.list
+      apt-get update -y
+      DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      systemctl enable --now docker
+      usermod -aG docker "$APP_USER"
+
+      echo "[fib] uv $UV_VERSION (checksum verified)"
+      UV_TGZ=uv-x86_64-unknown-linux-gnu.tar.gz
+      UV_TMP="$(mktemp -d /tmp/fib-uv.XXXXXX)"
+      curl -fsSL -o "$UV_TMP/$UV_TGZ" "https://github.com/astral-sh/uv/releases/download/$UV_VERSION/$UV_TGZ"
+      curl -fsSL -o "$UV_TMP/$UV_TGZ.sha256" "https://github.com/astral-sh/uv/releases/download/$UV_VERSION/$UV_TGZ.sha256"
+      (cd "$UV_TMP" && sha256sum -c "$UV_TGZ.sha256")
+      tar -xzf "$UV_TMP/$UV_TGZ" -C "$UV_TMP"
+      install -m 0755 "$UV_TMP/uv-x86_64-unknown-linux-gnu/uv" "$UV_TMP/uv-x86_64-unknown-linux-gnu/uvx" /usr/local/bin/
+      rm -rf -- "$${UV_TMP:?}"
+
+      echo "[fib] redis"
+      docker volume create fib-redis-data >/dev/null
+      docker rm -f fib-redis >/dev/null 2>&1 || true
+      docker run -d --name fib-redis --restart unless-stopped \
+        -p 127.0.0.1:6379:6379 -v fib-redis-data:/data \
+        "$REDIS_IMAGE" redis-server --appendonly yes
+
+      echo "[fib] clone $REPO_URL@$REPO_REF"
+      if [ ! -d "$APP_DIR/.git" ]; then
+        if ! sudo -u "$APP_USER" -H git clone "$REPO_URL" "$APP_DIR"; then
+          echo "[fib] clone failed; clone it by hand over SSH, then run: docker compose -f otel/docker-compose.yml up -d"
+        fi
+      fi
+
+      if [ -d "$APP_DIR/.git" ]; then
+        sudo -u "$APP_USER" -H git -C "$APP_DIR" checkout "$REPO_REF"
+        echo "[fib] otel collector + clickhouse + grafana"
+        (cd "$APP_DIR" && docker compose -f otel/docker-compose.yml up -d)
+        echo "[fib] python env"
+        sudo -u "$APP_USER" -H bash -c "cd '$APP_DIR' && /usr/local/bin/uv sync --frozen" \
+          || echo "[fib] uv sync failed; run it by hand"
+      fi
+
+      for img in $PREPULL; do
+        echo "[fib] pre-pull $img"
+        docker pull "$img" || echo "[fib] pull failed: $img"
+      done
+
+      mkdir -p /var/lib/fib
+      date -u +%Y-%m-%dT%H:%M:%SZ > /var/lib/fib/bootstrap-done
+      echo "[fib] bootstrap done"
+
+runcmd:
+  - [bash, /usr/local/sbin/fib-bootstrap.sh]
+
+final_message: "fork-in-the-bill runner ready after $UPTIME seconds (see /var/log/fib-bootstrap.log)"

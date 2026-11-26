@@ -1,0 +1,76 @@
+# Local telemetry stack: OTel Collector -> ClickHouse, with Grafana on top.
+#   docker compose -f otel/docker-compose.yml up -d
+#   export OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4318
+# Every port binds to 127.0.0.1; on the EC2 runner reach Grafana through an SSH tunnel.
+# Images are pinned by tag and by the multi-arch index digest.
+
+name: fib-otel
+
+x-clickhouse-env: &clickhouse-env
+  CLICKHOUSE_USER: ${CLICKHOUSE_USER:-fib}
+  CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-fib-local-only}
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.8.48.11@sha256:e7e582227e531fddb91be850643999603332ee3199139c9b00aab867aeb9749c
+    environment:
+      <<: *clickhouse-env
+      CLICKHOUSE_DB: fib
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports:
+      - "127.0.0.1:8123:8123"
+      - "127.0.0.1:9000:9000"
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./clickhouse_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8123/ping || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.166.0@sha256:3e18fe04181de50bdd72e23ad4a4d6214b54351e63d496f1c58127cc4541ad7f
+    command: ["--config=/etc/otelcol/collector.yaml"]
+    environment:
+      <<: *clickhouse-env
+      CLICKHOUSE_ENDPOINT: tcp://clickhouse:9000
+    ports:
+      - "127.0.0.1:4318:4318"
+      - "127.0.0.1:13133:13133"
+    volumes:
+      - ./collector.yaml:/etc/otelcol/collector.yaml:ro
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:13.3.2@sha256:81556409ba48b2b922e0adb69a2511337d8ba7578f11962eefa6149a2d815101
+    environment:
+      <<: *clickhouse-env
+      GF_PLUGINS_PREINSTALL_SYNC: grafana-clickhouse-datasource@4.24.0
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/fib/grafana_dashboard.json
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana_dashboard.json:/var/lib/grafana/dashboards/fib/grafana_dashboard.json:ro
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  clickhouse-data:
+  grafana-data:

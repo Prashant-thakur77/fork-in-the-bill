@@ -1,0 +1,259 @@
+{
+  "uid": "fib-overview",
+  "title": "Fork in the Bill: routing experiment",
+  "description": "Live cost, latency and progress per Flagsmith arm, from OpenTelemetry spans in ClickHouse.",
+  "tags": [
+    "fork-in-the-bill",
+    "flagsmith",
+    "genai"
+  ],
+  "timezone": "utc",
+  "schemaVersion": 41,
+  "version": 1,
+  "editable": true,
+  "refresh": "10s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "label": "ClickHouse",
+        "type": "datasource",
+        "query": "grafana-clickhouse-datasource",
+        "current": {
+          "text": "ClickHouse",
+          "value": "fib-clickhouse"
+        },
+        "hide": 0,
+        "refresh": 1
+      },
+      {
+        "name": "experiment",
+        "label": "Experiment",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-clickhouse-datasource",
+          "uid": "${datasource}"
+        },
+        "query": "SELECT DISTINCT SpanAttributes['fib.experiment'] FROM otel.otel_traces WHERE SpanName = 'fib.task' ORDER BY 1",
+        "definition": "experiments seen in task spans",
+        "includeAll": true,
+        "multi": true,
+        "allValue": null,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "refresh": 2,
+        "hide": 0,
+        "sort": 1
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Spend per arm (cumulative USD)",
+      "description": "Running total of priced model-call cost (fib.usd) per Flagsmith variant, from model-call spans.",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${datasource}"
+          },
+          "editorType": "sql",
+          "format": 0,
+          "queryType": "timeseries",
+          "rawSql": "SELECT t AS time, variant, sum(usd) OVER (PARTITION BY variant ORDER BY t) AS usd\nFROM (\n  SELECT $__timeInterval(Timestamp) AS t,\n         SpanAttributes['fib.variant'] AS variant,\n         sum(toFloat64OrZero(SpanAttributes['fib.usd'])) AS usd\n  FROM otel.otel_traces\n  WHERE $__timeFilter(Timestamp) AND SpanAttributes['fib.lane'] != '' AND SpanAttributes['fib.experiment'] IN (${experiment:singlequote})\n  GROUP BY t, variant\n)\nORDER BY time"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "p95 model-call latency per lane",
+      "description": "95th percentile span duration of model calls, split by main and delegate lane.",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${datasource}"
+          },
+          "editorType": "sql",
+          "format": 0,
+          "queryType": "timeseries",
+          "rawSql": "SELECT $__timeInterval(Timestamp) AS time,\n       SpanAttributes['fib.lane'] AS lane,\n       quantile(0.95)(Duration) / 1e9 AS p95_seconds\nFROM otel.otel_traces\nWHERE $__timeFilter(Timestamp) AND SpanAttributes['fib.lane'] != '' AND SpanAttributes['fib.experiment'] IN (${experiment:singlequote})\nGROUP BY time, lane\nORDER BY time"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "bargauge",
+      "title": "Delegate share of cost per arm",
+      "description": "Delegate-lane USD divided by all model-call USD, per variant.",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${datasource}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT SpanAttributes['fib.variant'] AS variant,\n       sumIf(toFloat64OrZero(SpanAttributes['fib.usd']), SpanAttributes['fib.lane'] = 'delegate')\n         / nullIf(sum(toFloat64OrZero(SpanAttributes['fib.usd'])), 0) AS delegate_share\nFROM otel.otel_traces\nWHERE $__timeFilter(Timestamp) AND SpanAttributes['fib.lane'] != '' AND SpanAttributes['fib.experiment'] IN (${experiment:singlequote})\nGROUP BY variant\nORDER BY variant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "basic",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "values": true,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^delegate_share$/"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "barchart",
+      "title": "Tasks done per arm",
+      "description": "Finished task spans per variant, and how many were solved.",
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${datasource}"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT SpanAttributes['fib.variant'] AS variant,\n       count() AS done,\n       countIf(SpanAttributes['fib.solved'] = 'true') AS solved\nFROM otel.otel_traces\nWHERE $__timeFilter(Timestamp) AND SpanName = 'fib.task' AND SpanAttributes['fib.experiment'] IN (${experiment:singlequote})\nGROUP BY variant\nORDER BY variant"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "xField": "variant",
+        "showValue": "always",
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        }
+      }
+    }
+  ]
+}

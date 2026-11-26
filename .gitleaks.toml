@@ -1,0 +1,36 @@
+# gitleaks configuration: the built-in ruleset plus one narrow allowlist.
+title = "fork-in-the-bill"
+
+[extend]
+useDefault = true
+
+# Recorded HTTP cassettes keep response headers so replays stay faithful. Credential
+# headers are scrubbed to placeholders at record time, and the remaining identifier
+# headers (request ids, organization ids, trace ids) are not secrets but look random
+# enough to trip the generic rule. Only lines that are such a header inside
+# tests/cassettes/ are allowed; any other high-entropy string there is still reported,
+# and provider-specific key rules (Anthropic, AWS, ...) are never allowlisted.
+#
+# The allowlist is scoped with targetRules on purpose: a global [[allowlists]] entry
+# with `paths` makes the directory and git sources skip the whole path regardless of
+# condition = "AND" (gitleaks 8.30), which would silence real keys in cassettes.
+[[allowlists]]
+description = "Scrubbed or non-secret headers in recorded cassettes"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''^tests/cassettes/''']
+regexTarget = "line"
+regexes = [
+  # credential headers after scrubbing
+  '''(?i)^\s*-?\s*['"]?(x-api-key|authorization|x-environment-key|anthropic-api-key|cookie|set-cookie)['"]?\s*:\s*\[?\s*-?\s*['"]?(REDACTED|SCRUBBED|<redacted>|<scrubbed>|Bearer REDACTED|Api-Key REDACTED)['"]?\s*\]?\s*,?\s*$''',
+  # identifier headers that carry no credential
+  '''(?i)^\s*-?\s*['"]?(request-id|x-request-id|anthropic-organization-id|cf-ray|traceparent|x-amzn-trace-id|etag)['"]?\s*:\s*\[?\s*-?\s*['"]?[A-Za-z0-9_:\-"./]+['"]?\s*\]?\s*,?\s*$''',
+]
+
+# numbers.json key paths (e.g. "exp1.arms.lanes_v1.solve_rate") sit in "key" fields of
+# tests, the board seed and the video captions. They are dotted lookups into
+# analysis/out/numbers.json, not credentials, but look random enough to the generic rule.
+[[allowlists]]
+description = "numbers.json key paths"
+targetRules = ["generic-api-key"]
+regexes = ['''^(exp\d|pilot|rollout|spend|integrity)(\.[A-Za-z0-9_]+)+$''']

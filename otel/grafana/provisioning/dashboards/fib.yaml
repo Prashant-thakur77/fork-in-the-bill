@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: fork-in-the-bill
+    folder: Fork in the Bill
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards/fib
+      foldersFromFilesStructure: false
