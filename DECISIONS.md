@@ -101,3 +101,12 @@ In the dry run the main lane never called `delegate` in four tasks. The two arms
 ## D17. The main lane sees short tool output; long output goes through the delegate
 
 The stronger prompt (D16) still produced no delegation: the main lane read files and ran builds with its own `bash`. The harness now enforces the two-lane design in both arms. The main lane's `bash` returns only the first and last 1 KB of output, and its tool description says so. The delegate's `bash` returns up to 16 KB. Short checks still work in the main lane. Reading long files, searching widely and digesting test or build output are delegated, which is the grunt work the experiment routes to a cheaper model.
+
+## D18. Planner and worker: the main lane has no shell
+
+Even with its shell output cut to 1 KB (D17), the main lane still delegated nothing. It switched to tighter `sed -n` and `grep | head` commands. Two identical arms would measure nothing. The harness now uses the orchestrator/worker split that many coding agents use, identically in both arms:
+
+- **Main lane (planner).** Tools are `view_file` (up to 150 numbered lines of one file), `edit_file`, `delegate` and `submit`. It decides what to change and writes the change.
+- **Delegate lane (worker).** Has `bash` (16 KB of output) in the same container. All searching, surveying, building and test running goes through it, and it returns JSON findings.
+
+The experiment's question is unchanged: whether the worker can be a small model without the planner solving fewer tasks. D17's main-lane `bash` cap no longer applies, because the main lane has no `bash`.

@@ -140,10 +140,8 @@ class Agent:
                 return result(None)
 
     async def _dispatch(self, name: str, args: dict[str, Any], t0: float) -> tuple[str, bool]:
-        if name == "bash":
-            return await defs.run_bash(
-                self.sb, str(args.get("cmd", "")), args.get("timeout"), defs.MAIN_OUTPUT_LIMIT_BYTES
-            )
+        if name == "view_file":
+            return await defs.run_view(self.sb, str(args.get("path", "")), args.get("start_line"), args.get("end_line"))
         if name == "edit_file":
             return await defs.run_edit(
                 self.sb, str(args.get("path", "")), str(args.get("old", "")), str(args.get("new", ""))

@@ -181,4 +181,5 @@ async def test_main_lane_bash_output_is_short_delegate_is_long() -> None:
     main, _ = await defs.run_bash(sb, "cat big", None, defs.MAIN_OUTPUT_LIMIT_BYTES)
     deleg, _ = await defs.run_bash(sb, "cat big", None)
     assert len(main.encode()) < 2_200 < 15_000 < len(deleg.encode()) < 16_200
-    assert defs.MAIN_TOOLS[0]["name"] == "bash" and "1 KB" in defs.MAIN_TOOLS[0]["description"]
+    assert [t["name"] for t in defs.MAIN_TOOLS] == ["view_file", "edit_file", "delegate", "submit"]
+    assert [t["name"] for t in defs.DELEGATE_TOOLS_READONLY] == ["bash"]

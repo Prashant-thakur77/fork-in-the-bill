@@ -47,6 +47,26 @@ BASH_MAIN = {
     },
 }
 
+VIEW_FILE = {
+    "name": "view_file",
+    "description": (
+        "Show lines of one file with line numbers, at most 150 lines per call. Use it to read the code "
+        "you are about to change. To find code, search or run anything, use `delegate`."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "path": {"type": "string"},
+            "start_line": {"type": "integer", "description": "1-based, default 1"},
+            "end_line": {"type": "integer", "description": "inclusive; at most start_line + 149"},
+        },
+        "required": ["path"],
+        "additionalProperties": False,
+    },
+}
+
+VIEW_MAX_LINES = 150
+
 EDIT_FILE = {
     "name": "edit_file",
     "description": (
@@ -94,7 +114,7 @@ SUBMIT = {
     "input_schema": {"type": "object", "properties": {}, "additionalProperties": False},
 }
 
-MAIN_TOOLS = [BASH_MAIN, EDIT_FILE, DELEGATE, SUBMIT]
+MAIN_TOOLS = [VIEW_FILE, EDIT_FILE, DELEGATE, SUBMIT]
 DELEGATE_TOOLS_READONLY = [BASH]
 DELEGATE_TOOLS_DRAFT = [BASH, EDIT_FILE]
 
@@ -109,6 +129,24 @@ async def run_bash(sb: Sandbox, cmd: str, timeout: int | None, limit: int = OUTP
     body = truncate_middle(res.output, limit)
     status = "timed out" if res.timed_out else f"exit {res.exit_code}"
     return f"[{status}]\n{body}", res.exit_code != 0 or res.timed_out
+
+
+async def run_view(sb: Sandbox, path: str, start: int | None, end: int | None) -> tuple[str, bool]:
+    first = max(int(start or 1), 1)
+    last = min(int(end or first + VIEW_MAX_LINES - 1), first + VIEW_MAX_LINES - 1)
+    if last < first:
+        return "error: end_line is before start_line", True
+    full = _resolve(sb.workdir, path)
+    q = shlex.quote(full)
+    res = await sb.exec(
+        f"test -f {q} || {{ echo 'no such file'; exit 2; }}; "
+        f"awk -v a={first} -v b={last} 'NR>=a && NR<=b {{ printf \"%6d  %s\\n\", NR, $0 }} NR>b {{ exit }}' {q}; "
+        f'echo "[lines {first}-{last} of $(wc -l < {q})]"',
+        timeout=30,
+    )
+    if res.exit_code != 0:
+        return f"error: {path}: {res.output.strip()[:200]}", True
+    return truncate_middle(res.output, OUTPUT_LIMIT_BYTES), False
 
 
 async def run_edit(sb: Sandbox, path: str, old: str, new: str) -> tuple[str, bool]:
