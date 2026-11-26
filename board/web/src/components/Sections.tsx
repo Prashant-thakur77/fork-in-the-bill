@@ -116,6 +116,10 @@ function Verdict({ board, phase }: { board: Board; phase: Phase }) {
               : "Posts when the run ends."}
         </p>
       </div>
+      <div className="verdict-gantry" aria-hidden="true">
+        <span className="verdict-hanger" />
+        <span className="verdict-hanger" />
+      </div>
       <div className={`verdict-sign ${ready ? "is-ready" : "is-pending"}`} data-reveal="hang">
         <div className="verdict-legend">
           {ready ? (
@@ -209,7 +213,9 @@ function Proof({ board }: { board: Board }) {
           snapshotted through the run; one distinct hash means it never changed.
         </p>
       </div>
-      <div className="receipt" data-reveal="print">
+      <div className="printer">
+        <div className="printer-slot" aria-hidden="true" />
+        <div className="receipt" data-reveal="print">
         <div className="receipt-head">
           <span>Fork in the Bill</span>
           <span>Run receipt · exp1</span>
@@ -224,6 +230,7 @@ function Proof({ board }: { board: Board }) {
         <p className="receipt-foot">
           Check it yourself: <code>python integrity/verify_ledger.py</code>
         </p>
+        </div>
       </div>
     </section>
   );

@@ -474,23 +474,28 @@ a.fs-link:active {
 .closed-plate {
   position: absolute;
   z-index: 3;
-  left: 50%;
-  top: 54%;
-  transform: translate(-50%, -50%) rotate(-4deg);
+  right: clamp(10px, 2vw, 28px);
+  top: 4px;
+  transform: rotate(-3deg);
   background: var(--orange);
   color: var(--text);
   font-weight: 900;
-  font-size: clamp(18px, 2.2vw, 34px);
+  font-size: clamp(14px, 1.5vw, 24px);
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  padding: 8px 22px;
+  padding: 6px 16px;
   border-radius: 6px;
   box-shadow: inset 0 0 0 3px var(--orange), inset 0 0 0 5px var(--text), 0 10px 20px -10px rgba(0, 0, 0, 0.6);
   white-space: nowrap;
 }
 .sign.is-closed .sign-face,
 .sign.is-closed .sign-tab {
-  filter: saturate(0.25) brightness(0.92);
+  --sign: #46534d;
+  background: var(--sign);
+}
+.sign.is-closed .sign-legend,
+.sign.is-closed .sign-sub {
+  opacity: 0.8;
 }
 .badge-replay {
   display: inline-block;
@@ -1015,6 +1020,12 @@ a.fs-link:active {
     --pad: 1%;
     --gap: 2%;
   }
+  .closed-plate {
+    left: 8px;
+    right: 8px;
+    top: 64px;
+    text-align: center;
+  }
   .sign-tab {
     margin-left: 10px;
     font-size: 13px;
@@ -1067,5 +1078,121 @@ a.fs-link:active {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- distinct lower layouts ---------- */
+/* Verdict: one wide sign hung from its own gantry, heading centred above it. */
+.block.verdict {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  text-align: center;
+  row-gap: 0;
+}
+.verdict .block-head {
+  margin-bottom: clamp(20px, 3vw, 36px);
+}
+.verdict .block-head p {
+  margin-inline: auto;
+}
+.verdict-gantry {
+  width: 100%;
+  height: 34px;
+  border-top: 10px solid var(--steel);
+  display: flex;
+  justify-content: space-around;
+  padding-inline: 18%;
+}
+.verdict-hanger {
+  width: 6px;
+  height: 24px;
+  background: var(--steel);
+}
+.verdict-sign {
+  width: min(100%, 1180px);
+  text-align: left;
+}
+.verdict-sign.is-pending {
+  text-align: center;
+}
+.verdict-legend {
+  text-align: center;
+}
+
+/* Experiment 2: reversed, the work-zone board leads; a barricade stripe tops the section. */
+.block.exp2 {
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 0.78fr);
+  border-top: 0;
+  position: relative;
+}
+.block.exp2::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 12px;
+  background: repeating-linear-gradient(-45deg, var(--orange) 0 16px, var(--sheet) 16px 32px);
+  box-shadow: inset 0 0 0 2px var(--text);
+}
+.exp2 .block-head {
+  order: 2;
+  align-self: center;
+}
+.exp2 .workzone {
+  order: 1;
+}
+
+/* Proof: a receipt fed out of a printer slot, centred, with the explanation beside the slot. */
+.block.proof {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 520px) minmax(0, 1fr);
+  align-items: start;
+}
+.proof .block-head {
+  grid-column: 1;
+  text-align: right;
+  justify-self: end;
+}
+.proof .block-head p {
+  margin-left: auto;
+}
+.printer {
+  grid-column: 2;
+  width: 100%;
+}
+.printer-slot {
+  height: 22px;
+  margin-inline: -18px;
+  background: var(--housing);
+  border-radius: 6px;
+  box-shadow: inset 0 -6px 0 #000;
+}
+.printer .receipt {
+  width: 100%;
+  margin-top: -6px;
+}
+.printer .receipt::before {
+  display: none;
+}
+
+@media (max-width: 1000px) {
+  .block.exp2,
+  .block.proof {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .exp2 .block-head {
+    order: 0;
+  }
+  .proof .block-head,
+  .printer {
+    grid-column: 1;
+    text-align: left;
+    justify-self: stretch;
+  }
+  .proof .block-head p {
+    margin-left: 0;
+  }
+  .verdict-gantry {
+    padding-inline: 12%;
   }
 }
