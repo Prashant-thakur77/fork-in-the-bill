@@ -7,7 +7,8 @@ import shlex
 
 from harness.tools.sandbox import Sandbox, truncate_middle
 
-OUTPUT_LIMIT_BYTES = 16_000
+OUTPUT_LIMIT_BYTES = 16_000  # delegate lane
+MAIN_OUTPUT_LIMIT_BYTES = 2_000  # main lane: long output is the delegate's job
 DEFAULT_TIMEOUT = 180
 MAX_TIMEOUT = 900
 
@@ -16,6 +17,24 @@ BASH = {
     "description": (
         "Run a shell command in the repository container (cwd is the repository root). "
         "Output is truncated to the first and last 8 KB. Non-interactive only."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "cmd": {"type": "string", "description": "Command to run with bash -lc."},
+            "timeout": {"type": "integer", "description": "Seconds, default 180, max 900."},
+        },
+        "required": ["cmd"],
+        "additionalProperties": False,
+    },
+}
+
+BASH_MAIN = {
+    "name": "bash",
+    "description": (
+        "Run a shell command in the repository container (cwd is the repository root). "
+        "Output is cut to the first and last 1 KB, so use it for short, targeted checks; "
+        "hand long reads, searches and test runs to `delegate`. Non-interactive only."
     ),
     "input_schema": {
         "type": "object",
@@ -75,7 +94,7 @@ SUBMIT = {
     "input_schema": {"type": "object", "properties": {}, "additionalProperties": False},
 }
 
-MAIN_TOOLS = [BASH, EDIT_FILE, DELEGATE, SUBMIT]
+MAIN_TOOLS = [BASH_MAIN, EDIT_FILE, DELEGATE, SUBMIT]
 DELEGATE_TOOLS_READONLY = [BASH]
 DELEGATE_TOOLS_DRAFT = [BASH, EDIT_FILE]
 
@@ -84,10 +103,10 @@ def _resolve(workdir: str, path: str) -> str:
     return path if path.startswith("/") else posixpath.join(workdir, path)
 
 
-async def run_bash(sb: Sandbox, cmd: str, timeout: int | None) -> tuple[str, bool]:
+async def run_bash(sb: Sandbox, cmd: str, timeout: int | None, limit: int = OUTPUT_LIMIT_BYTES) -> tuple[str, bool]:
     t = min(max(int(timeout or DEFAULT_TIMEOUT), 1), MAX_TIMEOUT)
     res = await sb.exec(f"cd {shlex.quote(sb.workdir)} && {cmd}", timeout=t)
-    body = truncate_middle(res.output, OUTPUT_LIMIT_BYTES)
+    body = truncate_middle(res.output, limit)
     status = "timed out" if res.timed_out else f"exit {res.exit_code}"
     return f"[{status}]\n{body}", res.exit_code != 0 or res.timed_out
 

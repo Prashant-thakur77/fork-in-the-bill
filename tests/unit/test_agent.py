@@ -167,3 +167,18 @@ def test_parse_delegate_json():
     assert parse_delegate_json('sure: {"summary":"s","findings":[],"confidence":1}') is not None
     assert parse_delegate_json("no json") is None
     assert parse_delegate_json('{"summary":"s","confidence":3}') is None
+
+
+@pytest.mark.asyncio
+async def test_main_lane_bash_output_is_short_delegate_is_long() -> None:
+    from harness.tools import defs
+
+    class Big(FakeSandbox):
+        async def exec(self, cmd: str, timeout: int) -> ExecResult:
+            return ExecResult(0, "x" * 50_000)
+
+    sb = Big()
+    main, _ = await defs.run_bash(sb, "cat big", None, defs.MAIN_OUTPUT_LIMIT_BYTES)
+    deleg, _ = await defs.run_bash(sb, "cat big", None)
+    assert len(main.encode()) < 2_200 < 15_000 < len(deleg.encode()) < 16_200
+    assert defs.MAIN_TOOLS[0]["name"] == "bash" and "1 KB" in defs.MAIN_TOOLS[0]["description"]

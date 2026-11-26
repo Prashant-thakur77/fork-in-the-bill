@@ -97,3 +97,7 @@ The SWE-bench-Live images ship with a dirty work tree: test reports and other fi
 ## D16. Delegation is the expected way to do grunt work
 
 In the dry run the main lane never called `delegate` in four tasks. The two arms differ only in the delegate lane's model, so without delegation they would be identical. The shared main-lane prompt now states that the main lane's context is the expensive resource. It tells the agent to delegate surveys, long reads and test runs, starting with a survey of the code the issue touches, and to use `bash` itself only for small, targeted checks. Both arms get the same prompt. The pilot measures the delegate share of tokens and cost before the prereg is fixed.
+
+## D17. The main lane sees short tool output; long output goes through the delegate
+
+The stronger prompt (D16) still produced no delegation: the main lane read files and ran builds with its own `bash`. The harness now enforces the two-lane design in both arms. The main lane's `bash` returns only the first and last 1 KB of output, and its tool description says so. The delegate's `bash` returns up to 16 KB. Short checks still work in the main lane. Reading long files, searching widely and digesting test or build output are delegated, which is the grunt work the experiment routes to a cheaper model.
