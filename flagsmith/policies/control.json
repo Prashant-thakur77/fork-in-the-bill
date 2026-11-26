@@ -1,0 +1,1 @@
+{"policy":"control","schema":1,"main":{"model":"claude-sonnet-5-5","max_tokens":8000,"cache":true,"effort":"medium"},"delegate":{"model":"claude-sonnet-5-5","max_tokens":2048,"max_context_tokens":24000,"effort":"low"},"caps":{"turns":40,"usd_per_task":0.60,"seconds":1200},"prompt_variant":"delegate_v1"}

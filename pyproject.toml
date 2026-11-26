@@ -57,14 +57,19 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["forkbill", "harness", "runner", "integrity", "analysis", "tasks", "otel_setup"]
+
 [tool.pyright]
 include = ["harness", "runner", "integrity", "analysis", "tasks", "otel_setup", "kit/forkbill", "tests"]
 pythonVersion = "3.12"
 typeCheckingMode = "standard"
 venvPath = "."
 venv = ".venv"
+extraPaths = ["kit"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 markers = ["docker: needs a Docker daemon"]
+pythonpath = [".", "kit"]

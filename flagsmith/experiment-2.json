@@ -1,0 +1,21 @@
+{
+  "$comment": "Experiment 2 body. Run after experiment 1 has ended and its winner is the flag's own value; '@policy:lanes_v1' assumes lanes_v1 won. If control won, change it to '@policy:control' before creating. lanes_v1 stays a variant at 0% so it gets no traffic.",
+  "feature": "@feature_id:agent_routing",
+  "name": "exp2: draft-review delegate role (lanes_v2) vs rolled-out winner",
+  "hypothesis": "@hypothesis",
+  "metrics": [
+    {"metric": "@metric_id:task_cost", "expected_direction": "decrease"},
+    {"metric": "@metric_id:task_solved", "expected_direction": "not_decrease"},
+    {"metric": "@metric_id:task_turns", "expected_direction": "not_increase"},
+    {"metric": "@metric_id:task_seconds", "expected_direction": "not_increase"}
+  ],
+  "experiment_rollout": {
+    "enabled": true,
+    "rollout_percentage": 100,
+    "feature_state_value": {"type": "string", "value": "@policy:lanes_v1"},
+    "multivariate_feature_state_values": [
+      {"multivariate_feature_option": "@variant_id:agent_routing:lanes_v1", "percentage_allocation": 0},
+      {"multivariate_feature_option": "@variant_id:agent_routing:lanes_v2", "percentage_allocation": 50}
+    ]
+  }
+}

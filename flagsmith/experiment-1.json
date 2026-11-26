@@ -1,0 +1,20 @@
+{
+  "$comment": "Experiment 1 body for POST api/v1/environments/<env>/experiments/. '@' strings are filled by create_experiment.sh from ids.json, policies/ and the prereg file (see kit/forkbill/experiment.py for the rules).",
+  "feature": "@feature_id:agent_routing",
+  "name": "exp1: delegate lane on small model (lanes_v1) vs control",
+  "hypothesis": "@hypothesis",
+  "metrics": [
+    {"metric": "@metric_id:task_cost", "expected_direction": "decrease"},
+    {"metric": "@metric_id:task_solved", "expected_direction": "not_decrease"},
+    {"metric": "@metric_id:task_turns", "expected_direction": "not_increase"},
+    {"metric": "@metric_id:task_seconds", "expected_direction": "not_increase"}
+  ],
+  "experiment_rollout": {
+    "enabled": true,
+    "rollout_percentage": 100,
+    "feature_state_value": {"type": "string", "value": "@policy:control"},
+    "multivariate_feature_state_values": [
+      {"multivariate_feature_option": "@variant_id:agent_routing:lanes_v1", "percentage_allocation": 50}
+    ]
+  }
+}

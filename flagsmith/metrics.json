@@ -1,0 +1,47 @@
+{
+  "$comment": "Metric definitions for the agent_routing experiments (plan 4.4). Event names match harness/schema.py. Enum literals are the Admin API values; setup.sh and forkbill init check every one against the target instance's OPTIONS choices before creating anything.",
+  "api_literals": {
+    "$comment": "Choices read from OPTIONS on self-hosted Flagsmith 2.295.2, 2026-11-27. Docs only list occurrence/up/increase. Re-confirmed per run by the preflight check.",
+    "aggregation": ["occurrence", "count", "sum", "mean"],
+    "direction": ["up", "down", "informational"],
+    "expected_direction": ["increase", "decrease", "not_increase", "not_decrease"]
+  },
+  "metrics": [
+    {
+      "name": "task_cost",
+      "event": "task_cost",
+      "aggregation": "mean",
+      "direction": "down",
+      "expected_direction": "decrease",
+      "role": "primary",
+      "description": "US dollars per task, sent for every exposed task including capped and failed ones. Lower is better."
+    },
+    {
+      "name": "task_solved",
+      "event": "task_solved",
+      "aggregation": "occurrence",
+      "direction": "up",
+      "expected_direction": "not_decrease",
+      "role": "guardrail",
+      "description": "Sent only when every FAIL_TO_PASS and PASS_TO_PASS test passes. Should not decrease."
+    },
+    {
+      "name": "task_turns",
+      "event": "task_turns",
+      "aggregation": "mean",
+      "direction": "informational",
+      "expected_direction": "not_increase",
+      "role": "secondary",
+      "description": "Agent turns per task. Informational."
+    },
+    {
+      "name": "task_seconds",
+      "event": "task_seconds",
+      "aggregation": "mean",
+      "direction": "informational",
+      "expected_direction": "not_increase",
+      "role": "secondary",
+      "description": "Wall-clock seconds per task. Informational."
+    }
+  ]
+}

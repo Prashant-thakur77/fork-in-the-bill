@@ -1,0 +1,31 @@
+{
+  "name": "@forkbill/flagsmith-lanes",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Routed lanes for Node agent loops, driven by a Flagsmith experiment flag",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "files": ["dist/src"],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node --test \"dist/test/**/*.test.js\""
+  },
+  "dependencies": {
+    "@flagsmith/nodejs": "^9.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.7",
+    "typescript": "~5.9.3"
+  }
+}
