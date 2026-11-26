@@ -1,0 +1,46 @@
+{
+  "arms": {
+    "control": {
+      "delegate_calls_mean": 2.3333333333333335,
+      "delegate_share": 0.609651011992138,
+      "failure_modes": {
+        "f2p_not_passing": 4,
+        "solved": 5
+      },
+      "infra_retries": 0,
+      "n": 9,
+      "run": "pilot-control",
+      "seconds_max": 2093.122,
+      "solve_rate": 0.5555555555555556,
+      "solved": 5,
+      "turns_max": 14,
+      "usd_incl_retries": 1.0289408,
+      "usd_max": 0.268386,
+      "usd_mean": 0.11432675555555555,
+      "usd_median": 0.1071388,
+      "usd_total": 1.0289408
+    },
+    "lanes_v1": {
+      "delegate_calls_mean": 3.5555555555555554,
+      "delegate_share": 0.114828110057447,
+      "failure_modes": {
+        "empty_patch": 1,
+        "f2p_not_passing": 3,
+        "p2p_broken": 1,
+        "solved": 4
+      },
+      "infra_retries": 1,
+      "n": 9,
+      "run": "pilot-lanes_v1",
+      "seconds_max": 2153.209,
+      "solve_rate": 0.4444444444444444,
+      "solved": 4,
+      "turns_max": 17,
+      "usd_incl_retries": 0.67199201,
+      "usd_max": 0.17196472,
+      "usd_mean": 0.07232328,
+      "usd_median": 0.05036232,
+      "usd_total": 0.65090952
+    }
+  }
+}

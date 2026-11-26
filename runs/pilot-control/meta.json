@@ -1,0 +1,8 @@
+{
+ "experiment": "pilot-control",
+ "pool_file": "tasks/pools/pilot.jsonl.gz",
+ "pool_sha256": "3013e46a0d6af8769e440429ac80b706ad914736d82f6f9e36b1ca56cfb8e433",
+ "force_policy": "control",
+ "started_at": "2026-11-26T21:37:34.397+00:00",
+ "flagsmith_experiment_id": null
+}

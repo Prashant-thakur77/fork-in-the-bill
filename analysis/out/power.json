@@ -1,0 +1,453 @@
+{
+  "pilot": {
+    "n": 18,
+    "solve_rate": 0.5,
+    "cost_mean_control": 0.11432675555555555,
+    "cost_mean_treatment": 0.07232328
+  },
+  "m": 0.2,
+  "power": 0.8,
+  "sims": 2000,
+  "seed": 20260202,
+  "n_per_arm": 55,
+  "mde_solve_pp": 23.0,
+  "mde_cost_pct": 27.0,
+  "guardrail_pass_rate": 0.8165,
+  "guardrail_target_met": true,
+  "grid": [
+    {
+      "n_per_arm": 25,
+      "mde_solve_pp": 32.5,
+      "mde_cost_pct": 37.0,
+      "guardrail_pass_rate": 0.555,
+      "power_at_pilot_cost_effect": 0.796
+    },
+    {
+      "n_per_arm": 30,
+      "mde_solve_pp": 30.5,
+      "mde_cost_pct": 35.0,
+      "guardrail_pass_rate": 0.654,
+      "power_at_pilot_cost_effect": 0.8435
+    },
+    {
+      "n_per_arm": 35,
+      "mde_solve_pp": 28.000000000000004,
+      "mde_cost_pct": 32.0,
+      "guardrail_pass_rate": 0.688,
+      "power_at_pilot_cost_effect": 0.89
+    },
+    {
+      "n_per_arm": 40,
+      "mde_solve_pp": 26.5,
+      "mde_cost_pct": 31.0,
+      "guardrail_pass_rate": 0.7125,
+      "power_at_pilot_cost_effect": 0.938
+    },
+    {
+      "n_per_arm": 45,
+      "mde_solve_pp": 25.5,
+      "mde_cost_pct": 28.999999999999996,
+      "guardrail_pass_rate": 0.7715,
+      "power_at_pilot_cost_effect": 0.949
+    },
+    {
+      "n_per_arm": 50,
+      "mde_solve_pp": 23.5,
+      "mde_cost_pct": 28.000000000000004,
+      "guardrail_pass_rate": 0.7555,
+      "power_at_pilot_cost_effect": 0.965
+    },
+    {
+      "n_per_arm": 55,
+      "mde_solve_pp": 23.0,
+      "mde_cost_pct": 27.0,
+      "guardrail_pass_rate": 0.8165,
+      "power_at_pilot_cost_effect": 0.972
+    },
+    {
+      "n_per_arm": 60,
+      "mde_solve_pp": 21.5,
+      "mde_cost_pct": 26.0,
+      "guardrail_pass_rate": 0.843,
+      "power_at_pilot_cost_effect": 0.989
+    },
+    {
+      "n_per_arm": 65,
+      "mde_solve_pp": 22.0,
+      "mde_cost_pct": 25.0,
+      "guardrail_pass_rate": 0.8855,
+      "power_at_pilot_cost_effect": 0.9905
+    },
+    {
+      "n_per_arm": 70,
+      "mde_solve_pp": 20.0,
+      "mde_cost_pct": 25.0,
+      "guardrail_pass_rate": 0.865,
+      "power_at_pilot_cost_effect": 0.9935
+    },
+    {
+      "n_per_arm": 75,
+      "mde_solve_pp": 19.5,
+      "mde_cost_pct": 23.0,
+      "guardrail_pass_rate": 0.8885,
+      "power_at_pilot_cost_effect": 0.9925
+    },
+    {
+      "n_per_arm": 80,
+      "mde_solve_pp": 20.0,
+      "mde_cost_pct": 23.0,
+      "guardrail_pass_rate": 0.9105,
+      "power_at_pilot_cost_effect": 0.9955
+    },
+    {
+      "n_per_arm": 85,
+      "mde_solve_pp": 19.5,
+      "mde_cost_pct": 22.0,
+      "guardrail_pass_rate": 0.922,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 90,
+      "mde_solve_pp": 18.0,
+      "mde_cost_pct": 21.0,
+      "guardrail_pass_rate": 0.9205,
+      "power_at_pilot_cost_effect": 0.9995
+    },
+    {
+      "n_per_arm": 95,
+      "mde_solve_pp": 18.5,
+      "mde_cost_pct": 21.0,
+      "guardrail_pass_rate": 0.936,
+      "power_at_pilot_cost_effect": 0.9995
+    },
+    {
+      "n_per_arm": 100,
+      "mde_solve_pp": 17.5,
+      "mde_cost_pct": 21.0,
+      "guardrail_pass_rate": 0.954,
+      "power_at_pilot_cost_effect": 0.9995
+    },
+    {
+      "n_per_arm": 125,
+      "mde_solve_pp": 15.5,
+      "mde_cost_pct": 18.0,
+      "guardrail_pass_rate": 0.976,
+      "power_at_pilot_cost_effect": 0.9995
+    },
+    {
+      "n_per_arm": 150,
+      "mde_solve_pp": 14.000000000000002,
+      "mde_cost_pct": 17.0,
+      "guardrail_pass_rate": 0.9925,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 175,
+      "mde_solve_pp": 13.5,
+      "mde_cost_pct": 16.0,
+      "guardrail_pass_rate": 0.9935,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 200,
+      "mde_solve_pp": 12.5,
+      "mde_cost_pct": 15.0,
+      "guardrail_pass_rate": 0.999,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 225,
+      "mde_solve_pp": 12.0,
+      "mde_cost_pct": 14.000000000000002,
+      "guardrail_pass_rate": 0.9985,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 250,
+      "mde_solve_pp": 11.5,
+      "mde_cost_pct": 14.000000000000002,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 275,
+      "mde_solve_pp": 11.0,
+      "mde_cost_pct": 13.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 300,
+      "mde_solve_pp": 10.0,
+      "mde_cost_pct": 12.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 325,
+      "mde_solve_pp": 10.0,
+      "mde_cost_pct": 12.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 350,
+      "mde_solve_pp": 9.5,
+      "mde_cost_pct": 12.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 375,
+      "mde_solve_pp": 9.0,
+      "mde_cost_pct": 11.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 400,
+      "mde_solve_pp": 9.0,
+      "mde_cost_pct": 11.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 425,
+      "mde_solve_pp": 8.5,
+      "mde_cost_pct": 11.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 450,
+      "mde_solve_pp": 8.5,
+      "mde_cost_pct": 10.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 475,
+      "mde_solve_pp": 8.0,
+      "mde_cost_pct": 10.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 500,
+      "mde_solve_pp": 8.0,
+      "mde_cost_pct": 10.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 525,
+      "mde_solve_pp": 8.0,
+      "mde_cost_pct": 10.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 550,
+      "mde_solve_pp": 8.0,
+      "mde_cost_pct": 10.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 575,
+      "mde_solve_pp": 7.5,
+      "mde_cost_pct": 9.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 600,
+      "mde_solve_pp": 7.5,
+      "mde_cost_pct": 9.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 625,
+      "mde_solve_pp": 7.5,
+      "mde_cost_pct": 9.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 650,
+      "mde_solve_pp": 7.000000000000001,
+      "mde_cost_pct": 9.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 675,
+      "mde_solve_pp": 7.000000000000001,
+      "mde_cost_pct": 9.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 700,
+      "mde_solve_pp": 7.000000000000001,
+      "mde_cost_pct": 9.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 725,
+      "mde_solve_pp": 7.000000000000001,
+      "mde_cost_pct": 8.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 750,
+      "mde_solve_pp": 6.5,
+      "mde_cost_pct": 8.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 775,
+      "mde_solve_pp": 6.5,
+      "mde_cost_pct": 8.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 800,
+      "mde_solve_pp": 6.5,
+      "mde_cost_pct": 8.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 825,
+      "mde_solve_pp": 6.5,
+      "mde_cost_pct": 8.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 850,
+      "mde_solve_pp": 6.0,
+      "mde_cost_pct": 8.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 875,
+      "mde_solve_pp": 6.0,
+      "mde_cost_pct": 8.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 900,
+      "mde_solve_pp": 6.0,
+      "mde_cost_pct": 8.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 925,
+      "mde_solve_pp": 6.0,
+      "mde_cost_pct": 8.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 950,
+      "mde_solve_pp": 5.5,
+      "mde_cost_pct": 7.000000000000001,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 975,
+      "mde_solve_pp": 6.0,
+      "mde_cost_pct": 7.000000000000001,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 1000,
+      "mde_solve_pp": 6.0,
+      "mde_cost_pct": 7.000000000000001,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 1100,
+      "mde_solve_pp": 5.5,
+      "mde_cost_pct": 7.000000000000001,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 1200,
+      "mde_solve_pp": 5.5,
+      "mde_cost_pct": 7.000000000000001,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 1300,
+      "mde_solve_pp": 5.0,
+      "mde_cost_pct": 6.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 1400,
+      "mde_solve_pp": 5.0,
+      "mde_cost_pct": 6.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 1500,
+      "mde_solve_pp": 4.5,
+      "mde_cost_pct": 6.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 1600,
+      "mde_solve_pp": 4.5,
+      "mde_cost_pct": 6.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 1700,
+      "mde_solve_pp": 4.5,
+      "mde_cost_pct": 6.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 1800,
+      "mde_solve_pp": 4.5,
+      "mde_cost_pct": 6.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 1900,
+      "mde_solve_pp": 4.5,
+      "mde_cost_pct": 5.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    },
+    {
+      "n_per_arm": 2000,
+      "mde_solve_pp": 4.0,
+      "mde_cost_pct": 5.0,
+      "guardrail_pass_rate": 1.0,
+      "power_at_pilot_cost_effect": 1.0
+    }
+  ]
+}

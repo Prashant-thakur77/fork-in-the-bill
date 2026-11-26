@@ -146,7 +146,7 @@
   "reserve_skipped": [],
   "pools": {
     "pilot": {
-      "count": 12,
+      "count": 9,
       "by_language": {
         "c": 4,
         "cpp": 6,
@@ -160,9 +160,11 @@
         "2026-06": 6
       },
       "jsonl": "tasks/pools/pilot.jsonl.gz",
-      "jsonl_sha256": "614b838446ae1f34a67ffbfe828532a1fc631276678e9417b337b3e0d9ef2fa7",
+      "jsonl_sha256": "3013e46a0d6af8769e440429ac80b706ad914736d82f6f9e36b1ca56cfb8e433",
       "txt": "tasks/pools/pilot.txt",
-      "txt_sha256": "c77727ee77f7b1ddd2cf4709794afa7890e1ec3a440eed0be3e8d85b11d580e4"
+      "txt_sha256": "89ac5708ec4684a05292c0d3d300555f291339ea76e36a87ae9f585dbf6a7c6b",
+      "dropped_invalid": 3,
+      "unvalidated": 0
     },
     "exp1": {
       "count": 140,
@@ -242,5 +244,7 @@
       "txt": "tasks/pools/reserve.txt",
       "txt_sha256": "8da1f1c515ce0ae9cfae186b2078c0d70eeb0c9ee9234a0e6f07d563885e8811"
     }
-  }
+  },
+  "validation_applied_at": "2026-11-26T21:37:29Z",
+  "validation_report_sha256": "f8746ccb77ae65c2bbffa674b6c9f203b07232d048195bcc6b0e4d20593ab6a6"
 }

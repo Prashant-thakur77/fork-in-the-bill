@@ -1,8 +1,5 @@
-DynamoRIO__dynamorio-7944
 github__gh-aw-27242
-OSGeo__gdal-14683
 carbon-language__carbon-lang-7342
-dotnet__runtime-126719
 colbymchenry__codegraph-948
 shader-slang__slang-10807
 timescale__timescaledb-9955

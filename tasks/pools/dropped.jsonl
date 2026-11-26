@@ -1,0 +1,3 @@
+{"ts": "2026-11-26T21:37:29Z", "pool": "pilot", "instance_id": "DynamoRIO__dynamorio-7944", "reason": "f2p_pass_before_gold:1;gold:p2p_broken:3fail/0missing"}
+{"ts": "2026-11-26T21:37:29Z", "pool": "pilot", "instance_id": "OSGeo__gdal-14683", "reason": "gold:p2p_broken:5fail/0missing"}
+{"ts": "2026-11-26T21:37:29Z", "pool": "pilot", "instance_id": "dotnet__runtime-126719", "reason": "f2p_pass_before_gold:1;gold:f2p_not_passing:0fail/2missing;p2p_broken:0fail/5missing"}

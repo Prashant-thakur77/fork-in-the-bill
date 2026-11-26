@@ -94,7 +94,7 @@ def run_power(
     grid: list[int] | None = None,
     min_n: int = 250,
 ) -> dict[str, Any]:
-    grid = grid or [*range(50, 1000, 25), *range(1000, 2001, 100)]
+    grid = grid or [*range(25, 100, 5), *range(100, 1000, 25), *range(1000, 2001, 100)]
     drops = np.round(np.arange(0.005, 0.505, 0.005), 3)
     reductions = np.round(np.arange(0.01, 0.91, 0.01), 2)
     rows: list[dict[str, Any]] = []
@@ -144,12 +144,14 @@ def run_power(
     }
 
 
-def pilot_inputs(run_dir: Path, out: Path) -> tuple[NDArray[np.float64], NDArray[np.float64] | None, float]:
-    parquet = out / "parquet" / run_dir.name
-    convert(run_dir, parquet)
-    rows = [r for r in Run(parquet).all_rows() if not r["excluded"]]
+def pilot_inputs(run_dirs: list[Path], out: Path) -> tuple[NDArray[np.float64], NDArray[np.float64] | None, float]:
+    rows: list[dict[str, Any]] = []
+    for run_dir in run_dirs:
+        parquet = out / "parquet" / run_dir.name
+        convert(run_dir, parquet)
+        rows += [r for r in Run(parquet).all_rows() if not r["excluded"]]
     if not rows:
-        raise typer.BadParameter(f"no analysable pilot tasks in {run_dir}")
+        raise typer.BadParameter(f"no analysable pilot tasks in {', '.join(map(str, run_dirs))}")
     control = [float(r["usd"]) for r in rows if r["variant"] == "control"]
     treatment = [float(r["usd"]) for r in rows if r["variant"] != "control"]
     if not control:
@@ -168,7 +170,7 @@ app = typer.Typer(add_completion=False)
 @app.command()
 def main(
     runs: Annotated[Path, typer.Option()] = Path("runs"),
-    pilot: Annotated[str, typer.Option(help="pilot experiment directory name")] = "pilot",
+    pilot: Annotated[list[str] | None, typer.Option(help="pilot run directory; repeat for one per arm")] = None,
     out: Annotated[Path, typer.Option()] = Path("analysis/out"),
     m: Annotated[float | None, typer.Option(help="guardrail margin, solve-rate fraction")] = None,
     power: Annotated[float, typer.Option()] = 0.8,
@@ -177,7 +179,7 @@ def main(
     min_n: Annotated[int, typer.Option()] = 250,
     write: Annotated[bool, typer.Option(help="also write <out>/power.json")] = True,
 ) -> None:
-    control, treatment, p = pilot_inputs(runs / pilot, out)
+    control, treatment, p = pilot_inputs([runs / d for d in pilot or ["pilot"]], out)
     result = run_power(control, treatment, p, m, power, sims, seed, min_n=min_n)
     text = json.dumps(result, indent=2)
     if write:
