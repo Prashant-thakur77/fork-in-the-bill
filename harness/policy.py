@@ -89,6 +89,9 @@ def assign(client: FlagsmithLike, identity: str, traits: dict[str, object], cont
         return Assignment("control", control, "kill_switch")
 
     flag = client.get_experiment_flag(FLAG_ROUTING, identifier=identity, traits=traits)
+    # With max_buffer_items=1 the SDK drops the oldest buffered event when a second is tracked
+    # before the first is sent, so the exposure is flushed before anything else is tracked.
+    client.flush_events()
     variant = flag.variant or "control"
     try:
         policy = parse_policy(flag.value)

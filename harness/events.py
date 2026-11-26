@@ -29,6 +29,7 @@ def emit_task_events(
     lines: list[dict[str, object]] = []
     for name, value in sent:
         client.track_event(name, identifier=rec.identity, value=value)
+        client.flush_events()  # one event in flight at a time; see harness/policy.py
         lines.append(
             {
                 "ts": datetime.now(UTC).isoformat(timespec="milliseconds"),

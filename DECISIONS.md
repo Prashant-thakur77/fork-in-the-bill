@@ -53,3 +53,7 @@ The whole study has a hard $100 cap on model spend (`BUDGET_USD_TOTAL=100`), wit
 - **Caps:** 40 turns, $0.60 and 20 minutes per task, identical in both arms.
 - **Difficulty stratum:** pools are restricted, before any run, to tasks whose gold patch touches one or two files and at most 40 changed lines. This raises the solve rate a mid-tier model can reach under a tight cap, which the original plan called for as the fallback if solve rates were near zero. The filter is recorded in `tasks/pools/manifest.json` and in the prereg, and the README states the result applies to this stratum.
 - **Power:** with roughly 70 tasks per arm, a guardrail margin of 5 points can't be verified. The analysis fixtures suggest that needs about 800 per arm. The prereg sets m from the pilot and power simulation, and states the detectable drop plainly.
+
+## D9. Flush after every exposure and event
+
+Flagsmith's docs recommend `EventProcessorConfig(max_buffer_items=1)` for short-lived processes. In the Python SDK 6.7, a full buffer drops its *oldest* event when another is tracked before the first has been sent. The smoke test on 2026-11-27 logged "Event buffer was full: dropped the 2 oldest events" when an exposure and a conversion were tracked back to back. The runner keeps `max_buffer_items=1` and calls `flush_events()` after the exposure and after each conversion event. A rerun with eight identities had no drops and served both variants. The worker calls `close()` on exit.
