@@ -39,12 +39,8 @@ def refresh_path(environment: str, experiment_id: str | int) -> str:
 
 
 def build_api_command(path: str, method: str = "GET") -> list[str]:
-    """argv for one `flagsmith api` call.
-
-    TODO: the CLI was not installed where this was written. Confirm with
-    `flagsmith api --help` that the HTTP method flag is spelled `--method` (it may be `-X`
-    or `--request`) and that the default is GET; then adjust only this function.
-    """
+    """argv for one `flagsmith api` call. CLI v2 spells the method flag `-X`/`--method` and
+    defaults to GET (`flagsmith api --help`, v2.0.0)."""
     argv = ["flagsmith", "api", path]
     if method.upper() != "GET":
         argv += ["--method", method.upper()]
