@@ -22,3 +22,8 @@ output "ami_id" {
   description = "Ubuntu AMI the instance booted from."
   value       = data.aws_ami.ubuntu.id
 }
+
+output "validator_ip" {
+  description = "Public IPv4 address of the spot validator, if enabled."
+  value       = try(aws_instance.validator[0].public_ip, "")
+}

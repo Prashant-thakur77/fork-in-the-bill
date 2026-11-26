@@ -104,3 +104,15 @@ variable "budget_email" {
   type        = string
   default     = ""
 }
+
+variable "validator_instance_type" {
+  description = "Instance type for the optional spot validator; empty disables it."
+  type        = string
+  default     = ""
+}
+
+variable "validator_volume_gb" {
+  description = "Root volume size of the validator in GiB."
+  type        = number
+  default     = 800
+}

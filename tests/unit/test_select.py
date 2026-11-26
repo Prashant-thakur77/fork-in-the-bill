@@ -246,3 +246,12 @@ def test_apply_drops_invalid_and_logs(tmp_path: Path) -> None:
     manifest = json.loads((pools / "manifest.json").read_text())
     assert manifest["pools"]["pilot"]["count"] == 2
     assert manifest["pools"]["pilot"]["unvalidated"] == 1
+
+
+def test_f2p_passing_before_gold_is_not_disqualifying() -> None:
+    from tasks.validate import is_valid
+
+    assert is_valid({"valid": False, "reason": "f2p_pass_before_gold:1"})
+    assert not is_valid({"valid": False, "reason": "f2p_pass_before_gold:1;gold:f2p_not_passing:0fail/2missing"})
+    assert not is_valid({"valid": False, "reason": "gold:p2p_broken:5fail/0missing"})
+    assert is_valid({"valid": True, "reason": None})

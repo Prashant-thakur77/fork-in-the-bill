@@ -118,7 +118,9 @@ async def validate_instance(
         if base.parse_error:
             reasons.append("base_parse_error")
         if before.f2p_success:
-            reasons.append(f"f2p_pass_before_gold:{len(before.f2p_success)}")
+            # Recorded, not disqualifying: upstream counts an instance as valid when the gold patch
+            # resolves it, and resolution only looks at the run after the patch.
+            entry["note"] = f"f2p_pass_before_gold:{len(before.f2p_success)}"
         gold_reason = failure_reason(after, gold)
         if gold_reason:
             reasons.append(f"gold:{gold_reason}")
@@ -138,6 +140,19 @@ async def validate_instance(
             with contextlib.suppress(Exception):
                 await docker.remove_image(inst.docker_image)
     return entry
+
+
+NON_BLOCKING_REASONS = ("f2p_pass_before_gold",)
+
+
+def is_valid(entry: dict[str, Any]) -> bool:
+    """Valid when the gold patch resolves the instance. Reports written before a reason became
+    non-blocking are re-judged from their recorded reasons."""
+    if entry.get("valid"):
+        return True
+    reason = entry.get("reason") or ""
+    parts = [r for r in reason.split(";") if r]
+    return bool(parts) and all(r.startswith(NON_BLOCKING_REASONS) for r in parts)
 
 
 async def run_validation(
@@ -208,7 +223,7 @@ def apply_report(pools: Sequence[str], report_path: Path, pools_dir: Path) -> in
                 if entry is None:
                     unvalidated += 1
                     keep.append(inst)
-                elif entry.get("valid"):
+                elif is_valid(entry):
                     keep.append(inst)
                 else:
                     dropped_total += 1
@@ -314,7 +329,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
     )
     ids = {i.instance_id for i in instances}
-    valid = sum(1 for k, v in report.items() if k in ids and v.get("valid"))
+    valid = sum(1 for k, v in report.items() if k in ids and is_valid(v))
     print(f"valid {valid}/{len(ids)}")
     return 0
 

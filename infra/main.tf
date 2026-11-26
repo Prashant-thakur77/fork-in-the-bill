@@ -158,3 +158,49 @@ resource "aws_budgets_budget" "monthly" {
 
   tags = local.tags
 }
+
+# Optional second machine on spot capacity, used to validate later pools in parallel with the
+# runner. Validation results are copied off it continuously, so a reclaim costs only the
+# instances in flight. Disabled when validator_instance_type is empty.
+resource "aws_instance" "validator" {
+  count                       = var.validator_instance_type == "" ? 0 : 1
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = var.validator_instance_type
+  subnet_id                   = sort(data.aws_subnets.default.ids)[1]
+  vpc_security_group_ids      = [aws_security_group.runner.id]
+  key_name                    = aws_key_pair.operator.key_name
+  associate_public_ip_address = true
+  user_data_replace_on_change = true
+
+  user_data = templatefile("${path.module}/cloud-init.yaml", {
+    repo_url       = var.repo_url
+    repo_ref       = var.repo_ref
+    uv_version     = var.uv_version
+    prepull_images = []
+  })
+
+  instance_market_options {
+    market_type = "spot"
+    spot_options {
+      spot_instance_type             = "one-time"
+      instance_interruption_behavior = "terminate"
+    }
+  }
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+  }
+
+  root_block_device {
+    volume_type           = "gp3"
+    volume_size           = var.validator_volume_gb
+    throughput            = 250
+    encrypted             = true
+    delete_on_termination = true
+    tags                  = merge(local.tags, { Name = "${var.name}-validator-root" })
+  }
+
+  tags = merge(local.tags, { Name = "${var.name}-validator" })
+}
