@@ -1,0 +1,2 @@
+44d715bd6bd7f8580e8bb1950a21ea852dfea4daaf040c84009f391bf56e19c2  prereg/experiment-1.md
+eb5b8c4c2aaa72c3a7e436fbdd8f9d10440db471d95ba411b80916ebb1dfc175  prereg/pilot-report.md
