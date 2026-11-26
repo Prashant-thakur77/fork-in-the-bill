@@ -39,12 +39,14 @@ STATE_DIR = "/tmp/.fib"
 TIMEOUT_EXIT_CODE = 124
 DEFAULT_MAX_OUTPUT = 64 * 1024
 
-# Same command the SWE-bench-Live README gives for collecting a prediction patch: the repo is
-# /testbed, or (rarely) a git checkout one level below it.
+# The SWE-bench-Live README's command for collecting a prediction patch (the repo is /testbed,
+# or rarely a git checkout one level below it), plus `git add -N` so files the agent created are
+# part of the patch. Untracked files would otherwise be dropped; .gitignore'd build output is not added.
 GIT_DIFF_CMD = (
     "cd /testbed; "
     "[ -d .git ] || { g=$(find . -maxdepth 2 -mindepth 2 -type d -name .git -print -quit); "
     '[ -n "$g" ] && cd "${g%/.git}"; } ; '
+    "git add -N -- . >/dev/null 2>&1; "
     "git --no-pager diff HEAD --text"
 )
 REPO_ROOT_CMD = (

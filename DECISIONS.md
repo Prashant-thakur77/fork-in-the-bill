@@ -85,3 +85,7 @@ Our replication deliberately uses different methods: a percentile bootstrap for 
 ## D13. Runner VM: on-demand r7i.2xlarge
 
 The first runner was a spot m7i.4xlarge. AWS reclaimed it about 15 minutes into validation and the in-progress work was lost. An on-demand 16-vCPU replacement exceeded the account's 16-vCPU on-demand quota, half of which other instances already use. The runner is now an on-demand r7i.2xlarge (8 vCPU, 64 GB, about $0.53 an hour in us-east-1, estimated) with a 1.5 TB gp3 volume, so validated images stay cached for the runs. Results are copied off the VM every 5 minutes.
+
+## D14. New files the agent creates are part of its patch
+
+The SWE-bench-Live README collects a prediction with `git diff HEAD`, which leaves out untracked files. A fix that adds a source file would then be graded without it. The runner runs `git add -N .` first, which marks new files without staging their content and respects `.gitignore`, so they appear in the diff. This applies identically to both arms. Validation uses the dataset's gold patches and is unaffected.
