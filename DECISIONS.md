@@ -57,3 +57,21 @@ The whole study has a hard $100 cap on model spend (`BUDGET_USD_TOTAL=100`), wit
 ## D9. Flush after every exposure and event
 
 Flagsmith's docs recommend `EventProcessorConfig(max_buffer_items=1)` for short-lived processes. In the Python SDK 6.7, a full buffer drops its *oldest* event when another is tracked before the first has been sent. The smoke test on 2026-11-27 logged "Event buffer was full: dropped the 2 oldest events" when an exposure and a conversion were tracked back to back. The runner keeps `max_buffer_items=1` and calls `flush_events()` after the exposure and after each conversion event. A rerun with eight identities had no drops and served both variants. The worker calls `close()` on exit.
+
+## D10. Final difficulty stratum: at most 3 files and 60 changed lines, C++ included
+
+With the first stratum (at most 2 files, 40 lines, no C++), only 92 fresh tasks qualified, which is 46 per arm and below Flagsmith's floor of 50 identities per arm before validation drops any. The final stratum allows the gold patch to touch at most 3 files and 60 changed lines, keeps problem statements under 12,000 characters, and includes C++ (the runner VM has 64 GB of RAM). Selected with seed 20261127 from the pinned dataset revision recorded in `tasks/pools/manifest.json`:
+
+| Pool | Tasks | Tier |
+|---|---|---|
+| pilot | 12 | created 2026-03-01 to 2026-06-30 |
+| exp1 | 140 | created on or after 2026-07-01 (every fresh task in the stratum) |
+| rollout | 20 | created 2026-03-01 to 2026-06-30 |
+| exp2 | 100 | created 2026-03-01 to 2026-06-30 |
+| reserve | 74 | SWE-rebench 2026_03, Python |
+
+Pool files are stored as gzip with a fixed timestamp, so the same seed produces byte-identical files.
+
+## D11. Grading runs with network access; the agent's container does not
+
+The agent works in a container with networking disabled. Grading happens afterwards, in a fresh container built from the same image, with networking on, as the official SWE-bench-Live harness does: many rebuild steps download dependencies, and some PASS_TO_PASS tests (for example c-ares' DNS tests) make live lookups. Because grading starts from a clean container after the agent has finished, network access during grading can't help the agent.

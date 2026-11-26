@@ -1,0 +1,246 @@
+{
+  "generated_at": "2026-11-26T19:53:34Z",
+  "seed": 20261127,
+  "params": {
+    "languages": [
+      "c",
+      "cpp",
+      "cs",
+      "go",
+      "java",
+      "js",
+      "rust",
+      "ts"
+    ],
+    "fresh_from": "2026-07-01",
+    "pre_from": "2026-03-01",
+    "sizes": {
+      "pilot": 12,
+      "rollout": 20,
+      "exp2": 100,
+      "exp1": null
+    },
+    "reserve": true,
+    "stratum": {
+      "min_gold_files": 1,
+      "max_gold_files": 3,
+      "max_gold_lines": 60,
+      "max_problem_chars": 12000
+    }
+  },
+  "sources": [
+    {
+      "dataset": "SWE-bench-Live/MultiLang",
+      "split": "c",
+      "url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/refs%2Fconvert%2Fparquet/default/c/0000.parquet",
+      "pinned_url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/47c3efdb8eb8d4333c5107f568de6aa4bc869483/default/c/0000.parquet",
+      "revision": "47c3efdb8eb8d4333c5107f568de6aa4bc869483",
+      "etag": "9b8982bbdc57bec3ead44e0a3ca9adb59092db471cd8f0f3e45143f2f086b8a5",
+      "sha256": "9b8982bbdc57bec3ead44e0a3ca9adb59092db471cd8f0f3e45143f2f086b8a5",
+      "size": 6914036,
+      "rows_loaded": 111
+    },
+    {
+      "dataset": "SWE-bench-Live/MultiLang",
+      "split": "cpp",
+      "url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/refs%2Fconvert%2Fparquet/default/cpp/0000.parquet",
+      "pinned_url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/47c3efdb8eb8d4333c5107f568de6aa4bc869483/default/cpp/0000.parquet",
+      "revision": "47c3efdb8eb8d4333c5107f568de6aa4bc869483",
+      "etag": "8afde860e651090f91950ff1613cfa3469c094ea49a7bfec9b536cc7efb3bb9b",
+      "sha256": "8afde860e651090f91950ff1613cfa3469c094ea49a7bfec9b536cc7efb3bb9b",
+      "size": 13640063,
+      "rows_loaded": 142
+    },
+    {
+      "dataset": "SWE-bench-Live/MultiLang",
+      "split": "cs",
+      "url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/refs%2Fconvert%2Fparquet/default/cs/0000.parquet",
+      "pinned_url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/47c3efdb8eb8d4333c5107f568de6aa4bc869483/default/cs/0000.parquet",
+      "revision": "47c3efdb8eb8d4333c5107f568de6aa4bc869483",
+      "etag": "29ffe16d0b2cd802e753262b8b0d7fe3f2bb1b489396da238146e79f37937c1f",
+      "sha256": "29ffe16d0b2cd802e753262b8b0d7fe3f2bb1b489396da238146e79f37937c1f",
+      "size": 84135095,
+      "rows_loaded": 136
+    },
+    {
+      "dataset": "SWE-bench-Live/MultiLang",
+      "split": "go",
+      "url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/refs%2Fconvert%2Fparquet/default/go/0000.parquet",
+      "pinned_url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/47c3efdb8eb8d4333c5107f568de6aa4bc869483/default/go/0000.parquet",
+      "revision": "47c3efdb8eb8d4333c5107f568de6aa4bc869483",
+      "etag": "76d2b5dff0f3fac8303d30fa85495539e487d25974ad7c21cd21a545cb4756e2",
+      "sha256": "76d2b5dff0f3fac8303d30fa85495539e487d25974ad7c21cd21a545cb4756e2",
+      "size": 47688780,
+      "rows_loaded": 138
+    },
+    {
+      "dataset": "SWE-bench-Live/MultiLang",
+      "split": "java",
+      "url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/refs%2Fconvert%2Fparquet/default/java/0000.parquet",
+      "pinned_url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/47c3efdb8eb8d4333c5107f568de6aa4bc869483/default/java/0000.parquet",
+      "revision": "47c3efdb8eb8d4333c5107f568de6aa4bc869483",
+      "etag": "00387685808c71d21ada175335304b1c118859453afadd58ea21a00b0d568ee8",
+      "sha256": "00387685808c71d21ada175335304b1c118859453afadd58ea21a00b0d568ee8",
+      "size": 90384179,
+      "rows_loaded": 160
+    },
+    {
+      "dataset": "SWE-bench-Live/MultiLang",
+      "split": "js",
+      "url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/refs%2Fconvert%2Fparquet/default/js/0000.parquet",
+      "pinned_url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/47c3efdb8eb8d4333c5107f568de6aa4bc869483/default/js/0000.parquet",
+      "revision": "47c3efdb8eb8d4333c5107f568de6aa4bc869483",
+      "etag": "bc6ec49ffaf9db97840d55eba6954fae8f5fb0fb071cf49e187f36ffadd55a7a",
+      "sha256": "bc6ec49ffaf9db97840d55eba6954fae8f5fb0fb071cf49e187f36ffadd55a7a",
+      "size": 45122982,
+      "rows_loaded": 108
+    },
+    {
+      "dataset": "SWE-bench-Live/MultiLang",
+      "split": "rust",
+      "url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/refs%2Fconvert%2Fparquet/default/rust/0000.parquet",
+      "pinned_url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/47c3efdb8eb8d4333c5107f568de6aa4bc869483/default/rust/0000.parquet",
+      "revision": "47c3efdb8eb8d4333c5107f568de6aa4bc869483",
+      "etag": "02ac78e2c51a84eb174ac393bb07b77478f1f96cf260af18835a711dd8074ebc",
+      "sha256": "02ac78e2c51a84eb174ac393bb07b77478f1f96cf260af18835a711dd8074ebc",
+      "size": 57661358,
+      "rows_loaded": 171
+    },
+    {
+      "dataset": "SWE-bench-Live/MultiLang",
+      "split": "ts",
+      "url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/refs%2Fconvert%2Fparquet/default/ts/0000.parquet",
+      "pinned_url": "https://huggingface.co/datasets/SWE-bench-Live/MultiLang/resolve/47c3efdb8eb8d4333c5107f568de6aa4bc869483/default/ts/0000.parquet",
+      "revision": "47c3efdb8eb8d4333c5107f568de6aa4bc869483",
+      "etag": "d8414f52bdc687d190902c83886a0cc0a21cc74169eb7de6cc8bbab11539988a",
+      "sha256": "d8414f52bdc687d190902c83886a0cc0a21cc74169eb7de6cc8bbab11539988a",
+      "size": 11528187,
+      "rows_loaded": 111
+    },
+    {
+      "dataset": "nebius/SWE-rebench-leaderboard",
+      "split": "2026_03",
+      "url": "https://huggingface.co/datasets/nebius/SWE-rebench-leaderboard/resolve/refs%2Fconvert%2Fparquet/default/2026_03/0000.parquet",
+      "pinned_url": "https://huggingface.co/datasets/nebius/SWE-rebench-leaderboard/resolve/55f056ab01ea7452ed4e300b723688a0364804dd/default/2026_03/0000.parquet",
+      "revision": "55f056ab01ea7452ed4e300b723688a0364804dd",
+      "etag": "18e198ac18b3c25b307c0aa5d9b6e20d338886e186bf7c12addb759ad4165a61",
+      "sha256": "18e198ac18b3c25b307c0aa5d9b6e20d338886e186bf7c12addb759ad4165a61",
+      "size": 797808,
+      "rows_loaded": 110
+    }
+  ],
+  "tiers": {
+    "fresh": 140,
+    "pre_cutoff": 270,
+    "reserve": 74
+  },
+  "excluded": {
+    "stratum:gold_files": 273,
+    "stratum:gold_lines": 153,
+    "stratum:problem_chars": 6,
+    "reserve_stratum:gold_files": 16,
+    "reserve_stratum:gold_lines": 19,
+    "reserve_stratum:problem_chars": 1,
+    "older_than_pre_tier": 235
+  },
+  "reserve_skipped": [],
+  "pools": {
+    "pilot": {
+      "count": 12,
+      "by_language": {
+        "c": 4,
+        "cpp": 6,
+        "cs": 1,
+        "go": 1
+      },
+      "by_month": {
+        "2026-03": 2,
+        "2026-04": 3,
+        "2026-05": 1,
+        "2026-06": 6
+      },
+      "jsonl": "tasks/pools/pilot.jsonl.gz",
+      "jsonl_sha256": "614b838446ae1f34a67ffbfe828532a1fc631276678e9417b337b3e0d9ef2fa7",
+      "txt": "tasks/pools/pilot.txt",
+      "txt_sha256": "c77727ee77f7b1ddd2cf4709794afa7890e1ec3a440eed0be3e8d85b11d580e4"
+    },
+    "exp1": {
+      "count": 140,
+      "by_language": {
+        "c": 21,
+        "cpp": 23,
+        "cs": 9,
+        "java": 39,
+        "js": 11,
+        "rust": 37
+      },
+      "by_month": {
+        "2026-07": 140
+      },
+      "jsonl": "tasks/pools/exp1.jsonl.gz",
+      "jsonl_sha256": "b3ff128e3e894f162c0abea18d9a519e5a7bde554d62fa3000e1183592ad785c",
+      "txt": "tasks/pools/exp1.txt",
+      "txt_sha256": "0d855da6a9f33d654838cafe1e71a3d5aa34b071132b70cfc363a5e5cf245cbb"
+    },
+    "rollout": {
+      "count": 20,
+      "by_language": {
+        "c": 1,
+        "cpp": 6,
+        "cs": 1,
+        "go": 5,
+        "java": 3,
+        "js": 1,
+        "rust": 1,
+        "ts": 2
+      },
+      "by_month": {
+        "2026-03": 6,
+        "2026-04": 12,
+        "2026-06": 2
+      },
+      "jsonl": "tasks/pools/rollout.jsonl.gz",
+      "jsonl_sha256": "ffd0c2b998f392333e33b7f1f7b27932e183aca92fdb718fbd4f63e66035291d",
+      "txt": "tasks/pools/rollout.txt",
+      "txt_sha256": "46816e64bd63881e2a40913ec9ee1e51534357f5b590563e332db2561d61240b"
+    },
+    "exp2": {
+      "count": 100,
+      "by_language": {
+        "c": 7,
+        "cpp": 15,
+        "cs": 22,
+        "go": 20,
+        "java": 16,
+        "js": 5,
+        "rust": 11,
+        "ts": 4
+      },
+      "by_month": {
+        "2026-03": 35,
+        "2026-04": 40,
+        "2026-05": 9,
+        "2026-06": 16
+      },
+      "jsonl": "tasks/pools/exp2.jsonl.gz",
+      "jsonl_sha256": "4f6a003739828a6950c13dd8a4ffab9bef72912a2de597a8ec7d82987d60cb6b",
+      "txt": "tasks/pools/exp2.txt",
+      "txt_sha256": "ab54ac462e5baad664ce3a230e3fd3601b352ee951ddf25658b00f7b8013bccc"
+    },
+    "reserve": {
+      "count": 74,
+      "by_language": {
+        "python": 74
+      },
+      "by_month": {
+        "2026-03": 32,
+        "2026-04": 31,
+        "2026-05": 11
+      },
+      "jsonl": "tasks/pools/reserve.jsonl.gz",
+      "jsonl_sha256": "87422e9e6298c97cf8722535fec1082a3a86cd0d3b38a1030c1752340f62c2a6",
+      "txt": "tasks/pools/reserve.txt",
+      "txt_sha256": "8da1f1c515ce0ae9cfae186b2078c0d70eeb0c9ee9234a0e6f07d563885e8811"
+    }
+  }
+}

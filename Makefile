@@ -43,7 +43,7 @@ pools: ## Select disjoint task pools (seeded)
 	$(UV) run python -m tasks.select_tasks --seed $(SEED)
 
 validate: ## Validate pool images and gold patches (POOL=pilot)
-	$(UV) run python -m tasks.validate --pool tasks/pools/$(POOL).jsonl --concurrency $(CONCURRENCY)
+	$(UV) run python -m tasks.validate --pool $(POOL) --concurrency $(CONCURRENCY)
 
 flagsmith-setup: ## Create flags, keyed variant and metrics with the Flagsmith CLI
 	$(ENV) bash flagsmith/setup.sh lanes_v1
@@ -52,24 +52,24 @@ smoke: ## Flagsmith smoke test (throwaway flag and experiment)
 	$(ENV) bash flagsmith/smoke_test.sh
 
 dryrun: ## Two tasks per arm outside any experiment (spends a little)
-	$(ENV) $(UV) run python -m runner.worker run --exp dryrun-control --pool tasks/pools/pilot.jsonl --force-policy control --limit 2 --concurrency 2 --phase-budget dryrun
-	$(ENV) $(UV) run python -m runner.worker run --exp dryrun-lanes_v1 --pool tasks/pools/pilot.jsonl --force-policy lanes_v1 --limit 2 --concurrency 2 --phase-budget dryrun
+	$(ENV) $(UV) run python -m runner.worker run --exp dryrun-control --pool tasks/pools/pilot.jsonl.gz --force-policy control --limit 2 --concurrency 2 --phase-budget dryrun
+	$(ENV) $(UV) run python -m runner.worker run --exp dryrun-lanes_v1 --pool tasks/pools/pilot.jsonl.gz --force-policy lanes_v1 --limit 2 --concurrency 2 --phase-budget dryrun
 
 pilot: ## Pilot: every pilot task under both policies, outside the experiment
-	$(ENV) $(UV) run python -m runner.worker run --exp pilot-control --pool tasks/pools/pilot.jsonl --force-policy control --concurrency $(CONCURRENCY) --phase-budget pilot
-	$(ENV) $(UV) run python -m runner.worker run --exp pilot-lanes_v1 --pool tasks/pools/pilot.jsonl --force-policy lanes_v1 --concurrency $(CONCURRENCY) --phase-budget pilot
+	$(ENV) $(UV) run python -m runner.worker run --exp pilot-control --pool tasks/pools/pilot.jsonl.gz --force-policy control --concurrency $(CONCURRENCY) --phase-budget pilot
+	$(ENV) $(UV) run python -m runner.worker run --exp pilot-lanes_v1 --pool tasks/pools/pilot.jsonl.gz --force-policy lanes_v1 --concurrency $(CONCURRENCY) --phase-budget pilot
 
 power: ## Choose N and the margin m from pilot data
 	$(UV) run python -m analysis.power --runs runs --pilot pilot
 
 exp1: ## Main run of experiment 1 (Flagsmith assigns every task)
-	$(ENV) $(UV) run python -m runner.worker run --exp exp1 --pool tasks/pools/exp1.jsonl --concurrency $(CONCURRENCY) --prune-images
+	$(ENV) $(UV) run python -m runner.worker run --exp exp1 --pool tasks/pools/exp1.jsonl.gz --concurrency $(CONCURRENCY) --prune-images
 
 rollout: ## Fresh batch after the winner is rolled out on the same flag
-	$(ENV) $(UV) run python -m runner.worker run --exp rollout --pool tasks/pools/rollout.jsonl --concurrency $(CONCURRENCY) --prune-images
+	$(ENV) $(UV) run python -m runner.worker run --exp rollout --pool tasks/pools/rollout.jsonl.gz --concurrency $(CONCURRENCY) --prune-images
 
 exp2: ## Main run of experiment 2
-	$(ENV) $(UV) run python -m runner.worker run --exp exp2 --pool tasks/pools/exp2.jsonl --concurrency $(CONCURRENCY) --prune-images
+	$(ENV) $(UV) run python -m runner.worker run --exp exp2 --pool tasks/pools/exp2.jsonl.gz --concurrency $(CONCURRENCY) --prune-images
 
 analyse: ## Reproduce every published number from the run logs
 	$(UV) run python -m analysis.analyse --runs runs --out analysis/out

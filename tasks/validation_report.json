@@ -1,0 +1,182 @@
+{
+  "c-ares__c-ares-1189": {
+    "valid": true,
+    "reason": null,
+    "f2p_before": 0,
+    "f2p_after": 1,
+    "p2p_after": 1181,
+    "f2p_total": 1,
+    "p2p_total": 1181,
+    "seconds": 280.0,
+    "image": "starryzhang/sweb.eval.x86_64.c-ares_1776_c-ares-1189",
+    "image_digest": "starryzhang/sweb.eval.x86_64.c-ares_1776_c-ares-1189@sha256:3958a570e195a081d40b68df43fddd33541f1e7d34e693833904287c813532e0",
+    "image_size_bytes": 2114597186,
+    "network": "all",
+    "validated_at": "2026-11-26T19:38:18Z",
+    "base": {
+      "test_patch_applied": true,
+      "patch_applied": null,
+      "exit_codes": {
+        "rebuild": 0,
+        "test": 8,
+        "print": 0
+      },
+      "timed_out": false,
+      "oom": false,
+      "parse_error": null,
+      "seconds": 101.22158072999991,
+      "n_statuses": 1182
+    },
+    "gold": {
+      "test_patch_applied": true,
+      "patch_applied": true,
+      "exit_codes": {
+        "rebuild": 0,
+        "test": 0,
+        "print": 0
+      },
+      "timed_out": false,
+      "oom": false,
+      "parse_error": null,
+      "seconds": 101.01437202700072,
+      "n_statuses": 1182
+    }
+  },
+  "floci-io__floci-420": {
+    "valid": true,
+    "reason": null,
+    "f2p_before": 0,
+    "f2p_after": 1,
+    "p2p_after": 1966,
+    "f2p_total": 1,
+    "p2p_total": 1966,
+    "seconds": 242.1,
+    "image": "starryzhang/sweb.eval.x86_64.floci-io_1776_floci-420",
+    "image_digest": "starryzhang/sweb.eval.x86_64.floci-io_1776_floci-420@sha256:96bc73efb15556d6b75a770e25e2551245c563e5a92d5833aaa857e99e26b632",
+    "image_size_bytes": 1240242054,
+    "network": "all",
+    "validated_at": "2026-11-26T19:47:01Z",
+    "base": {
+      "test_patch_applied": true,
+      "patch_applied": null,
+      "exit_codes": {
+        "rebuild": 0,
+        "test": 1,
+        "print": 0
+      },
+      "timed_out": false,
+      "oom": false,
+      "parse_error": null,
+      "seconds": 79.00924125900019,
+      "n_statuses": 1974
+    },
+    "gold": {
+      "test_patch_applied": true,
+      "patch_applied": true,
+      "exit_codes": {
+        "rebuild": 0,
+        "test": 1,
+        "print": 0
+      },
+      "timed_out": false,
+      "oom": false,
+      "parse_error": null,
+      "seconds": 85.55612761799966,
+      "n_statuses": 1974
+    }
+  },
+  "opendataloader-project__opendataloader-pdf-386": {
+    "valid": false,
+    "reason": "gold:f2p_not_passing:0fail/6missing",
+    "f2p_before": 0,
+    "f2p_after": 0,
+    "p2p_after": 493,
+    "f2p_total": 6,
+    "p2p_total": 493,
+    "seconds": 1872.7,
+    "image": "starryzhang/sweb.eval.x86_64.opendataloader-project_1776_opendataloader-pdf-386",
+    "image_digest": "starryzhang/sweb.eval.x86_64.opendataloader-project_1776_opendataloader-pdf-386@sha256:088716303b8c90b3466e98421375b8bd656000c35a27744055f8bf680673afe0",
+    "image_size_bytes": 1058581113,
+    "network": "rebuild",
+    "validated_at": "2026-11-26T19:15:12Z",
+    "base": {
+      "test_patch_applied": true,
+      "patch_applied": null,
+      "exit_codes": {
+        "rebuild": 1,
+        "test": 1,
+        "print": 0
+      },
+      "timed_out": false,
+      "oom": false,
+      "parse_error": null,
+      "seconds": 477.4975272190004,
+      "n_statuses": 495
+    },
+    "gold": {
+      "test_patch_applied": true,
+      "patch_applied": true,
+      "exit_codes": {
+        "rebuild": 1,
+        "test": 1,
+        "print": 0
+      },
+      "timed_out": false,
+      "oom": false,
+      "parse_error": null,
+      "seconds": 407.6190721330004,
+      "n_statuses": 493
+    },
+    "missing_after_gold": [
+      "org.opendataloader.pdf.processors.HeaderFooterProcessorTest::testRepeatedBodyTextNotAbsorbedIntoFooter",
+      "org.opendataloader.pdf.cli.CLIMainTest::testNonExistentFileReturnsNonZeroExitCode",
+      "org.opendataloader.pdf.cli.CLIMainTest::testInvalidArgumentsReturnsExitCode2",
+      "org.opendataloader.pdf.processors.HeaderFooterProcessorTest::testCloseFooterLinesAreGrouped",
+      "org.opendataloader.pdf.cli.CLIMainTest::testDirectoryWithFailingFileReturnsNonZeroExitCode",
+      "org.opendataloader.pdf.cli.CLIMainTest::testNoArgumentsReturnsZero"
+    ]
+  },
+  "rust-lang__rustfmt-6840": {
+    "valid": true,
+    "reason": null,
+    "f2p_before": 0,
+    "f2p_after": 62,
+    "p2p_after": 230,
+    "f2p_total": 62,
+    "p2p_total": 230,
+    "seconds": 16.9,
+    "image": "starryzhang/sweb.eval.x86_64.rust-lang_1776_rustfmt-6840",
+    "image_digest": "starryzhang/sweb.eval.x86_64.rust-lang_1776_rustfmt-6840@sha256:ba7346b7e1ff261f8c8aaabee572afa9f16afb7f56f9329dac5f60831257fa2b",
+    "image_size_bytes": 9808370804,
+    "network": "all",
+    "validated_at": "2026-11-26T19:47:01Z",
+    "base": {
+      "test_patch_applied": true,
+      "patch_applied": null,
+      "exit_codes": {
+        "rebuild": 0,
+        "test": 0,
+        "print": 0
+      },
+      "timed_out": false,
+      "oom": false,
+      "parse_error": null,
+      "seconds": 4.290816291000738,
+      "n_statuses": 232
+    },
+    "gold": {
+      "test_patch_applied": true,
+      "patch_applied": true,
+      "exit_codes": {
+        "rebuild": 0,
+        "test": 0,
+        "print": 0
+      },
+      "timed_out": false,
+      "oom": false,
+      "parse_error": null,
+      "seconds": 12.567189522000263,
+      "n_statuses": 299
+    }
+  }
+}

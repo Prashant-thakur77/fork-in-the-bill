@@ -28,7 +28,8 @@ class TaskInstance(BaseModel):
     docker_image: str
     rebuild_cmds: list[str]
     test_cmds: list[str]
-    log_parser: str  # Python source of `parse_log(log: str) -> dict[str, str]` or a named parser
+    print_cmds: list[str] = []  # empty: test output is captured from test_cmds (pytest-style sources)
+    log_parser: str  # Python source defining `parser(log: str) -> dict[str, str]`, or "pytest"
     workdir: str = "/testbed"
 
     @property

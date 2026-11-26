@@ -71,5 +71,5 @@ extraPaths = ["kit"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-markers = ["docker: needs a Docker daemon"]
+markers = ["docker: needs a Docker daemon", "integration: needs external services"]
 pythonpath = [".", "kit"]
