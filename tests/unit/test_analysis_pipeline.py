@@ -164,7 +164,7 @@ def _docs_root(balanced: tuple[Path, dict[str, Any]], tmp_path: Path) -> tuple[P
                 "headline": [
                     {"key": "exp1.delta.cost_mean_pct", "fmt": "pct1", "text": ""},
                     {
-                        "key": "exp1.arms.lanes_v1.solve_rate",
+                        "key": "exp1.arms.lanes_v1.solve_rate",  # gitleaks:allow
                         "fmt": "prob1",
                         "text": "",
                         "template": "solve rate {value}",
