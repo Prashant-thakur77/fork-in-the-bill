@@ -18,12 +18,11 @@ This module also owns the generated block of analysis/results.md between
 
 from __future__ import annotations
 
-import math
-from decimal import ROUND_HALF_UP, Decimal
-
 import json
+import math
 import re
 from dataclasses import dataclass, field
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Annotated, Any
 
