@@ -1,0 +1,8 @@
+{
+ "experiment": "dryrun3-control",
+ "pool_file": "work/dryrun.jsonl.gz",
+ "pool_sha256": "1e5ee22238c06aae26bce8da7dd7f5f7bf4ec1e75e6fb18de7a4a4b6cd39a68d",
+ "force_policy": "control",
+ "started_at": "2026-11-26T21:02:11.501+00:00",
+ "flagsmith_experiment_id": null
+}
