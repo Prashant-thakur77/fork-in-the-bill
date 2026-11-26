@@ -43,6 +43,7 @@ from runner.queue import MAX_DELIVERIES, Lease, TaskQueue
 from runner.reaper import reap
 from tasks.model import TaskInstance
 from tasks.sources import read_pool
+from tasks.validate import is_valid
 
 log = logging.getLogger("worker")
 app = typer.Typer(add_completion=False)
@@ -104,6 +105,7 @@ class RunCtx:
     board_secret: str | None = None
     prune_images: bool = False
     stop: asyncio.Event = field(default_factory=asyncio.Event)
+    feeding: bool = False  # more tasks may still pass validation and be enqueued
 
 
 async def run_one(ctx: RunCtx, inst: TaskInstance, attempt: int) -> TaskRecord:
@@ -286,7 +288,9 @@ async def worker_loop(ctx: RunCtx, q: TaskQueue, wid: int, limit: list[int]) -> 
         lease: Lease | None = await asyncio.to_thread(q.lease, 2_000)
         if lease is None:
             if await asyncio.to_thread(q.remaining) == 0:
-                return
+                if not ctx.feeding:
+                    return
+                await asyncio.sleep(10)
             continue
         limit[0] -= 1
         identity = identity_for(lease.instance_id)
@@ -319,6 +323,41 @@ async def _heartbeat(q: TaskQueue, lease: Lease) -> None:
         await asyncio.to_thread(q.heartbeat, lease.msg_id)
 
 
+def validation_status(reports: list[Path], pool: set[str]) -> tuple[set[str], set[str]]:
+    """(valid, decided) pool ids across validation reports; for an id in several reports the
+    most recent `validated_at` wins. Missing report files count as empty."""
+    latest: dict[str, dict[str, Any]] = {}
+    for path in reports:
+        if not path.exists():
+            continue
+        for iid, entry in json.loads(path.read_text(encoding="utf-8")).items():
+            if iid in pool and str(entry.get("validated_at", "")) >= str(latest.get(iid, {}).get("validated_at", "")):
+                latest[iid] = entry
+    return {i for i, e in latest.items() if is_valid(e)}, set(latest)
+
+
+async def feed_validated(ctx: RunCtx, q: TaskQueue, reports: list[Path], every: float = 60.0) -> None:
+    """Enqueue pool tasks as they pass validation, until every pool task has a verdict."""
+    pool = set(ctx.pool)
+    sent: set[str] = set()
+    while not ctx.stop.is_set():
+        valid, decided = await asyncio.to_thread(validation_status, reports, pool)
+        new = sorted(valid - sent)
+        if new:
+            await asyncio.to_thread(q.enqueue, new)
+            sent |= set(new)
+            ctx.ledger.append(LedgerKind.config, {"event": "enqueue_validated", "ids": new, "ts": now()})
+            log.info("enqueued %d newly validated task(s); %d/%d pool tasks decided", len(new), len(decided), len(pool))
+        if decided >= pool:
+            ctx.ledger.append(
+                LedgerKind.config,
+                {"event": "validation_complete", "valid": len(valid), "invalid": len(pool - valid), "ts": now()},
+            )
+            ctx.feeding = False
+            return
+        await asyncio.sleep(every)
+
+
 def _redis() -> Any:
     import redis
 
@@ -343,13 +382,18 @@ def run(
     mem: Annotated[str, typer.Option()] = "6g",
     prune_images: Annotated[bool, typer.Option()] = False,
     phase_budget: Annotated[str | None, typer.Option(help="per-phase cap name, reads BUDGET_USD_<NAME>")] = None,
+    valid_report: Annotated[
+        list[Path] | None,
+        typer.Option(help="run only tasks valid in these reports, enqueuing more as they pass validation"),
+    ] = None,
 ) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     run_dir = Path("runs") / exp
     run_dir.mkdir(parents=True, exist_ok=True)
     instances = {i.instance_id: i for i in read_pool(pool)}
     q = TaskQueue(_redis(), exp)
-    q.enqueue(list(instances))
+    if not valid_report:
+        q.enqueue(list(instances))
     fs: FlagsmithLike | None = None if force_policy else SerialFlagsmith(make_client())
     ledger = Ledger(run_dir / "ledger.jsonl")
     pool_sha = hashlib.sha256(pool.read_bytes()).hexdigest()
@@ -401,7 +445,11 @@ def run(
         for iid in reap(q, min_idle_ms=150_000):
             ctx.ledger.append(LedgerKind.exclusion, {"identity": identity_for(iid), "reason": "lease expired twice"})
         budget_left = [limit]
-        await asyncio.gather(*(worker_loop(ctx, q, i, budget_left) for i in range(concurrency)))
+        feeders = []
+        if valid_report:
+            ctx.feeding = True
+            feeders.append(feed_validated(ctx, q, valid_report))
+        await asyncio.gather(*feeders, *(worker_loop(ctx, q, i, budget_left) for i in range(concurrency)))
 
     try:
         asyncio.run(main())

@@ -110,3 +110,20 @@ Even with its shell output cut to 1 KB (D17), the main lane still delegated noth
 - **Delegate lane (worker).** Has `bash` (16 KB of output) in the same container. All searching, surveying, building and test running goes through it, and it returns JSON findings.
 
 The experiment's question is unchanged: whether the worker can be a small model without the planner solving fewer tasks. D17's main-lane `bash` cap no longer applies, because the main lane has no `bash`.
+
+## D19. The guardrail margin is 20 points, because the fresh pool is small
+
+The plan asked for N to come from the power analysis. But N is capped by supply: every task in the fresh tier (created after the models' cutoff, inside the stratum) is already in the exp1 pool, and about 62% of them validate. That gives about 43 tasks per arm. With those numbers, `analysis/power.py` on the pilot shows:
+
+- the cost question is well powered: 95% power at the pilot's 37% cut;
+- the solve-rate guardrail is not: only a drop of about 25 points is detectable.
+
+A 5-point margin would fail almost every time, even for an arm that is truly as good as control, so the experiment would decide nothing. The prereg uses m = 20 points, which an equal arm passes 77% of the time at this N. It also states plainly that smaller solve-rate losses cannot be ruled out. Adding older tasks would raise N but bring back the contamination risk that D1 avoids.
+
+## D20. Tasks are enqueued as they pass validation
+
+Validating a task means building it and running its tests with the gold patch. That takes from one minute to an hour, and a full pool takes many hours across two machines. The runner's `--valid-report` mode enqueues each task once any validation report marks it valid, and it keeps polling until every pool task has a verdict. This is sound because validation never involves a model or an arm, so the order in which tasks enter the queue tells us nothing about either arm. Every enqueue batch is written to the ledger.
+
+## D21. Environment snapshots
+
+`integrity/snapshot_env.py` saves the Flagsmith environment document at the start of the run, every 15 minutes during it, and at the end. It removes the organisation and project names first, and it writes each snapshot's SHA-256 and a summary of the routing flags to the run's ledger. If the flag or the split changed mid-run, the snapshots would show it.
