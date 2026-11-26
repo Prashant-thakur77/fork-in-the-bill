@@ -64,6 +64,13 @@ class Limits:
 
 
 @dataclass(frozen=True)
+class Baseline:
+    root: str
+    sha: str
+    untracked: frozenset[str]
+
+
+@dataclass(frozen=True)
 class ExecResult:
     exit_code: int | None
     output: str
@@ -353,6 +360,56 @@ class TaskContainer:
         res = await self.exec(REPO_ROOT_CMD, timeout=60, workdir=WORKDIR)
         lines = [ln.strip() for ln in res.output.splitlines() if ln.strip().startswith("/")]
         return lines[-1] if lines else WORKDIR
+
+    async def snapshot_baseline(self) -> Baseline:
+        """Commit the container's starting state so the agent's patch excludes what the image
+        build left in the work tree (test reports, generated files). Files that were untracked
+        at this point are remembered and kept out of the patch even if the agent's test runs
+        rewrite them."""
+        root = await self.repo_root()
+        q = shlex.quote(root)
+        res = await self.exec(
+            f"cd {q} && git -c core.quotepath=off --no-pager ls-files --others --exclude-standard",
+            timeout=120,
+            max_output=None,
+        )
+        untracked = frozenset(x.rstrip("\r") for x in res.output.splitlines() if x.strip())
+        commit = (
+            f"cd {q} && git add -A >/dev/null 2>&1 && "
+            "git -c user.name=baseline -c user.email=baseline@localhost -c commit.gpgsign=false "
+            "commit -q --no-verify --allow-empty -m baseline >/dev/null && git rev-parse HEAD"
+        )
+        res = await self.exec(commit, timeout=600, max_output=None)
+        sha = res.output.strip().splitlines()[-1] if res.output.strip() else ""
+        if not res.ok or len(sha) != 40:
+            raise RuntimeError(f"baseline commit failed ({res.exit_code}): {res.output[-2000:]}")
+        return Baseline(root=root, sha=sha, untracked=untracked)
+
+    async def agent_diff(self, base: Baseline, timeout: float = 300.0) -> str:
+        """The agent's changes relative to the baseline, including files it created."""
+        q = shlex.quote(base.root)
+        await self.exec(f"cd {q} && git add -N -- . >/dev/null 2>&1; true", timeout=timeout)
+        res = await self.exec(
+            f"cd {q} && git -c core.quotepath=off --no-pager diff --name-only {base.sha}",
+            timeout=timeout,
+            max_output=None,
+        )
+        names = [x.rstrip("\r") for x in res.output.splitlines() if x.strip()]
+        changed = [x for x in names if x not in base.untracked]
+        if not changed:
+            return ""
+        parts: list[str] = []
+        for i in range(0, len(changed), 200):
+            paths = " ".join(shlex.quote(x) for x in changed[i : i + 200])
+            r = await self.exec(
+                f"cd {q} && git --no-pager diff {base.sha} --text -- {paths}", timeout=timeout, max_output=None
+            )
+            if not r.ok:
+                raise RuntimeError(f"git diff failed ({r.exit_code}): {r.output[-2000:]}")
+            parts.append(r.output)
+        diff = "".join(parts)
+        start = diff.find("diff --git ")
+        return diff[start:] if start >= 0 else ""
 
     # -- network ----------------------------------------------------------------------------
 

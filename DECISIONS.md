@@ -89,3 +89,11 @@ The first runner was a spot m7i.4xlarge. AWS reclaimed it about 15 minutes into 
 ## D14. New files the agent creates are part of its patch
 
 The SWE-bench-Live README collects a prediction with `git diff HEAD`, which leaves out untracked files. A fix that adds a source file would then be graded without it. The runner runs `git add -N .` first, which marks new files without staging their content and respects `.gitignore`, so they appear in the diff. This applies identically to both arms. Validation uses the dataset's gold patches and is unaffected.
+
+## D15. The agent's patch is measured from the container's starting state
+
+The SWE-bench-Live images ship with a dirty work tree: test reports and other files left by the image build, and sometimes edited tracked files. Collecting the agent's patch with `git diff HEAD` swept these in. In the dry run that produced a 27 MB patch that failed to apply at grading. When a task container starts, the runner commits its state as a local baseline and records which files were untracked build output. The agent's patch is its diff against that baseline, including files it created. Build-output files are left out even when the agent's test runs rewrite them. Grading starts a fresh container from the same image, which is in the same starting state, so the patch applies cleanly. Covered by `tests/integration/test_baseline_diff.py`.
+
+## D16. Delegation is the expected way to do grunt work
+
+In the dry run the main lane never called `delegate` in four tasks. The two arms differ only in the delegate lane's model, so without delegation they would be identical. The shared main-lane prompt now states that the main lane's context is the expensive resource. It tells the agent to delegate surveys, long reads and test runs, starting with a survey of the code the issue touches, and to use `bash` itself only for small, targeted checks. Both arms get the same prompt. The pilot measures the delegate share of tokens and cost before the prereg is fixed.

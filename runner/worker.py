@@ -152,16 +152,29 @@ async def run_one(ctx: RunCtx, inst: TaskInstance, attempt: int) -> TaskRecord:
         outcome, error = Outcome.infra_error, f"container: {type(exc).__name__}: {exc}"
         tc = None
     if tc is not None:
+        diff = ""
         try:
+            baseline = await tc.snapshot_baseline()
             agent = Agent(a.policy, caller, ContainerSandbox(tc, inst.workdir))
             result = await agent.run(inst.problem_statement)
-            diff = await tc.git_diff()
+            diff = await tc.agent_diff(baseline)
+        except BudgetExceeded:
+            raise
+        except Exception as exc:  # container or git trouble: infrastructure, retried once
+            outcome, error = Outcome.infra_error, f"harness: {type(exc).__name__}: {exc}"[:2000]
         finally:
             await tc.remove()
         RAW.mkdir(parents=True, exist_ok=True)
-        raw = {"identity": identity, "variant": a.variant, "transcript": result.transcript, "diff": diff}
+        raw = {
+            "identity": identity,
+            "variant": a.variant,
+            "transcript": result.transcript if result else [],
+            "diff": diff,
+        }
         (RAW / f"{ctx.exp}__{inst.instance_id}__a{attempt}.json").write_text(json.dumps(raw, default=str))
-        if result.outcome is not None and result.outcome in (Outcome.infra_error, Outcome.agent_error):
+        if result is None:
+            pass  # outcome already set to infra_error above
+        elif result.outcome is not None and result.outcome in (Outcome.infra_error, Outcome.agent_error):
             outcome, error = result.outcome, result.error
         else:
             g = await grade(ctx.docker, inst, diff, GradeConfig(limits=ctx.limits, log_dir=RAW / "grading" / ctx.exp))
