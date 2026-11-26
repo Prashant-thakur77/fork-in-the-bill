@@ -119,21 +119,39 @@ DELEGATE_TOOLS_READONLY = [BASH]
 DELEGATE_TOOLS_DRAFT = [BASH, EDIT_FILE]
 
 
+class ToolInputError(ValueError):
+    """The model sent arguments that do not fit the tool's schema; reported back as a tool error."""
+
+
+def as_int(value: object, name: str) -> int | None:
+    if value is None or value == "":
+        return None
+    if isinstance(value, bool):
+        raise ToolInputError(f"{name} must be an integer, got {value!r}")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, str) and value.strip().lstrip("-").isdigit():
+        return int(value.strip())
+    raise ToolInputError(f"{name} must be an integer, got {str(value)[:80]!r}")
+
+
 def _resolve(workdir: str, path: str) -> str:
     return path if path.startswith("/") else posixpath.join(workdir, path)
 
 
-async def run_bash(sb: Sandbox, cmd: str, timeout: int | None, limit: int = OUTPUT_LIMIT_BYTES) -> tuple[str, bool]:
-    t = min(max(int(timeout or DEFAULT_TIMEOUT), 1), MAX_TIMEOUT)
+async def run_bash(sb: Sandbox, cmd: str, timeout: object, limit: int = OUTPUT_LIMIT_BYTES) -> tuple[str, bool]:
+    t = min(max(as_int(timeout, "timeout") or DEFAULT_TIMEOUT, 1), MAX_TIMEOUT)
     res = await sb.exec(f"cd {shlex.quote(sb.workdir)} && {cmd}", timeout=t)
     body = truncate_middle(res.output, limit)
     status = "timed out" if res.timed_out else f"exit {res.exit_code}"
     return f"[{status}]\n{body}", res.exit_code != 0 or res.timed_out
 
 
-async def run_view(sb: Sandbox, path: str, start: int | None, end: int | None) -> tuple[str, bool]:
-    first = max(int(start or 1), 1)
-    last = min(int(end or first + VIEW_MAX_LINES - 1), first + VIEW_MAX_LINES - 1)
+async def run_view(sb: Sandbox, path: str, start: object, end: object) -> tuple[str, bool]:
+    first = max(as_int(start, "start_line") or 1, 1)
+    last = min(as_int(end, "end_line") or first + VIEW_MAX_LINES - 1, first + VIEW_MAX_LINES - 1)
     if last < first:
         return "error: end_line is before start_line", True
     full = _resolve(sb.workdir, path)

@@ -183,3 +183,30 @@ async def test_main_lane_bash_output_is_short_delegate_is_long() -> None:
     assert len(main.encode()) < 2_200 < 15_000 < len(deleg.encode()) < 16_200
     assert [t["name"] for t in defs.MAIN_TOOLS] == ["view_file", "edit_file", "delegate", "submit"]
     assert [t["name"] for t in defs.DELEGATE_TOOLS_READONLY] == ["bash"]
+
+
+@pytest.mark.asyncio
+async def test_malformed_tool_args_go_back_to_the_model(tmp_path):
+    bad_view: dict[str, object] = {"path": "a.py", "start_line": '190, "end_line": 225'}
+    script = {
+        "claude-opus-5-5": [
+            msg([ToolUseBlock(type="tool_use", id="t1", name="view_file", input=bad_view)], "tool_use"),
+            msg([ToolUseBlock(type="tool_use", id="t2", name="submit", input={})], "tool_use"),
+        ]
+    }
+    agent, *_ = run(tmp_path, script, policy())
+    res = await agent.run("x")
+    assert res.outcome is None and res.turns == 2
+    tool_result = res.transcript[2]["content"][0]
+    assert tool_result["is_error"] is True
+    assert "start_line must be an integer" in tool_result["content"]
+
+
+def test_as_int() -> None:
+    from harness.tools import defs
+
+    assert defs.as_int(None, "x") is None and defs.as_int("", "x") is None
+    assert defs.as_int(5, "x") == 5 and defs.as_int("12", "x") == 12 and defs.as_int(3.0, "x") == 3
+    for bad in ("1, 2", True, 2.5, [1]):
+        with pytest.raises(defs.ToolInputError):
+            defs.as_int(bad, "x")

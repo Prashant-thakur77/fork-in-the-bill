@@ -132,6 +132,8 @@ class Agent:
                     text, is_error = await self._dispatch(tu.name, dict(tu.input), t0)
                 except TaskCapReached:
                     return result(Outcome.capped_usd)
+                except defs.ToolInputError as exc:
+                    text, is_error = f"error: {exc}", True
                 if tu.name == "submit":
                     submitted = True
                 results.append({"type": "tool_result", "tool_use_id": tu.id, "content": text, "is_error": is_error})
@@ -152,11 +154,19 @@ class Agent:
             return "submitted", False
         return f"error: unknown tool {name}", True
 
+    async def _delegate_tool(self, name: str, a: dict[str, Any]) -> tuple[str, bool]:
+        if name == "bash":
+            return await defs.run_bash(self.sb, str(a.get("cmd", "")), a.get("timeout"))
+        if name == "edit_file" and defs.EDIT_FILE in self.delegate_tools:
+            return await defs.run_edit(self.sb, str(a.get("path", "")), str(a.get("old", "")), str(a.get("new", "")))
+        return f"error: tool {name} not available", True
+
     async def _delegate(self, args: dict[str, Any]) -> tuple[str, bool]:
         """A fresh delegate-lane conversation with its own tool loop; returns validated JSON."""
         self.delegate_calls += 1
         lane = self.policy.delegate
-        max_out = min(int(args.get("max_output_tokens") or lane.max_tokens), lane.max_tokens)
+        asked = defs.as_int(args.get("max_output_tokens"), "max_output_tokens")
+        max_out = min(asked or lane.max_tokens, lane.max_tokens)
         paths = [str(p) for p in args.get("paths") or []]
         context = await defs.read_for_context(self.sb, paths, lane.max_context_tokens * 3)
         user = f"Job:\n{args.get('instruction', '')}"
@@ -189,14 +199,10 @@ class Agent:
                 results = []
                 for tu in tool_uses:
                     a = dict(tu.input)
-                    if tu.name == "bash":
-                        text, err = await defs.run_bash(self.sb, str(a.get("cmd", "")), a.get("timeout"))
-                    elif tu.name == "edit_file" and defs.EDIT_FILE in self.delegate_tools:
-                        text, err = await defs.run_edit(
-                            self.sb, str(a.get("path", "")), str(a.get("old", "")), str(a.get("new", ""))
-                        )
-                    else:
-                        text, err = f"error: tool {tu.name} not available", True
+                    try:
+                        text, err = await self._delegate_tool(tu.name, a)
+                    except defs.ToolInputError as exc:
+                        text, err = f"error: {exc}", True
                     results.append({"type": "tool_result", "tool_use_id": tu.id, "content": text, "is_error": err})
                 messages.append({"role": "user", "content": results})
                 continue
