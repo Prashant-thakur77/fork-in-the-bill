@@ -1,0 +1,112 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.10.9"
+  NODE_VERSION: "22"
+  GITLEAKS_VERSION: "8.30.1"
+
+jobs:
+  python:
+    name: python (lint, types, tests, consistency)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      # Model calls replay from VCR cassettes; no key is present, so nothing can spend.
+      ANTHROPIC_API_KEY: ""
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: uv sync
+        run: uv sync --locked --all-extras --dev
+      - name: ruff check
+        run: uv run ruff check .
+      - name: ruff format --check
+        run: uv run ruff format --check .
+      - name: pyright
+        run: uv run pyright
+      - name: pytest (no docker, no network spend)
+        run: uv run pytest -m "not docker" --record-mode=none
+      - name: consistency gate
+        run: uv run python -m analysis.check_consistency
+
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: install gitleaks (checksum verified)
+        run: |
+          set -euo pipefail
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          tgz="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          sums="gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          mkdir -p "$RUNNER_TEMP/gitleaks"
+          cd "$RUNNER_TEMP/gitleaks"
+          curl -fsSLO "$base/$tgz"
+          curl -fsSLO "$base/$sums"
+          grep " $tgz\$" "$sums" | sha256sum -c -
+          tar -xzf "$tgz" gitleaks
+          echo "$RUNNER_TEMP/gitleaks" >> "$GITHUB_PATH"
+      - name: scan history
+        run: gitleaks git --config .gitleaks.toml --redact --no-banner --verbose .
+
+  board:
+    name: board (web build, worker typecheck)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            board/web/package-lock.json
+            board/worker/package-lock.json
+      - name: web build
+        working-directory: board/web
+        run: |
+          npm ci
+          npm run build
+      - name: worker typecheck
+        working-directory: board/worker
+        run: |
+          npm ci
+          npx tsc --noEmit
+
+  kit-ts:
+    name: kit TypeScript build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: kit/ts/package-lock.json
+      - name: build
+        working-directory: kit/ts
+        run: |
+          npm ci
+          npm run build

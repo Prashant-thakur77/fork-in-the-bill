@@ -2,7 +2,7 @@
 
 Re-renders every marker without writing, then exits 1 on a stale marker, a missing key, a
 bad format, or a bare number inside a `<!--results:start-->`/`<!--results:end-->` section.
-Missing target files are skipped with a notice.
+Missing target files are skipped with a notice. Without numbers.json, any marker fails.
 """
 
 from __future__ import annotations
@@ -16,7 +16,9 @@ from analysis.render_docs import Problem, load_numbers, process
 
 
 def check(root: Path, numbers_path: Path) -> tuple[list[Problem], list[str]]:
-    nums = load_numbers(numbers_path)
+    # Before any run there is no numbers.json; checking against an empty one still fails on
+    # any marker or bare results figure, so the gate passes only when nothing cites a number.
+    nums = load_numbers(numbers_path) if numbers_path.exists() else {}
     problems: list[Problem] = []
     skipped: list[str] = []
     for res in process(root, nums, write=False, regenerate=False):
@@ -36,8 +38,7 @@ def main(
 ) -> None:
     path = numbers if numbers.is_absolute() else root / numbers
     if not path.exists():
-        typer.echo(f"{path} not found", err=True)
-        raise typer.Exit(1)
+        typer.echo(f"notice: {path} not found; checking that no document cites a number")
     problems, skipped = check(root, path)
     for s in skipped:
         typer.echo(f"notice: {s} not found, skipped")
