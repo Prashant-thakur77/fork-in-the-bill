@@ -87,7 +87,7 @@ function Page() {
                   const next = chainage(window.scrollY);
                   if (text && text.textContent !== next) text.textContent = next;
                   // The post belongs to the page's road; it steps aside before the footer's own road.
-                  post.parentElement?.classList.toggle("is-off", self.progress > 0.985);
+                  post.parentElement?.classList.toggle("is-off", self.progress < 0.004 || self.progress > 0.985);
                 },
               },
             },
@@ -103,7 +103,7 @@ function Page() {
       <div className="lane-rail" ref={rail} aria-hidden="true">
         <span className="lane-rail-paint" />
       </div>
-      <div className="km-rail" aria-hidden="true">
+      <div className="km-rail is-off" aria-hidden="true">
         <span className="km-post">
           <i />
           <b className="km-text">km 0+000</b>

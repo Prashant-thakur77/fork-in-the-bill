@@ -229,3 +229,11 @@ A scripted exchange in the voice of a toll booth, one question at a time: what t
 
 ## Colour meaning, corrected
 Orange now means one thing: a closed lane or a work zone (cones, barricade, "Lane closed", the 404 board, results pending). Labels for things that are not results (Illustration, Preview, Replay) are drafting notes: a dashed dark outline and no fill.
+
+## After the judge review
+- **The caveat travels with the result.** Wherever the experiment 1 answer is stated (hero plate, home result, results page, questions), the fresh-tier figures from `exp1.by_tier` sit beside it: on the tasks created after the models' cutoff the solve-rate check alone would not have passed. The results page has the two tiers as a table.
+- **Dashboard screenshots** (`src/site/Shot.tsx`): the real Flagsmith screenshots in `docs/img/flagsmith-*.png`, framed as a screen on a steel plate with the caption "Screenshot, not redrawn": results on `/results`, experiment 2 running on `/experiment-2`, the experiments list on `/rollout`, the flags on `/use-it`. Art stays art; evidence stays a photograph.
+- **Flag history, empty state.** When the worker has no flag changes, the list says the webhook is connected once experiment 2 has ended and points to the environment snapshots in each run's ledger, instead of showing an empty widget.
+- **Transcripts** are linked from the results checks, the rollout page and the footer's Source column.
+- **The guide** reads package names and versions from `kit/ts/package.json` and `kit/mcp/package.json`, the install command from the kit's README, and the MCP client configuration and tool list from `kit/mcp/README.md`.
+- **Kilometre post**: hidden at the very top of a page and before the footer, so it never sits beside a headline.
