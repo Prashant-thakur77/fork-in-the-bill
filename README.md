@@ -8,9 +8,9 @@ A pre-registered Flagsmith experiment on a coding agent's model routing: does ha
 
 ![The Fork in the Bill site: the routing junction and the live arm totals](docs/img/site-home.png)
 
-Result in one line: with the delegate lane on Haiku (`lanes_v1`), the agent spent <!--n:exp1.arms.lanes_v1.cost_per_solve:usd4-->n/a<!--/n--> per solved task against <!--n:exp1.arms.control.cost_per_solve:usd4-->n/a<!--/n--> for all-Sonnet `control` (<!--n:exp1.delta.cost_per_solve_pct:pct1-->n/a<!--/n-->), measured on <!--n:exp1.arms.control.n_analysed:int-->n/a<!--/n--> control and <!--n:exp1.arms.lanes_v1.n_analysed:int-->n/a<!--/n--> lanes_v1 real SWE-bench-Live tasks. Shipped by the pre-registered rule: <!--n:exp1.decision.ship:str-->n/a<!--/n-->.
+Result in one line: with the delegate lane on Haiku (`lanes_v1`), the agent spent <!--n:exp1.arms.lanes_v1.cost_per_solve:usd4-->$0.0837<!--/n--> per solved task against <!--n:exp1.arms.control.cost_per_solve:usd4-->$0.1753<!--/n--> for all-Sonnet `control` (<!--n:exp1.delta.cost_per_solve_pct:pct1-->−52.2%<!--/n-->), measured on <!--n:exp1.arms.control.n_analysed:int-->76<!--/n--> control and <!--n:exp1.arms.lanes_v1.n_analysed:int-->69<!--/n--> lanes_v1 real SWE-bench-Live tasks. Shipped by the pre-registered rule: <!--n:exp1.decision.ship:str-->lanes_v1<!--/n-->.
 
-> Status: experiment 1 is still running. Every figure shown as n/a is a marker that `make analyse` fills from `analysis/out/numbers.json` when the run ends.
+> Status: experiment 1 is complete and decided. The same-flag rollout and experiment 2 run next; their sections below fill in from `analysis/out/numbers.json` when those runs end.
 
 ## Contents
 
@@ -80,7 +80,6 @@ The amendment adds the next 80 pre-cutoff tasks (created 2026-03-01 to 2026-06-3
 
 Flagsmith decides which arm every task runs, records the exposure, receives the outcome events and computes the verdict the decision rule reads. The runner never picks an arm.
 
-![The Flagsmith experiment page for experiment 822](docs/img/flagsmith-experiment.png)
 
 ### Flags, variants and keys
 
@@ -123,7 +122,6 @@ Flagsmith has no ratio metric, so dollars per solved task is computed in [`analy
 
 [`flagsmith/experiment-1.json`](flagsmith/experiment-1.json) is the request body: all four metrics, 100% rollout, 50% to `lanes_v1` and the rest to `control`. Flagsmith implements the split as a system segment override (`experiment-822-rollout`) on the flag, and the flag is locked while the experiment runs. The results page reports lift, a 95% interval, chance to beat control and a sample-ratio check; [D12](DECISIONS.md#d12-how-flagsmith-computes-the-verdict-and-how-our-replication-differs) records how Flagsmith computes them, read from its open-source `api/experimentation/stats.py`. [`analysis/pull_results.py`](analysis/pull_results.py) refreshes and saves the raw results response under [`analysis/flagsmith/`](analysis/flagsmith/).
 
-![Flagsmith results for experiment 822](docs/img/flagsmith-results.png)
 
 ### Kill switch
 
@@ -221,61 +219,51 @@ Every figure in this section is a marker filled from [`analysis/out/numbers.json
 
 | | `control` | `lanes_v1` |
 |---|---|---|
-| Tasks exposed | <!--n:exp1.arms.control.n_exposed:int-->n/a<!--/n--> | <!--n:exp1.arms.lanes_v1.n_exposed:int-->n/a<!--/n--> |
-| Excluded (infra failures, listed) | <!--n:exp1.arms.control.n_excluded:int-->n/a<!--/n--> | <!--n:exp1.arms.lanes_v1.n_excluded:int-->n/a<!--/n--> |
-| Analysed | <!--n:exp1.arms.control.n_analysed:int-->n/a<!--/n--> | <!--n:exp1.arms.lanes_v1.n_analysed:int-->n/a<!--/n--> |
-| Mean cost per task | <!--n:exp1.arms.control.cost_mean:usd4-->n/a<!--/n--> | <!--n:exp1.arms.lanes_v1.cost_mean:usd4-->n/a<!--/n--> |
-| Mean cost, bootstrap interval | <!--n:exp1.arms.control.cost_mean_ci.0:usd4-->n/a<!--/n--> to <!--n:exp1.arms.control.cost_mean_ci.1:usd4-->n/a<!--/n--> | <!--n:exp1.arms.lanes_v1.cost_mean_ci.0:usd4-->n/a<!--/n--> to <!--n:exp1.arms.lanes_v1.cost_mean_ci.1:usd4-->n/a<!--/n--> |
-| Solves | <!--n:exp1.arms.control.solves:int-->n/a<!--/n--> | <!--n:exp1.arms.lanes_v1.solves:int-->n/a<!--/n--> |
-| Solve rate | <!--n:exp1.arms.control.solve_rate:prob1-->n/a<!--/n--> | <!--n:exp1.arms.lanes_v1.solve_rate:prob1-->n/a<!--/n--> |
-| Solve rate, posterior interval | <!--n:exp1.arms.control.solve_rate_ci.0:prob1-->n/a<!--/n--> to <!--n:exp1.arms.control.solve_rate_ci.1:prob1-->n/a<!--/n--> | <!--n:exp1.arms.lanes_v1.solve_rate_ci.0:prob1-->n/a<!--/n--> to <!--n:exp1.arms.lanes_v1.solve_rate_ci.1:prob1-->n/a<!--/n--> |
-| Cost per solved task | <!--n:exp1.arms.control.cost_per_solve:usd4-->n/a<!--/n--> | <!--n:exp1.arms.lanes_v1.cost_per_solve:usd4-->n/a<!--/n--> |
-| Cost per solved task, bootstrap interval | <!--n:exp1.arms.control.cost_per_solve_ci.0:usd4-->n/a<!--/n--> to <!--n:exp1.arms.control.cost_per_solve_ci.1:usd4-->n/a<!--/n--> | <!--n:exp1.arms.lanes_v1.cost_per_solve_ci.0:usd4-->n/a<!--/n--> to <!--n:exp1.arms.lanes_v1.cost_per_solve_ci.1:usd4-->n/a<!--/n--> |
-| Delegate lane share of cost | <!--n:exp1.arms.control.delegate_share_cost:prob1-->n/a<!--/n--> | <!--n:exp1.arms.lanes_v1.delegate_share_cost:prob1-->n/a<!--/n--> |
-| Mean turns | <!--n:exp1.arms.control.turns_mean:f3-->n/a<!--/n--> | <!--n:exp1.arms.lanes_v1.turns_mean:f3-->n/a<!--/n--> |
-| Mean seconds | <!--n:exp1.arms.control.seconds_mean:int-->n/a<!--/n--> | <!--n:exp1.arms.lanes_v1.seconds_mean:int-->n/a<!--/n--> |
+| Tasks exposed | <!--n:exp1.arms.control.n_exposed:int-->76<!--/n--> | <!--n:exp1.arms.lanes_v1.n_exposed:int-->69<!--/n--> |
+| Excluded (infra failures, listed) | <!--n:exp1.arms.control.n_excluded:int-->0<!--/n--> | <!--n:exp1.arms.lanes_v1.n_excluded:int-->0<!--/n--> |
+| Analysed | <!--n:exp1.arms.control.n_analysed:int-->76<!--/n--> | <!--n:exp1.arms.lanes_v1.n_analysed:int-->69<!--/n--> |
+| Mean cost per task | <!--n:exp1.arms.control.cost_mean:usd4-->$0.0784<!--/n--> | <!--n:exp1.arms.lanes_v1.cost_mean:usd4-->$0.0340<!--/n--> |
+| Mean cost, bootstrap interval | <!--n:exp1.arms.control.cost_mean_ci.0:usd4-->$0.0632<!--/n--> to <!--n:exp1.arms.control.cost_mean_ci.1:usd4-->$0.0962<!--/n--> | <!--n:exp1.arms.lanes_v1.cost_mean_ci.0:usd4-->$0.0282<!--/n--> to <!--n:exp1.arms.lanes_v1.cost_mean_ci.1:usd4-->$0.0406<!--/n--> |
+| Solves | <!--n:exp1.arms.control.solves:int-->34<!--/n--> | <!--n:exp1.arms.lanes_v1.solves:int-->28<!--/n--> |
+| Solve rate | <!--n:exp1.arms.control.solve_rate:prob1-->44.7%<!--/n--> | <!--n:exp1.arms.lanes_v1.solve_rate:prob1-->40.6%<!--/n--> |
+| Solve rate, posterior interval | <!--n:exp1.arms.control.solve_rate_ci.0:prob1-->34.1%<!--/n--> to <!--n:exp1.arms.control.solve_rate_ci.1:prob1-->55.9%<!--/n--> | <!--n:exp1.arms.lanes_v1.solve_rate_ci.0:prob1-->29.8%<!--/n--> to <!--n:exp1.arms.lanes_v1.solve_rate_ci.1:prob1-->52.4%<!--/n--> |
+| Cost per solved task | <!--n:exp1.arms.control.cost_per_solve:usd4-->$0.1753<!--/n--> | <!--n:exp1.arms.lanes_v1.cost_per_solve:usd4-->$0.0837<!--/n--> |
+| Cost per solved task, bootstrap interval | <!--n:exp1.arms.control.cost_per_solve_ci.0:usd4-->$0.1233<!--/n--> to <!--n:exp1.arms.control.cost_per_solve_ci.1:usd4-->$0.2607<!--/n--> | <!--n:exp1.arms.lanes_v1.cost_per_solve_ci.0:usd4-->$0.0614<!--/n--> to <!--n:exp1.arms.lanes_v1.cost_per_solve_ci.1:usd4-->$0.1191<!--/n--> |
+| Delegate lane share of cost | <!--n:exp1.arms.control.delegate_share_cost:prob1-->62.5%<!--/n--> | <!--n:exp1.arms.lanes_v1.delegate_share_cost:prob1-->11.5%<!--/n--> |
+| Mean turns | <!--n:exp1.arms.control.turns_mean:f3-->4.921<!--/n--> | <!--n:exp1.arms.lanes_v1.turns_mean:f3-->5.145<!--/n--> |
+| Mean seconds | <!--n:exp1.arms.control.seconds_mean:int-->623<!--/n--> | <!--n:exp1.arms.lanes_v1.seconds_mean:int-->442<!--/n--> |
 
 Cost per solved task is mean cost divided by solve rate:
 
-- `control`: <!--n:exp1.arms.control.cost_mean:usd4-->n/a<!--/n--> ÷ <!--n:exp1.arms.control.solve_rate:prob1-->n/a<!--/n--> = <!--n:exp1.arms.control.cost_per_solve:usd4-->n/a<!--/n-->
-- `lanes_v1`: <!--n:exp1.arms.lanes_v1.cost_mean:usd4-->n/a<!--/n--> ÷ <!--n:exp1.arms.lanes_v1.solve_rate:prob1-->n/a<!--/n--> = <!--n:exp1.arms.lanes_v1.cost_per_solve:usd4-->n/a<!--/n-->
-- change: <!--n:exp1.delta.cost_per_solve_pct:pct1-->n/a<!--/n-->
+- `control`: <!--n:exp1.arms.control.cost_mean:usd4-->$0.0784<!--/n--> ÷ <!--n:exp1.arms.control.solve_rate:prob1-->44.7%<!--/n--> = <!--n:exp1.arms.control.cost_per_solve:usd4-->$0.1753<!--/n-->
+- `lanes_v1`: <!--n:exp1.arms.lanes_v1.cost_mean:usd4-->$0.0340<!--/n--> ÷ <!--n:exp1.arms.lanes_v1.solve_rate:prob1-->40.6%<!--/n--> = <!--n:exp1.arms.lanes_v1.cost_per_solve:usd4-->$0.0837<!--/n-->
+- change: <!--n:exp1.delta.cost_per_solve_pct:pct1-->−52.2%<!--/n-->
 
 Differences, `lanes_v1` minus `control`:
 
-- Mean cost: <!--n:exp1.delta.cost_mean:usd4-->n/a<!--/n--> per task (<!--n:exp1.delta.cost_mean_pct:pct1-->n/a<!--/n-->), bootstrap interval <!--n:exp1.delta.cost_mean_ci.0:usd4-->n/a<!--/n--> to <!--n:exp1.delta.cost_mean_ci.1:usd4-->n/a<!--/n-->.
-- Solve rate: <!--n:exp1.delta.solve_rate_pp:pp1-->n/a<!--/n-->, posterior interval <!--n:exp1.delta.solve_rate_ci.0:pp1-->n/a<!--/n--> to <!--n:exp1.delta.solve_rate_ci.1:pp1-->n/a<!--/n-->.
-- Posterior probability that the solve-rate drop is within m = <!--n:exp1.prereg.m:prob1-->n/a<!--/n-->: <!--n:exp1.delta.p_solve_drop_within_m:prob1-->n/a<!--/n-->.
+- Mean cost: <!--n:exp1.delta.cost_mean:usd4-->−$0.0444<!--/n--> per task (<!--n:exp1.delta.cost_mean_pct:pct1-->−56.7%<!--/n-->), bootstrap interval <!--n:exp1.delta.cost_mean_ci.0:usd4-->−$0.0632<!--/n--> to <!--n:exp1.delta.cost_mean_ci.1:usd4-->−$0.0281<!--/n-->.
+- Solve rate: <!--n:exp1.delta.solve_rate_pp:pp1-->−4.2 pp<!--/n-->, posterior interval <!--n:exp1.delta.solve_rate_ci.0:pp1-->−19.8 pp<!--/n--> to <!--n:exp1.delta.solve_rate_ci.1:pp1-->+11.8 pp<!--/n-->.
+- Posterior probability that the solve-rate drop is within m = <!--n:exp1.prereg.m:prob1-->20.0%<!--/n-->: <!--n:exp1.delta.p_solve_drop_within_m:prob1-->97.7%<!--/n-->.
 
 Flagsmith's readout and our replication:
 
-- Chance to beat control on `task_cost`: <!--n:exp1.flagsmith.chance_to_beat_control_cost:prob1-->n/a<!--/n-->.
-- Guardrail `task_solved` status: <!--n:exp1.flagsmith.solve_rate_status:str-->n/a<!--/n-->.
-- Results pulled at <!--n:exp1.flagsmith.pulled_at:str-->n/a<!--/n-->.
-- Gap between our mean cost and Flagsmith's: <!--n:exp1.agreement.cost_mean_abs_diff.control:usd4-->n/a<!--/n--> for `control`, <!--n:exp1.agreement.cost_mean_abs_diff.lanes_v1:usd4-->n/a<!--/n--> for `lanes_v1`.
-- Sample ratio: chi-square <!--n:exp1.srm.chi2:f3-->n/a<!--/n-->, p = <!--n:exp1.srm.p:f3-->n/a<!--/n-->, flagged: <!--n:exp1.srm.flag:str-->n/a<!--/n-->.
+- Chance to beat control on `task_cost`: <!--n:exp1.flagsmith.chance_to_beat_control_cost:prob1-->100.0%<!--/n-->.
+- Guardrail `task_solved` status: <!--n:exp1.flagsmith.solve_rate_status:str-->inconclusive<!--/n-->.
+- Results pulled at <!--n:exp1.flagsmith.pulled_at:str-->20261127T120242Z<!--/n-->.
+- Gap between our mean cost and Flagsmith's: <!--n:exp1.agreement.cost_mean_abs_diff.control:usd4-->$0.0000<!--/n--> for `control`, <!--n:exp1.agreement.cost_mean_abs_diff.lanes_v1:usd4-->$0.0001<!--/n--> for `lanes_v1`.
+- Sample ratio: chi-square <!--n:exp1.srm.chi2:f3-->0.338<!--/n-->, p = <!--n:exp1.srm.p:f3-->0.561<!--/n-->, flagged: <!--n:exp1.srm.flag:str-->False<!--/n-->.
 
-Decision: ship <!--n:exp1.decision.ship:str-->n/a<!--/n-->. Flagsmith chance to beat control at the bar: <!--n:exp1.decision.rule_met.flagsmith_95:str-->n/a<!--/n-->. Guardrail posterior at the bar: <!--n:exp1.decision.rule_met.guardrail_90:str-->n/a<!--/n-->. No Flagsmith guardrail loss: <!--n:exp1.decision.rule_met.no_guardrail_loss:str-->n/a<!--/n-->.
+Decision: ship <!--n:exp1.decision.ship:str-->lanes_v1<!--/n-->. Flagsmith chance to beat control at the bar: <!--n:exp1.decision.rule_met.flagsmith_95:str-->True<!--/n-->. Guardrail posterior at the bar: <!--n:exp1.decision.rule_met.guardrail_90:str-->True<!--/n-->. No Flagsmith guardrail loss: <!--n:exp1.decision.rule_met.no_guardrail_loss:str-->True<!--/n-->.
 
 ### Rollout on the same flag
 
-After End Experiment, <!--n:exp1.decision.ship:str-->n/a<!--/n--> became the value of `agent_routing`. The fresh batch then ran <!--n:rollout.n:int-->n/a<!--/n--> tasks at a mean cost of <!--n:rollout.cost_mean:usd4-->n/a<!--/n--> and a solve rate of <!--n:rollout.solve_rate:prob1-->n/a<!--/n-->, with no code change.
+Pending. The Flagsmith experiment is ended with `lanes_v1` as the rollout decision, then a fresh batch of tasks from `tasks/pools/rollout.txt` runs on the same flag with no code change.
 
 ### Experiment `exp2`: `lanes_v2` against the exp1 winner
 
-| | `control` (exp1 winner) | `lanes_v2` |
-|---|---|---|
-| Analysed | <!--n:exp2.arms.control.n_analysed:int-->n/a<!--/n--> | <!--n:exp2.arms.lanes_v2.n_analysed:int-->n/a<!--/n--> |
-| Mean cost per task | <!--n:exp2.arms.control.cost_mean:usd4-->n/a<!--/n--> | <!--n:exp2.arms.lanes_v2.cost_mean:usd4-->n/a<!--/n--> |
-| Solve rate | <!--n:exp2.arms.control.solve_rate:prob1-->n/a<!--/n--> | <!--n:exp2.arms.lanes_v2.solve_rate:prob1-->n/a<!--/n--> |
-| Cost per solved task | <!--n:exp2.arms.control.cost_per_solve:usd4-->n/a<!--/n--> | <!--n:exp2.arms.lanes_v2.cost_per_solve:usd4-->n/a<!--/n--> |
+Pending. `lanes_v2` differs from the exp1 winner only in `prompt_variant`, and is registered and tagged before its first task.
 
-- Cost per solved task: <!--n:exp2.delta.cost_per_solve_pct:pct1-->n/a<!--/n-->. Solve rate: <!--n:exp2.delta.solve_rate_pp:pp1-->n/a<!--/n-->.
-- Posterior probability that the solve-rate drop is within m: <!--n:exp2.delta.p_solve_drop_within_m:prob1-->n/a<!--/n-->.
-- Flagsmith chance to beat control on `task_cost`: <!--n:exp2.flagsmith.chance_to_beat_control_cost:prob1-->n/a<!--/n-->.
-- Registration: <!--n:exp2.prereg.tag:str-->n/a<!--/n-->, sha256 <!--n:exp2.prereg.sha256:hash12-->n/a<!--/n-->. Decision: ship <!--n:exp2.decision.ship:str-->n/a<!--/n-->.
-
-Total model spend across the study: <!--n:spend.total_usd:usd2-->n/a<!--/n-->.
+Total model spend across the study: <!--n:spend.total_usd:usd2-->$11.27<!--/n-->.
 <!--results:end-->
 
 ### Power, and what was chosen after seeing data
@@ -298,7 +286,7 @@ Without these, the two arms would have run the same model on nearly every call a
 
 Each run writes a hash-chained ledger (`runs/<exp>/ledger.jsonl`): every record's hash is `sha256(prev_hash + canonical_json(payload))`, so changing or deleting any record breaks every hash after it. The ledger holds task completions, events sent, exclusions, environment snapshots, config checks and kill-switch uses. Environment snapshots ([D21](DECISIONS.md#d21-environment-snapshots)) are taken at the start, every 15 minutes and at the end of a run, and would show any change to the flag or the split.
 
-For experiment 1: Merkle root over <!--n:integrity.task_done_records:int-->n/a<!--/n--> `task_done` records is <!--n:integrity.merkle_root:str-->n/a<!--/n-->. <!--n:integrity.env_snapshots:int-->n/a<!--/n--> environment snapshots were taken, with <!--n:integrity.env_snapshot_distinct_hashes:int-->n/a<!--/n--> distinct hashes. <!--n:integrity.assignment.matched:int-->n/a<!--/n--> of <!--n:integrity.assignment.checked:int-->n/a<!--/n--> recorded arms match Flagsmith's engine offline.
+For experiment 1: Merkle root over <!--n:integrity.task_done_records:int-->146<!--/n--> `task_done` records is <!--n:integrity.merkle_root:str-->7ed364648c7513ef22280eaed97a2ab77e92d91b8f88f5bbfab08d747a989929<!--/n-->. <!--n:integrity.env_snapshots:int-->56<!--/n--> environment snapshots were taken, with <!--n:integrity.env_snapshot_distinct_hashes:int-->1<!--/n--> distinct hashes. <!--n:integrity.assignment.matched:int-->146<!--/n--> of <!--n:integrity.assignment.checked:int-->146<!--/n--> recorded arms match Flagsmith's engine offline.
 
 One command each, from a clean clone after `uv sync`:
 
