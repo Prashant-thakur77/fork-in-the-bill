@@ -1,7 +1,7 @@
 import { useRef, type ReactNode } from "react";
 import { Kinetic, PageHead, useReveals } from "../site/ui";
 import { Link } from "../site/router";
-import { ROUTES, routeFor } from "../site/routes";
+import { ROUTES, pageMeta } from "../site/routes";
 import { ghFile, repo } from "../site/data";
 import { format } from "../data/format";
 import { Led } from "../led/Led";
@@ -117,7 +117,7 @@ export default function Scale() {
   return (
     <div className="page-wrap scale-page" ref={root}>
       <PageHead
-        route={routeFor("/scale")}
+        route={pageMeta("/scale")}
         lead={
           <>
             Two arms and one flag, and behind them {n(T.attempts)} task attempts, {n(T.tests)} test results and {n(T.calls)} priced model calls. Every figure here is counted

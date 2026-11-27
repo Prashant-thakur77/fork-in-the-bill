@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { render } from "../src/entry-server";
-import { MENU_GROUPS, ROUTES } from "../src/site/routes";
+import { MENU_GROUPS, MOVED, PARTS, ROUTES } from "../src/site/routes";
 import { chainage } from "../src/site/scroll";
 import { STACKS, WANTS } from "../src/site/Booth";
 // @ts-expect-error plain ESM build script without types
@@ -28,9 +28,41 @@ describe("navigation", () => {
 
   it("lists every page in the menu and the footer of every page", () => {
     const html = render("/");
-    for (const r of ROUTES.slice(1)) expect(html.split(`href="${r.path}"`).length - 1, r.path).toBeGreaterThanOrEqual(2);
+    for (const r of ROUTES.slice(1)) expect(html.split(`href="${r.path}"`).length - 1, r.path).toBeGreaterThanOrEqual(r.path === "/updates" ? 1 : 2);
     expect(html).toContain('role="dialog"');
     expect(html).toContain('aria-modal="true"');
+  });
+
+  it("keeps the menu to about a dozen entries in four groups, with four links in the header", () => {
+    const listed = ROUTES.filter((r) => r.menu && r.path !== "/updates");
+    expect(listed.length).toBeGreaterThanOrEqual(10);
+    expect(listed.length).toBeLessThanOrEqual(12);
+    expect(new Set(listed.map((r) => r.menu)).size).toBe(4);
+    expect(ROUTES.filter((r) => r.group === "main")).toHaveLength(4);
+  });
+
+  it("redirects every folded page to its part, and that part is on the page", () => {
+    const redirects = readFileSync(resolve(REPO, "board/web/public/_redirects"), "utf8");
+    for (const [from, { to, anchor }] of Object.entries(MOVED)) {
+      expect(ROUTES.some((r) => r.path === from), from).toBe(false);
+      expect(ROUTES.some((r) => r.path === to), to).toBe(true);
+      expect(PARTS.some((r) => r.path === from), from).toBe(true);
+      expect(redirects).toContain(`${from} ${to}${anchor ? `#${anchor}` : ""} 301`);
+      const html = render(to);
+      if (anchor) expect(html, `${to}#${anchor}`).toContain(`id="${anchor}"`);
+      // the folded page's own title heads its part, or the page itself
+      expect(html).toContain(PARTS.find((r) => r.path === from)!.title.split(" ")[0]);
+      // no link on the site still points at the old address
+      for (const r of ROUTES) expect(render(r.path), `${r.path} links to ${from}`).not.toMatch(new RegExp(`href="${from}["#]`));
+    }
+  });
+
+  it("gives every element on a merged page its own id", () => {
+    for (const to of new Set(Object.values(MOVED).map((m) => m.to))) {
+      const ids = [...render(to).matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]!).filter((id) => !/^:r/.test(id));
+      const dup = ids.filter((id, i) => ids.indexOf(id) !== i);
+      expect([...new Set(dup)], to).toEqual([]);
+    }
   });
 
   it("reads the scroll position as a chainage", () => {
@@ -58,7 +90,7 @@ describe("experiment 2 and the rollout", () => {
     if (!before || !after) return;
     expect(before.experimentId).toBeTruthy();
     expect(after.experimentId).toBeNull();
-    const page = text("/rollout");
+    const page = text("/results");
     expect(page).toContain(before.envSha256.slice(0, 16));
     expect(page).toContain(after.envSha256.slice(0, 16));
     expect(page).toContain(`${after.variants[0][1]}%`);
@@ -68,11 +100,11 @@ describe("experiment 2 and the rollout", () => {
 
 describe("the paper, the guide and the updates window", () => {
   it("links the PDFs and figures that exist in the repository", () => {
-    const html = render("/paper");
+    const html = render("/research");
     if (existsSync(resolve(REPO, "docs/paper.pdf"))) expect(html).toContain("/downloads/fork-in-the-bill-paper.pdf");
     if (existsSync(resolve(REPO, "docs/deck.pdf"))) expect(html).toContain("/downloads/fork-in-the-bill-deck.pdf");
     for (const f of data.paper.figures) expect(existsSync(resolve(REPO, "analysis/charts", f.file)), f.file).toBe(true);
-    expect(text("/paper")).toContain(data.paper.title);
+    expect(text("/research")).toContain(data.paper.title);
   });
 
   it("takes every snippet in the guide from a file in the repository", () => {

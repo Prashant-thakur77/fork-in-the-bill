@@ -20,7 +20,8 @@ describe("routes", () => {
     expect(normalize("/live?demo=replay")).toBe("/live");
     expect(normalize("/method#power")).toBe("/method");
     expect(normalize("")).toBe("/");
-    expect(routeFor("/proof/").path).toBe("/proof");
+    expect(routeFor("/verify/").path).toBe("/verify");
+    expect(routeFor("/proof")).toBe(NOT_FOUND); // folded into /verify; the old address redirects
   });
 
   it("sends unknown paths to the wrong-exit page", () => {

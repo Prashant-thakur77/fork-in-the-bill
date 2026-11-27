@@ -9,6 +9,7 @@ import { CURRENT, batchOf, batchStatus } from "./batches";
 import { totals, useLiveState } from "./live";
 import { prefersReducedMotion } from "../motion";
 import { scrollLock } from "./scroll";
+import { carMarkup } from "../art/car";
 
 const MAIN = ROUTES.filter((r) => r.group === "main");
 const HOME = ROUTES[0]!;
@@ -285,7 +286,7 @@ function Menu({ open, onClose, returnFocus, origin }: { open: boolean; onClose: 
                   </span>
                 </p>
                 <ul>
-                  {ROUTES.filter((r) => r.menu === g.key).map((r) => (
+                  {ROUTES.filter((r) => r.menu === g.key && r.path !== "/updates").map((r) => (
                     <li key={r.path}>
                       <Link
                         to={r.path}
@@ -339,6 +340,13 @@ function Menu({ open, onClose, returnFocus, origin }: { open: boolean; onClose: 
               <GitHubIcon /> GitHub repository <span aria-hidden="true">↗</span>
             </a>
           </aside>
+        </div>
+        <div className="menu-road" aria-hidden="true">
+          <span className="menu-road-dashes" />
+          <span className="menu-road-edge" />
+          <span className="menu-road-car" dangerouslySetInnerHTML={{ __html: `<svg viewBox="-50 -30 100 60" width="84" height="50"><g transform="rotate(90)">${carMarkup("estate", "sheet")}</g></svg>` }} />
+          <span className="menu-road-car" dangerouslySetInnerHTML={{ __html: `<svg viewBox="-50 -30 100 60" width="84" height="50"><g transform="rotate(90)">${carMarkup("van", "concrete")}</g></svg>` }} />
+          <span className="menu-road-post">{ROUTES.length - 1} exits</span>
         </div>
       </div>
     </div>

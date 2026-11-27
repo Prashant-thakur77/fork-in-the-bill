@@ -1,10 +1,10 @@
-import { Fragment, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { Fragment, createContext, useContext, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { Link } from "./router";
 import { ghFile, type Block, type Snippet } from "./data";
-import { routeFor, type Route } from "./routes";
+import { pageMeta, type Route } from "./routes";
 import { Picto } from "./Picto";
 import { PageProp } from "./PageProp";
 
@@ -251,8 +251,25 @@ export function Kinetic({ text, as: Tag = "h2", id, className = "" }: { text: st
 
 /* ---------- page sign: breadcrumbs, exit number, title, purpose ---------- */
 
+/** Set around a page that is shown as a part of another page: its head becomes a section head. */
+export const PartContext = createContext<{ id: string; n: number } | null>(null);
+
 export function PageHead({ route, lead, children }: { route?: Route; path?: string; lead: ReactNode; children?: ReactNode }) {
   const r = route!;
+  const part = useContext(PartContext);
+  if (part) {
+    return (
+      <header className="part-head" id={part.id}>
+        <span className="part-tab">Part {part.n}</span>
+        <span className="part-picto" aria-hidden="true">
+          <Picto path={r.path} />
+        </span>
+        <Kinetic as="h2" text={r.title} className="part-title" />
+        <p className="part-lead">{lead}</p>
+        {children}
+      </header>
+    );
+  }
   return (
     <header className="page-head">
       <nav aria-label="Breadcrumb" className="crumbs">
@@ -283,7 +300,7 @@ export function PageHead({ route, lead, children }: { route?: Route; path?: stri
 }
 
 export function pageRoute(path: string): Route {
-  return routeFor(path);
+  return pageMeta(path);
 }
 
 /* ---------- on this page ---------- */

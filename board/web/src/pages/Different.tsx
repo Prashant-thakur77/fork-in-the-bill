@@ -1,7 +1,7 @@
 import { useRef, type ReactNode } from "react";
 import { Kinetic, PageHead, useReveals } from "../site/ui";
 import { Link } from "../site/router";
-import { routeFor } from "../site/routes";
+import { pageMeta } from "../site/routes";
 import { ghFile, repo, type Reference } from "../site/data";
 import { batchOf, gapBetween } from "../site/batches";
 import { format } from "../data/format";
@@ -80,7 +80,7 @@ export const ROWS: Row[] = [
     figure: assign ? [`${assign.matched} of ${assign.checked}`, "arms re-derived offline"] : undefined,
     evidence: (
       <>
-        <Link to="/why-flagsmith">Why Flagsmith</Link> · <a href={ghFile("integrity/verify_assignment.py")}>integrity/verify_assignment.py</a>
+        <Link to="/flagsmith">Why Flagsmith</Link> · <a href={ghFile("integrity/verify_assignment.py")}>integrity/verify_assignment.py</a>
       </>
     ),
   },
@@ -125,7 +125,7 @@ export const ROWS: Row[] = [
     ),
     evidence: (
       <>
-        <Link to="/method">The stopping rule</Link> · <Link to="/decisions#d24">Decision D24</Link>
+        <Link to="/method">The stopping rule</Link> · <Link to="/timeline#d24">Decision D24</Link>
       </>
     ),
   },
@@ -200,7 +200,7 @@ export const ROWS: Row[] = [
     figure: repo.scale.packages.length ? [repo.scale.packages.map((p) => p.name).join(" · "), `npm, ${repo.scale.packages[0]!.version}`] : undefined,
     evidence: (
       <>
-        <Link to="/rollout">The rollout</Link> · <Link to="/use-it">Use it</Link>
+        <Link to="/results#end-experiment">The rollout</Link> · <Link to="/use-it">Use it</Link>
       </>
     ),
   },
@@ -212,7 +212,7 @@ export default function Different() {
   return (
     <div className="page-wrap diff-page" ref={root}>
       <PageHead
-        route={routeFor("/different")}
+        route={pageMeta("/different")}
         lead={
           <>
             Claims that a cheaper model is "good enough" are common. This is how such claims are usually supported, and what was done here instead, with the evidence for

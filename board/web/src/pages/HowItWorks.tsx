@@ -139,7 +139,7 @@ export default function HowItWorks() {
         <DecisionText id="D11" />
         <DecisionText id="D15" />
         <p className="doc-next">
-          <Link to="/why-flagsmith" className="text-link">
+          <Link to="/flagsmith" className="text-link">
             Next: how Flagsmith assigns each task <span aria-hidden="true">→</span>
           </Link>
         </p>

@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { Kinetic, PageHead, useReveals } from "../site/ui";
 import { Link } from "../site/router";
-import { routeFor } from "../site/routes";
+import { pageMeta } from "../site/routes";
 import { ghFile, repo } from "../site/data";
 import { batchOf } from "../site/batches";
 import { Booth } from "../site/Booth";
@@ -17,7 +17,7 @@ export default function Updates() {
   return (
     <div className="page-wrap updates-page" ref={root}>
       <PageHead
-        route={routeFor("/updates")}
+        route={pageMeta("/updates")}
         lead={
           <>
             {exp2?.state === "open" ? "Experiment 2 is still running. " : ""}Leave an address and you get one email when its write-up is published, and one when the kit is

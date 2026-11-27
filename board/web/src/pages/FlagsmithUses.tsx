@@ -25,7 +25,7 @@ const TOC = [
 export default function FlagsmithUses() {
   return (
     <DocPage
-      path="/flagsmith"
+      path="/flagsmith-features"
       toc={TOC}
       lead={
         <>

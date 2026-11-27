@@ -6,6 +6,7 @@ import { RouterProvider, useRouter } from "./router";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { routeFor } from "./routes";
+import { PartContext } from "./ui";
 import { chainage, initSmoothScroll } from "./scroll";
 import { initPointerFx } from "./fx";
 import Home from "../pages/Home";
@@ -34,29 +35,49 @@ import NotFound from "../pages/NotFound";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
+/** One page made of a host page and the pages folded into it, with a short contents line on top. */
+function merged(host: ComponentType, hostLabel: string, parts: { C: ComponentType; id: string; label: string }[]): ComponentType {
+  const Host = host;
+  return function Merged() {
+    return (
+      <>
+        <nav className="parts-nav" aria-label="Parts of this page">
+          <span>On this page</span>
+          <a href="#main">{hostLabel}</a>
+          {parts.map((p) => (
+            <a key={p.id} href={`#${p.id}`}>
+              {p.label}
+            </a>
+          ))}
+        </nav>
+        <Host />
+        {parts.map(({ C, id }, i) => (
+          <div className="part" key={id}>
+            <PartContext.Provider value={{ id, n: i + 2 }}>
+              <C />
+            </PartContext.Provider>
+          </div>
+        ))}
+      </>
+    );
+  };
+}
+
 export const PAGES: Record<string, ComponentType> = {
   "/": Home,
   "/live": Live,
-  "/how-it-works": HowItWorks,
-  "/why-flagsmith": WhyFlagsmith,
-  "/method": Method,
-  "/results": Results,
-  "/flagsmith": FlagsmithUses,
-  "/proof": Proof,
-  "/kit": Kit,
-  "/timeline": Timeline,
-  "/decisions": Decisions,
-  "/glossary": Glossary,
-  "/faq": Faq,
+  "/results": merged(Results, "The results", [{ C: Rollout, id: "end-experiment", label: "The rollout on the same flag" }]),
   "/experiment-2": Experiment2,
-  "/rollout": Rollout,
-  "/paper": Paper,
-  "/verify": Verify,
-  "/use-it": UseIt,
-  "/updates": Updates,
-  "/scale": Scale,
+  "/method": merged(Method, "The method", [{ C: HowItWorks, id: "how-it-works", label: "How the agent works" }]),
+  "/flagsmith": merged(WhyFlagsmith, "Why Flagsmith is the core", [{ C: FlagsmithUses, id: "features", label: "Every feature used" }]),
   "/different": Different,
-  "/research": Research,
+  "/scale": Scale,
+  "/verify": merged(Verify, "Check it in your browser", [{ C: Proof, id: "run-receipt", label: "The receipt and the commands" }]),
+  "/research": merged(Research, "The research", [{ C: Paper, id: "paper", label: "The paper and the deck" }]),
+  "/timeline": merged(Timeline, "The timeline", [{ C: Decisions, id: "decisions", label: "Every decision" }]),
+  "/use-it": merged(UseIt, "Getting started", [{ C: Kit, id: "kit", label: "The kit in detail" }]),
+  "/faq": merged(Faq, "Questions", [{ C: Glossary, id: "glossary", label: "Glossary" }]),
+  "/updates": Updates,
   "/404": NotFound,
 };
 

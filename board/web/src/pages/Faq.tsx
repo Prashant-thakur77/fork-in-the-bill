@@ -1,7 +1,7 @@
 import { useRef, type ReactNode } from "react";
 import { PageHead, Kinetic, useReveals } from "../site/ui";
 import { Link } from "../site/router";
-import { routeFor } from "../site/routes";
+import { pageMeta } from "../site/routes";
 import { ghFile, repo } from "../site/data";
 import { format } from "../data/format";
 
@@ -42,7 +42,7 @@ const GROUPS: { id: string; title: string; sign: string; items: QA[] }[] = [
             No. Both arms use the same planner model, prompts, tools and caps. The only difference is which model does the delegated grunt work
             {C && V ? ` (${C.delegateShort} in control, ${V.delegateShort} in lanes_v1)` : ""}. The question is about a routing decision inside one agent, the
             kind of change a team would ship behind a flag. The result applies to this planner and worker design, not to an agent that does its own grunt
-            work. <Link to="/how-it-works">How the agent works</Link>.
+            work. <Link to="/method#how-it-works">How the agent works</Link>.
           </p>
         ),
       },
@@ -57,7 +57,7 @@ const GROUPS: { id: string; title: string; sign: string; items: QA[] }[] = [
             {repo.numbers?.integrity?.by_experiment.exp1?.assignment
               ? `: ${repo.numbers.integrity.by_experiment.exp1.assignment.matched} of ${repo.numbers.integrity.by_experiment.exp1.assignment.checked} matched for experiment 1`
               : ""}
-            . <Link to="/why-flagsmith">Why Flagsmith is the core</Link>.
+            . <Link to="/flagsmith">Why Flagsmith is the core</Link>.
           </p>
         ),
       },
@@ -68,7 +68,7 @@ const GROUPS: { id: string; title: string; sign: string; items: QA[] }[] = [
           <p>
             No. The run continued until every task in the pools was done, excluded or invalid. The live board showed running totals from 89 tasks in, so the
             operator did see interim figures; the rule, the margin, the pools and the stopping rule were fixed in the registration before that and there was
-            no early stop to take. <Link to="/decisions#d24">Decision D24</Link> records this.
+            no early stop to take. <Link to="/timeline#d24">Decision D24</Link> records this.
           </p>
         ),
       },
@@ -79,7 +79,7 @@ const GROUPS: { id: string; title: string; sign: string; items: QA[] }[] = [
           <p>
             Yes, before registration, and identically for both arms. In the first dry runs the planner never delegated, so both arms would have run the same
             model on nearly every call and measured nothing. The planner prompt was changed to delegate surveys, long reads and test runs, then its shell
-            output was cut, then its shell was removed. These three changes were in place before the pilot. <Link to="/decisions#d16">Decisions D16 to D18</Link>.
+            output was cut, then its shell was removed. These three changes were in place before the pilot. <Link to="/timeline#d16">Decisions D16 to D18</Link>.
           </p>
         ),
       },
@@ -126,7 +126,7 @@ const GROUPS: { id: string; title: string; sign: string; items: QA[] }[] = [
             <p>
               That means rule 2 is a check against large losses only. A reader who wanted a tighter margin should read the result that way
               {N1 ? `: the solve-rate interval runs from ${format(N1.delta.solve_rate_ci[0], "pp1")} to ${format(N1.delta.solve_rate_ci[1], "pp1")}` : ""}.{" "}
-              <Link to="/decisions#d19">Decision D19</Link>.
+              <Link to="/timeline#d19">Decision D19</Link>.
             </p>
           </>
         ),
@@ -216,7 +216,7 @@ const GROUPS: { id: string; title: string; sign: string; items: QA[] }[] = [
               ? ` The environment was saved ${repo.numbers.integrity.by_experiment.exp1.env_snapshots} times through experiment 1 and every snapshot has the same hash (${repo.numbers.integrity.by_experiment.exp1.env_snapshot_distinct_hashes} distinct).`
               : ""}{" "}
             Flagsmith also locks a flag while its experiment runs, and the flags-as-code setup is read-only during a run. Only the kill switch may be used, for
-            safety, and any use is logged. <Link to="/proof">The proof</Link>.
+            safety, and any use is logged. <Link to="/verify#run-receipt">The proof</Link>.
           </p>
         ),
       },
@@ -257,7 +257,7 @@ const GROUPS: { id: string; title: string; sign: string; items: QA[] }[] = [
         q: "Can I run this on my own agent?",
         a: (
           <p>
-            Yes. The <Link to="/kit">kit</Link> wraps any agent loop in Python or TypeScript, works with Flagsmith Cloud or self-hosted Flagsmith, and sends the
+            Yes. The <Link to="/use-it#kit">kit</Link> wraps any agent loop in Python or TypeScript, works with Flagsmith Cloud or self-hosted Flagsmith, and sends the
             same four events. You bring the tasks and a way to grade them.
           </p>
         ),
@@ -268,7 +268,7 @@ const GROUPS: { id: string; title: string; sign: string; items: QA[] }[] = [
         a: (
           <p>
             Clone the repository and run one command per run directory: it walks the hash chain of the ledger and prints the Merkle root over every finished
-            task. A second command recomputes every arm with Flagsmith's flag-engine. <Link to="/proof">The commands</Link>.
+            task. A second command recomputes every arm with Flagsmith's flag-engine. <Link to="/verify#run-receipt">The commands</Link>.
           </p>
         ),
       },
@@ -283,7 +283,7 @@ export default function Faq() {
   useReveals(root);
   return (
     <div className="page-wrap faq-page" ref={root}>
-      <PageHead route={routeFor("/faq")} lead={<>The questions a careful reader asks, answered plainly, with the weak points left in.</>} />
+      <PageHead route={pageMeta("/faq")} lead={<>The questions a careful reader asks, answered plainly, with the weak points left in.</>} />
       <nav className="faq-jump" aria-label="Question groups">
         {GROUPS.map((g) => (
           <a key={g.id} href={`#${g.id}`}>
@@ -317,7 +317,7 @@ export default function Faq() {
       ))}
       <p className="faq-more">
         A question that is not here? The <a href={`${repo.site.repo}/issues`}>issue tracker</a> is open, and every design choice is in{" "}
-        <Link to="/decisions">the decisions log</Link>.
+        <Link to="/timeline#decisions">the decisions log</Link>.
       </p>
     </div>
   );

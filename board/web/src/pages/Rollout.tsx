@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { Code, Kinetic, PageHead, RepoCode, useReveals } from "../site/ui";
 import { Link } from "../site/router";
-import { routeFor } from "../site/routes";
+import { pageMeta } from "../site/routes";
 import { ghFile, repo, type FlagState } from "../site/data";
 import { batchOf, gapBetween, utcStamp } from "../site/batches";
 import { format } from "../data/format";
@@ -78,7 +78,7 @@ export default function Rollout() {
   return (
     <div className="page-wrap ro-page" ref={root}>
       <PageHead
-        route={routeFor("/rollout")}
+        route={pageMeta("/rollout")}
         lead={
           SHIP ? (
             <>

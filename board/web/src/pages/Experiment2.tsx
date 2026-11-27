@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { Blocks, Kinetic, Md, PageHead, useReveals } from "../site/ui";
 import { Link } from "../site/router";
-import { routeFor } from "../site/routes";
+import { pageMeta } from "../site/routes";
 import { ghFile, repo } from "../site/data";
 import { batchOf, batchStatus, gapBetween, utcStamp } from "../site/batches";
 import { LivePanel } from "../site/LivePanel";
@@ -154,7 +154,7 @@ export default function Experiment2() {
   return (
     <div className="page-wrap x2-page" ref={root}>
       <PageHead
-        route={routeFor("/experiment-2")}
+        route={pageMeta("/experiment-2")}
         lead={
           decided ? (
             <>Experiment 2 is decided by the rule registered before its first task. Every figure is read from the analysis output.</>
@@ -200,7 +200,7 @@ export default function Experiment2() {
             </p>
             <p>
               Control is not the old control. After experiment 1, Flagsmith serves the lanes_v1 policy to every task, so that policy is what lanes_v2 has to beat.{" "}
-              <Link to="/rollout">What ending experiment 1 did to the flag</Link>.
+              <Link to="/results#end-experiment">What ending experiment 1 did to the flag</Link>.
             </p>
           </div>
         </div>

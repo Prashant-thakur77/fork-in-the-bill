@@ -5,7 +5,7 @@ import { SplitLab } from "../art/SplitLab";
 import { Link } from "../site/router";
 import { Kinetic, OnThisPage, PageHead, useReveals } from "../site/ui";
 import { ghFile, repo, type Snippet } from "../site/data";
-import { routeFor } from "../site/routes";
+import { pageMeta } from "../site/routes";
 import { JOURNEY_STEPS } from "../site/journeySteps";
 
 const S = repo.snippets;
@@ -107,7 +107,7 @@ const ROLES: Role[] = [
       </>
     ),
     code: S.policy,
-    more: "/how-it-works#lanes",
+    more: "/method#lanes",
   },
   {
     id: "terraform",
@@ -167,7 +167,7 @@ export default function WhyFlagsmith() {
   return (
     <div className="page-wrap" ref={root}>
       <PageHead
-        route={routeFor("/why-flagsmith")}
+        route={pageMeta("/why-flagsmith")}
         lead={
           <>
             This is a Flagsmith experiment, not a script with a Flagsmith call in it. Flagsmith decides every arm, records every exposure, measures the outcome

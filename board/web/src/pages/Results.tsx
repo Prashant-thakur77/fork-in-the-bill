@@ -257,7 +257,7 @@ function Rollout() {
       <p className="prose">
         The batch has no comparison arm, so it shows the winner working as the flag's own value, not a second estimate of the effect.
         {b?.startedAt && <> It started at {utcStamp(b.startedAt, true)}.</>} No code changed between the experiment and this batch: the runner asks
-        Flagsmith for the policy the same way. <Link to="/rollout">What End Experiment did</Link>.
+        Flagsmith for the policy the same way. <a href="#end-experiment">What End Experiment did, below</a>.
       </p>
     </Section>
   );
@@ -385,7 +385,7 @@ function Checks() {
         ]}
       />
       <p className="prose">
-        <Link to="/verify">Check a ledger in your browser</Link>, or run the commands on the <Link to="/proof">proof page</Link>.
+        <Link to="/verify">Check a ledger in your browser</Link>, or run the commands on the <Link to="/verify#run-receipt">proof page</Link>.
       </p>
       {repo.transcripts.exp1 > 0 && (
         <p className="prose">

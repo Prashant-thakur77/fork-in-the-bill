@@ -1,7 +1,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import { Blocks, Code, Kinetic, PageHead, RepoCode, useReveals } from "../site/ui";
 import { Link } from "../site/router";
-import { routeFor } from "../site/routes";
+import { pageMeta } from "../site/routes";
 import { ghFile, repo } from "../site/data";
 import { Shot } from "../site/Shot";
 
@@ -71,7 +71,7 @@ export default function UseIt() {
   return (
     <div className="page-wrap use-page" ref={root}>
       <PageHead
-        route={routeFor("/use-it")}
+        route={pageMeta("/use-it")}
         lead={
           <>
             Put your own agent on a Flagsmith experiment in six steps. The kit does what this study's runner does: one task is one identity, the flag's value is the
@@ -83,7 +83,7 @@ export default function UseIt() {
           <a className="btn btn-sheet" href={ghFile("kit")} rel="noopener">
             Kit source <span aria-hidden="true">↗</span>
           </a>
-          <Link className="btn btn-ghost-sheet" to="/kit">
+          <Link className="btn btn-ghost-sheet" to="/use-it#kit">
             Kit reference
           </Link>
         </div>
@@ -173,7 +173,7 @@ export default function UseIt() {
         </div>
         <p className="prose small">
           For local evaluation or an Edge Proxy, build the client with <code>forkbill.client.make_client(mode, ...)</code> or <code>flagsmithConfig(mode, ...)</code>
-          . <Link to="/kit#modes">The four evaluation modes</Link>.
+          . <Link to="/use-it#modes">The four evaluation modes</Link>.
         </p>
       </Step>
 

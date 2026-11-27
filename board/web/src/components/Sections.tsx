@@ -262,7 +262,7 @@ function RolloutFacts({ board }: { board: Board }) {
         </div>
       </dl>
       <p className="prereg">
-        <Link to="/rollout">What End Experiment did to the flag</Link>
+        <Link to="/results#end-experiment">What End Experiment did to the flag</Link>
       </p>
     </section>
   );

@@ -1,7 +1,7 @@
 import { useRef, type ReactNode } from "react";
 import { Kinetic, PageHead, useReveals } from "../site/ui";
 import { Link } from "../site/router";
-import { routeFor } from "../site/routes";
+import { pageMeta } from "../site/routes";
 import { ghFile, repo, type Reference } from "../site/data";
 import { format } from "../data/format";
 
@@ -379,7 +379,7 @@ export default function Research() {
   return (
     <div className="page-wrap research-page" ref={root}>
       <PageHead
-        route={routeFor("/research")}
+        route={pageMeta("/research")}
         lead={
           <>
             Nothing in the method is new. Each part comes from published work, and each card says what was taken, where it lives in the code and what it produces here.

@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "../site/router";
 import { PageHead, useReveals } from "../site/ui";
-import { routeFor } from "../site/routes";
+import { pageMeta } from "../site/routes";
 
 export const TERMS: { term: string; def: ReactNode; see?: [string, string] }[] = [
   { term: "Amendment", def: "A change to the registered plan, written as its own hashed file before it applies. The original file is never edited.", see: ["/method#amendment", "The amendment"] },
@@ -22,7 +22,7 @@ export const TERMS: { term: string; def: ReactNode; see?: [string, string] }[] =
   { term: "Kill switch", def: "The routing_kill flag. When on, tasks run control with no exposure, so the experiment's data stays clean.", see: ["/flagsmith#kill", "Kill switch"] },
   { term: "lanes_v1", def: "The challenger in experiment 1: the same planner, with a small model in the worker lane." },
   { term: "lanes_v2", def: "The challenger in experiment 2: the small model drafts the patch and the frontier model reviews it." },
-  { term: "Ledger", def: "An append-only file of run records where each record's hash includes the previous one, so an edit breaks every later hash.", see: ["/proof#rules", "Hashing rules"] },
+  { term: "Ledger", def: "An append-only file of run records where each record's hash includes the previous one, so an edit breaks every later hash.", see: ["/verify#rules", "Hashing rules"] },
   { term: "Margin m", def: "How far the solve rate may drop and still pass rule 2. Set from the pilot before the run.", see: ["/method#margin", "The margin"] },
   { term: "Merkle root", def: "One hash computed over every finished task's record. If two people get the same root, they have the same set of tasks." },
   { term: "OpenFeature", def: "A vendor-neutral feature flag API. The kit can read the policy and send events through it with the official Flagsmith provider." },
@@ -59,7 +59,7 @@ export default function Glossary() {
   const n = TERMS.filter(match).length;
   return (
     <div className="page-wrap gl-page" ref={root}>
-      <PageHead route={routeFor("/glossary")} lead={<>The words this site uses, in plain terms. Each one links to the page where it matters most.</>} />
+      <PageHead route={pageMeta("/glossary")} lead={<>The words this site uses, in plain terms. Each one links to the page where it matters most.</>} />
       <div className="gl-bar">
         <div className="dec-find">
           <label htmlFor="gl-q">Find a word</label>

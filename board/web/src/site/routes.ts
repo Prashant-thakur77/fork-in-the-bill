@@ -46,10 +46,10 @@ const DRAFTS: Draft[] = [
     path: "/results",
     label: "Results",
     title: "Results",
-    description: "The verdict of experiment 1, the rollout on the same flag, and experiment 2 as it stands, each read from the analysis output.",
+    description: "The verdict of experiment 1, what ending it did to the flag and the batch that ran after, and experiment 2 as it stands, each read from the analysis output.",
     group: "main",
     menu: "experiment",
-    blurb: "Experiment 1, decided",
+    blurb: "Experiment 1, and the rollout",
   },
   {
     path: "/experiment-2",
@@ -61,59 +61,23 @@ const DRAFTS: Draft[] = [
     blurb: "Running now, registered first",
   },
   {
-    path: "/rollout",
-    label: "Rollout",
-    title: "Rollout on the same flag",
-    description: "What ending the experiment did to the flag, and the fresh batch that ran on it with no code change.",
-    group: "more",
-    menu: "experiment",
-    blurb: "What End Experiment did",
-  },
-  {
     path: "/method",
     label: "Method",
     title: "Method",
-    description: "The pre-registration, the decision rule, the margin, power, the task pools and what changed after the pilot.",
+    description: "The pre-registration, the decision rule, the margin, power and the task pools, and how the two-lane agent under test works.",
     group: "main",
     menu: "experiment",
-    blurb: "The rule, fixed first",
+    blurb: "The rule, and the agent",
   },
-  {
-    path: "/how-it-works",
-    label: "How it works",
-    title: "How the agent works",
-    description: "The two-lane coding agent: a planner that writes the fix and a worker that does the grunt work, with caps and grading.",
-    group: "more",
-    menu: "experiment",
-    blurb: "Planner lane, worker lane",
-  },
-  {
-    path: "/scale",
-    label: "By the numbers",
-    title: "By the numbers",
-    description: "How big the study is: task attempts, test results, model calls, tokens, dollars, ledger records and lines of code, each counted from the repository.",
-    group: "more",
-    menu: "experiment",
-    blurb: "Every count, from the repo",
-  },
-  /* ---- Flagsmith ---- */
-  {
-    path: "/why-flagsmith",
-    label: "Why Flagsmith",
-    title: "Why Flagsmith is the core",
-    description: "Flagsmith picks every arm, records every exposure, measures the result and rolls out the winner. Without it the experiment cannot be checked.",
-    group: "main",
-    menu: "flagsmith",
-    blurb: "It picks every arm",
-  },
+  /* ---- the case for it ---- */
   {
     path: "/flagsmith",
-    label: "Flagsmith features",
-    title: "Every Flagsmith feature used",
-    description: "Experiments, exposures, events, the kill switch, rollout, flag-engine checks, Terraform, webhooks, feature health, Edge Proxy, OpenFeature and self-hosting.",
-    group: "more",
+    label: "Flagsmith",
+    title: "Flagsmith, the core",
+    description: "Flagsmith picks every arm, records every exposure, measures the result and rolls out the winner. Why the experiment cannot run without it, and every feature used, with the code.",
+    group: "main",
     menu: "flagsmith",
-    blurb: "Each one, with the code",
+    blurb: "Why it is the core, feature by feature",
   },
   {
     path: "/different",
@@ -124,97 +88,61 @@ const DRAFTS: Draft[] = [
     menu: "flagsmith",
     blurb: "The usual way, and this one",
   },
+  {
+    path: "/scale",
+    label: "By the numbers",
+    title: "By the numbers",
+    description: "How big the study is: task attempts, test results, model calls, tokens, dollars, ledger records and lines of code, each counted from the repository.",
+    group: "more",
+    menu: "flagsmith",
+    blurb: "Every count, from the repo",
+  },
   /* ---- evidence ---- */
   {
     path: "/verify",
     label: "Verify",
-    title: "Check a ledger yourself",
-    description: "Fetch a real run ledger and check its hash chain and Merkle root in your browser, record by record. Then change one record and watch it break.",
+    title: "Verify it yourself",
+    description: "Check a real run ledger and one task's proof in your browser, then the run receipt and the exact commands for every other check.",
     group: "more",
     menu: "evidence",
-    blurb: "In your browser, now",
-  },
-  {
-    path: "/proof",
-    label: "Proof",
-    title: "Proof the run was not edited",
-    description: "The run receipt and the exact commands to check the ledger, the Merkle root, the flag snapshots and every arm assignment yourself.",
-    group: "more",
-    menu: "evidence",
-    blurb: "The receipt and the commands",
-  },
-  {
-    path: "/paper",
-    label: "Paper",
-    title: "The paper and the deck",
-    description: "The write-up of experiment 1 as a paper and a slide deck: read the summary and the figures here, or download the PDFs.",
-    group: "more",
-    menu: "evidence",
-    blurb: "Read it or download it",
+    blurb: "In your browser, then the commands",
   },
   {
     path: "/research",
-    label: "Research",
+    label: "Research and paper",
     title: "From the research to the code",
-    description: "One card per published source the project uses: what it says, what was taken from it, where it lives in the code and what it produces here.",
+    description: "One card per published source the project uses, with what it produces here, then the paper and the deck to read or download.",
     group: "more",
     menu: "evidence",
-    blurb: "Each source, and its code",
+    blurb: "Each source, then the write-up",
   },
   {
     path: "/timeline",
-    label: "Timeline",
+    label: "Timeline and decisions",
     title: "Run timeline",
-    description: "Every phase of the study, from the Flagsmith smoke test to the second experiment, with the evidence for each.",
+    description: "Every phase of the study with its evidence, then every design decision and why it was made.",
     group: "more",
     menu: "evidence",
-    blurb: "Phase by phase",
-  },
-  {
-    path: "/decisions",
-    label: "Decisions",
-    title: "Design decisions",
-    description: "Every design choice made while building and running the experiments, and why it was made.",
-    group: "more",
-    menu: "evidence",
-    blurb: "Every choice, with the reason",
-  },
-  {
-    path: "/faq",
-    label: "Questions",
-    title: "Questions and honest answers",
-    description: "Power, the margin chosen after the pilot, tasks the models may have seen, why Flagsmith, and what the study cost to run.",
-    group: "more",
-    menu: "evidence",
-    blurb: "The weak points, left in",
+    blurb: "What happened, and why",
   },
   /* ---- use it ---- */
   {
     path: "/use-it",
     label: "Use it",
     title: "Use it in your project",
-    description: "Step by step: put your own agent on a Flagsmith experiment with the forkbill kit in Python or TypeScript, through OpenFeature, or on self-hosted Flagsmith.",
+    description: "Step by step: put your own agent on a Flagsmith experiment with the forkbill kit or the MCP server, then the kit in detail.",
     group: "more",
     menu: "use",
-    blurb: "Step by step",
+    blurb: "Step by step, then in detail",
   },
   {
-    path: "/kit",
-    label: "Kit",
-    title: "Run it on your own agent",
-    description: "The forkbill kit for Python and TypeScript: a routed-lane agent loop driven by a Flagsmith experiment, on Cloud or self-hosted.",
+    path: "/faq",
+    label: "Questions",
+    title: "Questions, answers and terms",
+    description: "Power, the margin chosen after the pilot, tasks the models may have seen, why Flagsmith and what it cost, then plain definitions of every term.",
     group: "more",
-    menu: "use",
-    blurb: "The kit, in detail",
-  },
-  {
-    path: "/glossary",
-    label: "Glossary",
-    title: "Glossary",
-    description: "Plain definitions of the terms used on this site: arm, identity, exposure, guardrail, margin, SRM, Merkle root and more.",
-    group: "more",
-    menu: "use",
-    blurb: "Plain definitions",
+    menu: "evidence",
+    blurb: "Honest answers, plain terms",
   },
   {
     path: "/updates",
@@ -227,11 +155,109 @@ const DRAFTS: Draft[] = [
   },
 ];
 
+// Pages that were folded into another page. Their titles and purpose lines head their part of
+// that page; their old addresses redirect (public/_redirects).
+const PART_DRAFTS: Draft[] = [
+  {
+    path: "/flagsmith-features",
+    label: "Flagsmith features",
+    title: "Every Flagsmith feature used",
+    description: "Experiments, exposures, events, the kill switch, rollout, flag-engine checks, Terraform, webhooks, feature health, Edge Proxy, OpenFeature and self-hosting.",
+    group: "none",
+  },
+  {
+    path: "/rollout",
+    label: "Rollout",
+    title: "Rollout on the same flag",
+    description: "What ending the experiment did to the flag, and the fresh batch that ran on it with no code change.",
+    group: "none",
+    menu: "experiment",
+    blurb: "What End Experiment did",
+  },
+  {
+    path: "/how-it-works",
+    label: "How it works",
+    title: "How the agent works",
+    description: "The two-lane coding agent: a planner that writes the fix and a worker that does the grunt work, with caps and grading.",
+    group: "none",
+    menu: "experiment",
+    blurb: "Planner lane, worker lane",
+  },
+  {
+    path: "/why-flagsmith",
+    label: "Why Flagsmith",
+    title: "Why Flagsmith is the core",
+    description: "Flagsmith picks every arm, records every exposure, measures the result and rolls out the winner. Without it the experiment cannot be checked.",
+    group: "none",
+    menu: "flagsmith",
+    blurb: "It picks every arm",
+  },
+  {
+    path: "/proof",
+    label: "Proof",
+    title: "Proof the run was not edited",
+    description: "The run receipt and the exact commands to check the ledger, the Merkle root, the flag snapshots and every arm assignment yourself.",
+    group: "none",
+    menu: "evidence",
+    blurb: "The receipt and the commands",
+  },
+  {
+    path: "/paper",
+    label: "Paper",
+    title: "The paper and the deck",
+    description: "The write-up of experiment 1 as a paper and a slide deck: read the summary and the figures here, or download the PDFs.",
+    group: "none",
+    menu: "evidence",
+    blurb: "Read it or download it",
+  },
+  {
+    path: "/decisions",
+    label: "Decisions",
+    title: "Design decisions",
+    description: "Every design choice made while building and running the experiments, and why it was made.",
+    group: "none",
+    menu: "evidence",
+    blurb: "Every choice, with the reason",
+  },
+  {
+    path: "/glossary",
+    label: "Glossary",
+    title: "Glossary",
+    description: "Plain definitions of the terms used on this site: arm, identity, exposure, guardrail, margin, SRM, Merkle root and more.",
+    group: "none",
+    menu: "use",
+    blurb: "Plain definitions",
+  },
+  {
+    path: "/kit",
+    label: "Kit",
+    title: "Run it on your own agent",
+    description: "The forkbill kit for Python and TypeScript: a routed-lane agent loop driven by a Flagsmith experiment, on Cloud or self-hosted.",
+    group: "none",
+    menu: "use",
+    blurb: "The kit, in detail",
+  },
+];
+
+/** Where each folded page went: the page it is part of and the anchor of its part. */
+export const MOVED: Record<string, { to: string; anchor: string }> = {
+  "/rollout": { to: "/results", anchor: "end-experiment" },
+  "/how-it-works": { to: "/method", anchor: "how-it-works" },
+  "/why-flagsmith": { to: "/flagsmith", anchor: "" },
+  "/proof": { to: "/verify", anchor: "run-receipt" },
+  "/paper": { to: "/research", anchor: "paper" },
+  "/decisions": { to: "/timeline", anchor: "decisions" },
+  "/glossary": { to: "/faq", anchor: "glossary" },
+  "/kit": { to: "/use-it", anchor: "kit" },
+};
+
 export const ROUTES: Route[] = DRAFTS.map((r, i) => ({ ...r, exit: String(i) }));
+
+export const PARTS: Route[] = PART_DRAFTS.map((r) => ({ ...r, exit: "" }));
 
 export const MENU_GROUPS: { key: MenuGroup; title: string; line: string }[] = [
   { key: "experiment", title: "The experiment", line: "What was tested and what came out" },
-  { key: "flagsmith", title: "Flagsmith", line: "The tool that makes it checkable" },
+  { key: "flagsmith", title: "The case", line: "Why it holds, and how big it is" },
   { key: "evidence", title: "Evidence", line: "Check it, do not trust it" },
   { key: "use", title: "Use it", line: "Run it on your own agent" },
 ];
@@ -253,6 +279,12 @@ export function normalize(path: string): string {
 export function routeFor(path: string): Route {
   const p = normalize(path);
   return ROUTES.find((r) => r.path === p) ?? NOT_FOUND;
+}
+
+/** Title and purpose of a page or of a part that was folded into one. Not for routing. */
+export function pageMeta(path: string): Route {
+  const p = normalize(path);
+  return ROUTES.find((r) => r.path === p) ?? PARTS.find((r) => r.path === p) ?? NOT_FOUND;
 }
 
 export const SITE_NAME = "Fork in the Bill";

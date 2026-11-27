@@ -9,7 +9,7 @@ export function DecisionText({ id }: { id: string }) {
   return (
     <div className="quote-block">
       <p className="quote-src">
-        <Link to={`/decisions#${id.toLowerCase()}`}>
+        <Link to={`/timeline#${id.toLowerCase()}`}>
           {d.id}. {d.title}
         </Link>
       </p>

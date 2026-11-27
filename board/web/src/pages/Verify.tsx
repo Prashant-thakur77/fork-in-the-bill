@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Code, Kinetic, PageHead, RepoCode, useReveals } from "../site/ui";
 import { Link } from "../site/router";
-import { routeFor } from "../site/routes";
+import { pageMeta } from "../site/routes";
 import { ghFile, repo } from "../site/data";
 import { ProofLab } from "../site/ProofLab";
 import { tamper, verifyLedger, type LedgerReport, type RecordCheck } from "../site/ledger";
@@ -94,7 +94,7 @@ export default function Verify() {
   return (
     <div className="page-wrap verify-page" ref={root}>
       <PageHead
-        route={routeFor("/verify")}
+        route={pageMeta("/verify")}
         lead={<>Do not take this site's word for it. This page fetches a real run ledger and checks it on your machine, with the same rule the project's own verifier uses.</>}
       />
 
@@ -238,7 +238,7 @@ export default function Verify() {
           </div>
         </div>
         <p className="doc-next">
-          <Link to="/proof" className="text-link">
+          <Link to="/verify#run-receipt" className="text-link">
             The run receipt and every other check <span aria-hidden="true">→</span>
           </Link>
         </p>

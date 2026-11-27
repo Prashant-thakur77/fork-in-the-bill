@@ -1,0 +1,9 @@
+# Pages that were folded into another page keep their old addresses.
+/rollout /results#end-experiment 301
+/how-it-works /method#how-it-works 301
+/why-flagsmith /flagsmith 301
+/proof /verify#run-receipt 301
+/paper /research#paper 301
+/decisions /timeline#decisions 301
+/glossary /faq#glossary 301
+/kit /use-it#kit 301

@@ -301,7 +301,7 @@ function Result() {
         </ol>
         <div className="result-next">
           {repo.numbers?.rollout && (
-            <Link to="/rollout" className="next-row">
+            <Link to="/results#end-experiment" className="next-row">
               <span className="next-k">Then: rollout</span>
               <span className="next-v">
                 The experiment was ended with {SHIP1} as the flag's own value. {f["rollout.n"]} fresh tasks ran on the same flag with no code change:{" "}
@@ -403,7 +403,7 @@ export default function Home() {
           <Kinetic id="journey-h" text="One task, from the queue to the decision" />
           <p>
             Flagsmith picks the lane, records the exposure, joins the events and reports the result. Scroll to follow two tasks through experiment 1.{" "}
-            <Link to="/why-flagsmith">Why it cannot run without Flagsmith</Link>.
+            <Link to="/flagsmith">Why it cannot run without Flagsmith</Link>.
           </p>
         </div>
         <Journey steps={JOURNEY_STEPS} id="home-journey" />

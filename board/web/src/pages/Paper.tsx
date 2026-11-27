@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { Blocks, Kinetic, PageHead, useReveals } from "../site/ui";
 import { Link } from "../site/router";
-import { routeFor } from "../site/routes";
+import { pageMeta } from "../site/routes";
 import { ghFile, repo } from "../site/data";
 
 // The paper and the deck. The summary, the limits and the conclusion are read from docs/paper.md
@@ -45,13 +45,13 @@ export default function Paper() {
   if (!P) {
     return (
       <div className="page-wrap paper-page" ref={root}>
-        <PageHead route={routeFor("/paper")} lead={<>The write-up is not in this build yet.</>} />
+        <PageHead route={pageMeta("/paper")} lead={<>The write-up is not in this build yet.</>} />
       </div>
     );
   }
   return (
     <div className="page-wrap paper-page" ref={root}>
-      <PageHead route={routeFor("/paper")} lead={<>Experiment 1, written up twice: a paper to read and a deck to present. Read the short version here or take the PDFs.</>}>
+      <PageHead route={pageMeta("/paper")} lead={<>Experiment 1, written up twice: a paper to read and a deck to present. Read the short version here or take the PDFs.</>}>
         <div className="dl-row">
           {P.hasPdf && <Download href="/downloads/fork-in-the-bill-paper.pdf" title="The paper" meta={`PDF, ${kb(P.pdfBytes)}`} kind="paper" />}
           {P.hasDeck && <Download href="/downloads/fork-in-the-bill-deck.pdf" title="The deck" meta={`PDF, ${kb(P.deckBytes)}`} kind="deck" />}

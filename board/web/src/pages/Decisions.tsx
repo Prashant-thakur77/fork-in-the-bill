@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { Blocks, PageHead, useReveals } from "../site/ui";
-import { routeFor } from "../site/routes";
+import { pageMeta } from "../site/routes";
 import { ghFile, repo, type Block } from "../site/data";
 
 // DECISIONS.md, quoted in full. The index is one large guide sign, each decision a destination on
@@ -28,7 +28,7 @@ export default function Decisions() {
   return (
     <div className="page-wrap dec-page" ref={root}>
       <PageHead
-        route={routeFor("/decisions")}
+        route={pageMeta("/decisions")}
         lead={
           <>
             Every choice made while building and running the experiments, with the reason. Quoted in full from <a href={ghFile("DECISIONS.md")}>DECISIONS.md</a>.
