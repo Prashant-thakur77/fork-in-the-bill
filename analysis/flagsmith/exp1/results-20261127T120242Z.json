@@ -1,0 +1,292 @@
+{
+  "results": {
+    "as_of": "2026-11-27T12:02:41.020574Z",
+    "is_final": false,
+    "last_error_at": null,
+    "payload": {
+      "exposures_timeseries": {
+        "granularity": "hour",
+        "points": [
+          {
+            "bucket": "2026-11-26T23:00:00+00:00",
+            "new_identities": {
+              "control": 16,
+              "lanes_v1": 10
+            }
+          },
+          {
+            "bucket": "2026-11-27T00:00:00+00:00",
+            "new_identities": {
+              "control": 6,
+              "lanes_v1": 3
+            }
+          },
+          {
+            "bucket": "2026-11-27T01:00:00+00:00",
+            "new_identities": {
+              "control": 9,
+              "lanes_v1": 10
+            }
+          },
+          {
+            "bucket": "2026-11-27T02:00:00+00:00",
+            "new_identities": {
+              "control": 6,
+              "lanes_v1": 2
+            }
+          },
+          {
+            "bucket": "2026-11-27T03:00:00+00:00",
+            "new_identities": {
+              "control": 4,
+              "lanes_v1": 7
+            }
+          },
+          {
+            "bucket": "2026-11-27T04:00:00+00:00",
+            "new_identities": {
+              "control": 6,
+              "lanes_v1": 5
+            }
+          },
+          {
+            "bucket": "2026-11-27T05:00:00+00:00",
+            "new_identities": {
+              "control": 7,
+              "lanes_v1": 9
+            }
+          },
+          {
+            "bucket": "2026-11-27T06:00:00+00:00",
+            "new_identities": {
+              "control": 9,
+              "lanes_v1": 6
+            }
+          },
+          {
+            "bucket": "2026-11-27T07:00:00+00:00",
+            "new_identities": {
+              "control": 9,
+              "lanes_v1": 6
+            }
+          },
+          {
+            "bucket": "2026-11-27T08:00:00+00:00",
+            "new_identities": {
+              "control": 4,
+              "lanes_v1": 5
+            }
+          },
+          {
+            "bucket": "2026-11-27T09:00:00+00:00",
+            "new_identities": {
+              "lanes_v1": 3
+            }
+          },
+          {
+            "bucket": "2026-11-27T10:00:00+00:00",
+            "new_identities": {
+              "lanes_v1": 2
+            }
+          },
+          {
+            "bucket": "2026-11-27T11:00:00+00:00",
+            "new_identities": {
+              "lanes_v1": 1
+            }
+          }
+        ]
+      },
+      "metrics": [
+        {
+          "conversions_timeseries": null,
+          "inference": {
+            "lanes_v1": {
+              "chance_to_win": 1.0,
+              "ci_high": -0.4429904907189159,
+              "ci_low": -0.6882455433841466,
+              "lift": -0.5656180170515313
+            }
+          },
+          "metric_id": 737,
+          "variants": {
+            "control": {
+              "n": 76,
+              "sum": 5.959372999999999,
+              "sum_squares": 0.8757484994429999
+            },
+            "lanes_v1": {
+              "n": 69,
+              "sum": 2.3502164999999997,
+              "sum_squares": 0.12954009341125
+            }
+          }
+        },
+        {
+          "conversions_timeseries": {
+            "granularity": "hour",
+            "points": [
+              {
+                "bucket": "2026-11-26T23:00:00+00:00",
+                "converted_identities": {
+                  "control": 6
+                }
+              },
+              {
+                "bucket": "2026-11-27T00:00:00+00:00",
+                "converted_identities": {
+                  "control": 4,
+                  "lanes_v1": 3
+                }
+              },
+              {
+                "bucket": "2026-11-27T01:00:00+00:00",
+                "converted_identities": {
+                  "control": 5,
+                  "lanes_v1": 4
+                }
+              },
+              {
+                "bucket": "2026-11-27T02:00:00+00:00",
+                "converted_identities": {
+                  "control": 4,
+                  "lanes_v1": 1
+                }
+              },
+              {
+                "bucket": "2026-11-27T03:00:00+00:00",
+                "converted_identities": {
+                  "control": 2,
+                  "lanes_v1": 4
+                }
+              },
+              {
+                "bucket": "2026-11-27T04:00:00+00:00",
+                "converted_identities": {
+                  "control": 4,
+                  "lanes_v1": 4
+                }
+              },
+              {
+                "bucket": "2026-11-27T05:00:00+00:00",
+                "converted_identities": {
+                  "control": 3,
+                  "lanes_v1": 3
+                }
+              },
+              {
+                "bucket": "2026-11-27T06:00:00+00:00",
+                "converted_identities": {
+                  "control": 3,
+                  "lanes_v1": 2
+                }
+              },
+              {
+                "bucket": "2026-11-27T07:00:00+00:00",
+                "converted_identities": {
+                  "control": 2,
+                  "lanes_v1": 2
+                }
+              },
+              {
+                "bucket": "2026-11-27T08:00:00+00:00",
+                "converted_identities": {
+                  "control": 1
+                }
+              },
+              {
+                "bucket": "2026-11-27T09:00:00+00:00",
+                "converted_identities": {
+                  "lanes_v1": 3
+                }
+              },
+              {
+                "bucket": "2026-11-27T10:00:00+00:00",
+                "converted_identities": {
+                  "lanes_v1": 1
+                }
+              },
+              {
+                "bucket": "2026-11-27T11:00:00+00:00",
+                "converted_identities": {
+                  "lanes_v1": 1
+                }
+              }
+            ]
+          },
+          "inference": {
+            "lanes_v1": {
+              "chance_to_win": 0.2996193644898472,
+              "ci_high": 0.25365907916867425,
+              "ci_low": -0.4395073315130902,
+              "lift": -0.09292412617220797
+            }
+          },
+          "metric_id": 738,
+          "variants": {
+            "control": {
+              "n": 76,
+              "sum": 34.0,
+              "sum_squares": 34.0
+            },
+            "lanes_v1": {
+              "n": 69,
+              "sum": 28.0,
+              "sum_squares": 28.0
+            }
+          }
+        },
+        {
+          "conversions_timeseries": null,
+          "inference": {
+            "lanes_v1": {
+              "chance_to_win": 0.7246493941416244,
+              "ci_high": 0.2012306488450583,
+              "ci_low": -0.10729900504129182,
+              "lift": 0.04696582190188324
+            }
+          },
+          "metric_id": 739,
+          "variants": {
+            "control": {
+              "n": 76,
+              "sum": 374.0,
+              "sum_squares": 2222.0
+            },
+            "lanes_v1": {
+              "n": 69,
+              "sum": 355.5,
+              "sum_squares": 2191.25
+            }
+          }
+        },
+        {
+          "conversions_timeseries": null,
+          "inference": {
+            "lanes_v1": {
+              "chance_to_win": 0.00520935136477968,
+              "ci_high": -0.06794062133017872,
+              "ci_low": -0.5105938470868935,
+              "lift": -0.2892672342085361
+            }
+          },
+          "metric_id": 740,
+          "variants": {
+            "control": {
+              "n": 76,
+              "sum": 47318.769000000015,
+              "sum_squares": 56384009.94458699
+            },
+            "lanes_v1": {
+              "n": 69,
+              "sum": 30533.4075,
+              "sum_squares": 25510351.58708425
+            }
+          }
+        }
+      ],
+      "srm_p_value": null
+    },
+    "refresh_requested_at": "2026-11-27T12:02:40.889507Z"
+  }
+}
