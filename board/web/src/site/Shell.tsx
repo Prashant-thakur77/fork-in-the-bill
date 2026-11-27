@@ -6,12 +6,14 @@ import { RouterProvider, useRouter } from "./router";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { routeFor } from "./routes";
+import Home from "../pages/Home";
 import Live from "../pages/Live";
 import NotFound from "../pages/NotFound";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 export const PAGES: Record<string, ComponentType> = {
+  "/": Home,
   "/live": Live,
   "/404": NotFound,
 };
