@@ -51,6 +51,7 @@ uv run python -m analysis.check_consistency                                   # 
 - [For judges](#for-judges)
 - [How Flagsmith is used](#how-flagsmith-is-used)
 - [What we found in Flagsmith along the way](#what-we-found-in-flagsmith-along-the-way)
+- [From the research to the code](#from-the-research-to-the-code)
 - [Results](#results)
 - [Integrity and how to verify](#integrity-and-how-to-verify)
 - [Architecture](#architecture)
@@ -280,6 +281,33 @@ Running a real experiment end to end turned up behaviour worth knowing before yo
 - **End Experiment rolls a variant out by weight.** Ending with a variant as the decision sets that variant to 100% on the environment default and removes the experiment's override; the flag's base value stays as it was. Before experiment 2 the winner was made the flag's own value ([D25](DECISIONS.md#d25-ending-experiment-1-and-making-the-winner-the-flags-own-value)).
 - **Every publish gives feature states new ids.** With v2 feature versioning, a Terraform apply during a run would publish new versions on the flag being split, so flags as code are plan-only while an experiment runs ([D23](DECISIONS.md#d23-flags-as-code-are-read-only-during-an-experiment)).
 - **The OpenFeature exposure hook covers split traffic only.** The kit's adapter records the exposure itself so the control arm is counted ([`kit/forkbill/openfeature.py`](kit/forkbill/openfeature.py)).
+
+## From the research to the code
+
+Each statistical and integrity method in this repository comes from a source in [docs/references.md](docs/references.md). The table says where each one is implemented and what it shows on experiment 1. The first eight rows were fixed before any result was seen: by the registration, and in the case of the tier split by the amendment. The last four were added after experiment 1 had ended and been decided ([D29](DECISIONS.md#d29-secondary-analyses-added-after-experiment-1-ended)). They are secondary robustness readings, they run for experiment 2 as soon as its logs are committed, and none of them changes the registered decision.
+
+| Source | Idea | Implemented in | What it shows here |
+|---|---|---|---|
+| [Nosek et al., 2018](https://doi.org/10.1073/pnas.1708274114) | Fix the hypothesis, metrics and decision rule before the data exist | [`prereg/experiment-1.md`](prereg/experiment-1.md), [`prereg/HASHES.txt`](prereg/HASHES.txt) | Registration <!--n:exp1.prereg.sha256:hash12-->44d715bd6bd7<!--/n--> hashed and tagged before the first task, margin m = <!--n:exp1.prereg.m:prob1-->20.0%<!--/n--> of solve rate |
+| [Fabijan et al., 2019](https://doi.org/10.1145/3292500.3330722) | If the arms' shares drift from the planned split, the pipeline is broken and the result is not trusted | `srm_test` in [`analysis/analyse.py`](analysis/analyse.py) | Chi-square <!--n:exp1.srm.chi2:f3-->0.338<!--/n-->, p = <!--n:exp1.srm.p:f3-->0.561<!--/n-->; flagged: <!--n:exp1.srm.flag:str-->False<!--/n--> |
+| [Deng et al., 2013](https://doi.org/10.1145/2433396.2433413) (CUPED) | Take out the part of the outcome that a pre-experiment covariate predicts | `cuped` in [`analysis/analyse.py`](analysis/analyse.py) | A pilot-trained cost covariate gives a variance reduction of <!--n:exp1.cuped.variance_reduction_pct:pct1-->+3.4%<!--/n--> |
+| [Efron and Tibshirani, 1994](https://www.routledge.com/An-Introduction-to-the-Bootstrap/Efron-Tibshirani/p/book/9780412042317) | Resample the tasks to get an interval without assuming a distribution | `bootstrap_arm` in [`analysis/analyse.py`](analysis/analyse.py) | Mean cost per task changed by <!--n:exp1.delta.cost_mean:usd4-->−$0.0444<!--/n-->, interval <!--n:exp1.delta.cost_mean_ci.0:usd4-->−$0.0632<!--/n--> to <!--n:exp1.delta.cost_mean_ci.1:usd4-->−$0.0281<!--/n--> |
+| [Gelman et al., 2013](https://doi.org/10.1201/b16018) (BDA) | A Beta prior and binomial data give a Beta posterior for each arm's solve rate | `beta_posterior` in [`analysis/analyse.py`](analysis/analyse.py) | P(Δsolve > −m) = <!--n:exp1.delta.p_solve_drop_within_m:prob1-->97.7%<!--/n--> |
+| [Haber and Stornetta, 1991](https://doi.org/10.1007/BF00196791) | Each record carries the hash of the one before, so an edit breaks every later hash | [`integrity/ledger.py`](integrity/ledger.py), [`integrity/verify_ledger.py`](integrity/verify_ledger.py) | <!--n:integrity.task_done_records:int-->146<!--/n--> `task_done` records under the Merkle root <!--n:integrity.merkle_root:hash12-->7ed364648c75<!--/n--> |
+| [FDA, 2016](https://www.fda.gov/regulatory-information/search-fda-guidance-documents/non-inferiority-clinical-trials) | A guardrail is a non-inferiority test against a margin fixed in advance | rule 2 of the registration, `analyse_experiment` in [`analysis/analyse.py`](analysis/analyse.py) | The posterior <!--n:exp1.delta.p_solve_drop_within_m:prob1-->97.7%<!--/n--> clears the <!--n:exp1.decision.bars.guardrail_posterior:prob1-->90.0%<!--/n--> bar at m = <!--n:exp1.prereg.m:prob1-->20.0%<!--/n--> |
+| [Liang, Garg and Moghaddam, 2025](https://arxiv.org/abs/2506.12286) | Models can remember benchmark tasks, so tasks created after the training cutoff are reported apart | `by_tier` in [`analysis/analyse.py`](analysis/analyse.py) | On the fresh tier alone the guardrail posterior is <!--n:exp1.by_tier.fresh.delta.p_solve_drop_within_m:prob1-->78.9%<!--/n-->, below the bar |
+| [Johari et al., 2017](https://doi.org/10.1145/3097983.3097992) | A p-value that stays valid however often a running test is looked at (mixture sequential probability ratio test) | [`analysis/always_valid.py`](analysis/always_valid.py) | Replayed in the order tasks finished, cost crossed <!--n:exp1.secondary.always_valid.alpha:f3-->0.050<!--/n--> after task <!--n:exp1.secondary.always_valid.cost.first_cross_at:int-->72<!--/n--> of <!--n:exp1.secondary.always_valid.n_tasks:int-->145<!--/n--> and ended at p = <!--n:exp1.secondary.always_valid.cost.p_final:p3--><0.001<!--/n-->. Solve rate ended at p = <!--n:exp1.secondary.always_valid.solve.p_final:p3-->0.630<!--/n-->; crossed in the harmful direction: <!--n:exp1.secondary.always_valid.solve.crossed_harmful:str-->False<!--/n--> ([chart](analysis/charts/exp1-always-valid.png)) |
+| [Kapoor et al., 2024](https://arxiv.org/abs/2407.01502) | Report an agent's cost next to its accuracy and draw the Pareto frontier | [`analysis/frontier.py`](analysis/frontier.py) | <!--n:frontier.n_on_frontier:int-->3<!--/n--> of <!--n:frontier.n_arms:int-->5<!--/n--> arms are on the frontier: <!--n:frontier.on_frontier:str-->exp1 lanes_v1, rollout lanes_v1, pilot control<!--/n-->. The batches used different task pools, so this describes them and tests nothing ([chart](analysis/charts/frontier.png)) |
+| [RFC 6962](https://www.rfc-editor.org/info/rfc6962); [Crosby and Wallach, 2009](https://www.usenix.org/conference/usenixsecurity09/technical-sessions/presentation/efficient-data-structures-tamper-evident) | Prove that one entry is in a published log with a short audit path | [`integrity/merkle.py`](integrity/merkle.py), [`integrity/prove.py`](integrity/prove.py) | <!--n:integrity.proofs.exp1.verified:int-->146<!--/n--> of <!--n:integrity.proofs.exp1.leaves:int-->146<!--/n--> experiment 1 records verify against the published root, with at most <!--n:integrity.proofs.exp1.path_length_max:int-->8<!--/n--> hashes each. The tree rule is this project's, not RFC 6962's, so the root is unchanged |
+| [Gelman and Loken, 2013](https://sites.stat.columbia.edu/gelman/research/unpublished/p_hacking.pdf) | A result can depend on analysis choices even when nobody went fishing | [`analysis/multiverse.py`](analysis/multiverse.py) | Over <!--n:exp1.secondary.multiverse.n_specs:int-->72<!--/n--> specifications, cost per solved task is lower under `lanes_v1` in <!--n:exp1.secondary.multiverse.cost_direction:int-->72<!--/n--> and the guardrail holds in <!--n:exp1.secondary.multiverse.guardrail_pass:int-->48<!--/n-->. Every failure uses the <!--n:exp1.secondary.multiverse.guardrail_fail_task_sets:str-->fresh tier<!--/n--> alone, as in [by tier](#by-tier-secondary-not-part-of-the-decision) ([chart](analysis/charts/exp1-specification-curve.png)) |
+
+To check one record against the published root yourself:
+
+```sh
+uv run python -m integrity.prove --run runs/exp1 --task swelive:gui-cs__Terminal.Gui-4860
+```
+
+That identity ran twice, so the command proves both of its records. The proof of every record is in [`analysis/out/proofs/`](analysis/out/proofs/exp1.json) for the site to check in the browser.
 
 ## Results
 
@@ -783,7 +811,7 @@ Citation metadata is in [`CITATION.cff`](CITATION.cff); GitHub's "Cite this repo
 | Path | Contents |
 |---|---|
 | [`prereg/`](prereg/experiment-1.md) | Registrations, amendment, pilot report, hashes |
-| [`DECISIONS.md`](DECISIONS.md) | Every design choice and why (D1 to D24) |
+| [`DECISIONS.md`](DECISIONS.md) | Every design choice and why (D1 to D29) |
 | [`PROGRESS.md`](PROGRESS.md) | Phase gates with evidence |
 | [`docs/interfaces.md`](docs/interfaces.md) | File formats, ledger rule, numbers.json keys, board and webhook wire formats |
 | [`flagsmith/`](flagsmith/setup.sh) | CLI setup scripts, policies, metrics, experiment bodies, ids |

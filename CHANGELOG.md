@@ -4,6 +4,17 @@ Notable changes to this project, newest first. Versions are git tags. Result fig
 
 ## [Unreleased]
 
+### Added
+
+- Four secondary analyses, added after experiment 1 had ended and been decided (D29). None was registered and none changes a decision; each runs for experiment 2 as soon as `runs/exp2` is committed.
+  - Always-valid p-values (`analysis/always_valid.py`): a mixture sequential probability ratio test replayed in the order tasks finished, for mean cost and for solve rate, with its mixing scale fixed from the pilot runs alone. Chart `analysis/charts/<exp>-always-valid.png`.
+  - Every arm on one cost-accuracy plane (`analysis/frontier.py`): the pilot arms, both arms of each experiment and the rollout batch, with bootstrap intervals on both axes and the Pareto frontier marked. Chart `analysis/charts/frontier.png`.
+  - Merkle inclusion proofs (`inclusion_proof` and `verify_inclusion` in `integrity/merkle.py`), a command that prints and checks one record's proof (`python -m integrity.prove`), and every record's proof as JSON in `analysis/out/proofs/` for the site.
+  - A specification curve (`analysis/multiverse.py`) over task set, repeated attempt, cost statistic, solve-rate prior and cost outliers. Chart `analysis/charts/<exp>-specification-curve.png`.
+- `numbers.json` keys for those analyses (`<exp>.secondary`, `frontier`, `integrity.proofs`), plus per-arm worker and planner cost (`delegate_cost_mean`, `main_cost_mean`), list prices for the two models (`pricing`), cost per 1,000 solved tasks (`projection`) and counts of the work done (`scale`), all documented in `docs/interfaces.md`.
+- A results section for each new analysis in `analysis/results.md`, a robustness subsection in the paper, and a README section that maps each source in `docs/references.md` to the code that implements it.
+- The `p3` number format for p-values, in `analysis/render_docs.py` and the board's formatter.
+
 ## [0.3.0] - 2026-11-27
 
 ### Added
