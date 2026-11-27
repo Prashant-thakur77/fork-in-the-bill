@@ -1,0 +1,602 @@
+{
+  "generated_by": "kit/ts/test/fixtures/make_fixtures.py",
+  "hashed_percentage": [
+    {
+      "ids": [
+        "x"
+      ],
+      "value": 18.24364872974595
+    },
+    {
+      "ids": [
+        "demo",
+        "floci-io__floci-1837"
+      ],
+      "value": 12.44248849769954
+    },
+    {
+      "ids": [
+        "12345",
+        "env_abc_task-1"
+      ],
+      "value": 92.04840968193638
+    },
+    {
+      "ids": [
+        "7001",
+        "FIXTUREKEY_task:0001"
+      ],
+      "value": 67.72354470894179
+    },
+    {
+      "ids": [
+        "9002",
+        "FIXTUREKEY_task:0001"
+      ],
+      "value": 1.3602720544108822
+    },
+    {
+      "ids": [
+        "a",
+        "b",
+        "c"
+      ],
+      "value": 5.761152230446089
+    },
+    {
+      "ids": [
+        "naïve",
+        "タスク"
+      ],
+      "value": 62.90258051610322
+    },
+    {
+      "ids": [
+        ""
+      ],
+      "value": 35.40708141628326
+    }
+  ],
+  "assignments": [
+    {
+      "identity": "task:0001",
+      "segment_percentage": 67.72354470894179,
+      "in_rollout": false,
+      "split_percentage": 6.7213442688537715,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0002",
+      "segment_percentage": 44.848969793958794,
+      "in_rollout": true,
+      "split_percentage": 6.581316263252651,
+      "independent_variant": "lanes_v1",
+      "engine_variant": "lanes_v1",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0003",
+      "segment_percentage": 54.2008401680336,
+      "in_rollout": true,
+      "split_percentage": 77.75555111022204,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0004",
+      "segment_percentage": 45.30906181236247,
+      "in_rollout": true,
+      "split_percentage": 31.12622524504901,
+      "independent_variant": "lanes_v2",
+      "engine_variant": "lanes_v2",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0005",
+      "segment_percentage": 52.660532106421286,
+      "in_rollout": true,
+      "split_percentage": 55.021004200840174,
+      "independent_variant": "lanes_v2",
+      "engine_variant": "lanes_v2",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0006",
+      "segment_percentage": 37.62752550510102,
+      "in_rollout": true,
+      "split_percentage": 54.52090418083617,
+      "independent_variant": "lanes_v2",
+      "engine_variant": "lanes_v2",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0007",
+      "segment_percentage": 9.161832366473295,
+      "in_rollout": true,
+      "split_percentage": 90.57811562312462,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0008",
+      "segment_percentage": 37.52750550110022,
+      "in_rollout": true,
+      "split_percentage": 3.960792158431686,
+      "independent_variant": "lanes_v1",
+      "engine_variant": "lanes_v1",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0009",
+      "segment_percentage": 23.104620924184836,
+      "in_rollout": true,
+      "split_percentage": 6.19123824764953,
+      "independent_variant": "lanes_v1",
+      "engine_variant": "lanes_v1",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0010",
+      "segment_percentage": 16.113222644528904,
+      "in_rollout": true,
+      "split_percentage": 22.784556911382275,
+      "independent_variant": "lanes_v1",
+      "engine_variant": "lanes_v1",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0011",
+      "segment_percentage": 36.257251450290056,
+      "in_rollout": true,
+      "split_percentage": 65.85317063412683,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0012",
+      "segment_percentage": 7.251450290058012,
+      "in_rollout": true,
+      "split_percentage": 77.98559711942389,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0013",
+      "segment_percentage": 37.71754350870174,
+      "in_rollout": true,
+      "split_percentage": 49.72994598919784,
+      "independent_variant": "lanes_v2",
+      "engine_variant": "lanes_v2",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0014",
+      "segment_percentage": 81.82636527305462,
+      "in_rollout": false,
+      "split_percentage": 11.60232046409282,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0015",
+      "segment_percentage": 58.19163832766553,
+      "in_rollout": true,
+      "split_percentage": 31.13622724544909,
+      "independent_variant": "lanes_v2",
+      "engine_variant": "lanes_v2",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0016",
+      "segment_percentage": 3.590718143628726,
+      "in_rollout": true,
+      "split_percentage": 76.09521904380875,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0017",
+      "segment_percentage": 81.26625325065014,
+      "in_rollout": false,
+      "split_percentage": 5.081016203240648,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0018",
+      "segment_percentage": 6.9513902780556105,
+      "in_rollout": true,
+      "split_percentage": 58.05161032206442,
+      "independent_variant": "lanes_v2",
+      "engine_variant": "lanes_v2",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0019",
+      "segment_percentage": 38.51770354070814,
+      "in_rollout": true,
+      "split_percentage": 65.95319063812762,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0020",
+      "segment_percentage": 59.5619123824765,
+      "in_rollout": true,
+      "split_percentage": 76.04520904180836,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0021",
+      "segment_percentage": 43.96879375875175,
+      "in_rollout": true,
+      "split_percentage": 33.766753350670136,
+      "independent_variant": "lanes_v2",
+      "engine_variant": "lanes_v2",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0022",
+      "segment_percentage": 50.130026005201046,
+      "in_rollout": true,
+      "split_percentage": 21.294258851770355,
+      "independent_variant": "lanes_v1",
+      "engine_variant": "lanes_v1",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0023",
+      "segment_percentage": 65.77315463092619,
+      "in_rollout": false,
+      "split_percentage": 55.53110622124425,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0024",
+      "segment_percentage": 78.11562312462492,
+      "in_rollout": false,
+      "split_percentage": 69.53390678135627,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0025",
+      "segment_percentage": 13.632726545309062,
+      "in_rollout": true,
+      "split_percentage": 85.22704540908181,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0026",
+      "segment_percentage": 42.80856171234247,
+      "in_rollout": true,
+      "split_percentage": 68.58371674334866,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0027",
+      "segment_percentage": 87.9375875175035,
+      "in_rollout": false,
+      "split_percentage": 1.2102420484096819,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0028",
+      "segment_percentage": 45.56911382276455,
+      "in_rollout": true,
+      "split_percentage": 98.18963792758552,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0029",
+      "segment_percentage": 10.272054410882177,
+      "in_rollout": true,
+      "split_percentage": 1.4802960592118424,
+      "independent_variant": "lanes_v1",
+      "engine_variant": "lanes_v1",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0030",
+      "segment_percentage": 58.47169433886778,
+      "in_rollout": true,
+      "split_percentage": 58.64172834566913,
+      "independent_variant": "lanes_v2",
+      "engine_variant": "lanes_v2",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0031",
+      "segment_percentage": 99.4498899779956,
+      "in_rollout": false,
+      "split_percentage": 99.30986197239447,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0032",
+      "segment_percentage": 91.4482896579316,
+      "in_rollout": false,
+      "split_percentage": 96.38927785557111,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0033",
+      "segment_percentage": 98.1996399279856,
+      "in_rollout": false,
+      "split_percentage": 52.81056211242249,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0034",
+      "segment_percentage": 35.04700940188037,
+      "in_rollout": true,
+      "split_percentage": 38.2376475295059,
+      "independent_variant": "lanes_v2",
+      "engine_variant": "lanes_v2",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0035",
+      "segment_percentage": 29.195839167833565,
+      "in_rollout": true,
+      "split_percentage": 50.270054010802156,
+      "independent_variant": "lanes_v2",
+      "engine_variant": "lanes_v2",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0036",
+      "segment_percentage": 73.4746949389878,
+      "in_rollout": false,
+      "split_percentage": 91.50830166033207,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0037",
+      "segment_percentage": 56.27125425085017,
+      "in_rollout": true,
+      "split_percentage": 70.31406281256251,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0038",
+      "segment_percentage": 12.88257651530306,
+      "in_rollout": true,
+      "split_percentage": 17.49349869973995,
+      "independent_variant": "lanes_v1",
+      "engine_variant": "lanes_v1",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0039",
+      "segment_percentage": 35.09701940388077,
+      "in_rollout": true,
+      "split_percentage": 61.48229645929186,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0040",
+      "segment_percentage": 71.00420084016802,
+      "in_rollout": false,
+      "split_percentage": 82.39647929585917,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0041",
+      "segment_percentage": 48.37967593518704,
+      "in_rollout": true,
+      "split_percentage": 44.22884576915383,
+      "independent_variant": "lanes_v2",
+      "engine_variant": "lanes_v2",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0042",
+      "segment_percentage": 21.204240848169633,
+      "in_rollout": true,
+      "split_percentage": 83.14662932586518,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0043",
+      "segment_percentage": 43.94878975795159,
+      "in_rollout": true,
+      "split_percentage": 88.29765953190638,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0044",
+      "segment_percentage": 66.17323464692939,
+      "in_rollout": false,
+      "split_percentage": 49.02980596119224,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0045",
+      "segment_percentage": 6.09121824364873,
+      "in_rollout": true,
+      "split_percentage": 93.20864172834567,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0046",
+      "segment_percentage": 35.1370274054811,
+      "in_rollout": true,
+      "split_percentage": 81.43628725745148,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0047",
+      "segment_percentage": 75.24504900980196,
+      "in_rollout": false,
+      "split_percentage": 9.041808361672334,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0048",
+      "segment_percentage": 60.812162432486495,
+      "in_rollout": false,
+      "split_percentage": 57.12142428485697,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0049",
+      "segment_percentage": 84.1368273654731,
+      "in_rollout": false,
+      "split_percentage": 6.1812362472494495,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0050",
+      "segment_percentage": 8.011602320464092,
+      "in_rollout": true,
+      "split_percentage": 10.232046409281855,
+      "independent_variant": "lanes_v1",
+      "engine_variant": "lanes_v1",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0051",
+      "segment_percentage": 83.46669333866772,
+      "in_rollout": false,
+      "split_percentage": 60.852170434086815,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0052",
+      "segment_percentage": 65.69313862772555,
+      "in_rollout": false,
+      "split_percentage": 19.46389277855571,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0053",
+      "segment_percentage": 97.47949589917984,
+      "in_rollout": false,
+      "split_percentage": 11.562312462492498,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0054",
+      "segment_percentage": 98.60972194438887,
+      "in_rollout": false,
+      "split_percentage": 61.45229045809162,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0055",
+      "segment_percentage": 85.23704740948189,
+      "in_rollout": false,
+      "split_percentage": 34.096819363872775,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0056",
+      "segment_percentage": 58.25165033006602,
+      "in_rollout": true,
+      "split_percentage": 76.01520304060813,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0057",
+      "segment_percentage": 14.202840568113622,
+      "in_rollout": true,
+      "split_percentage": 64.20284056811363,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0058",
+      "segment_percentage": 7.951590318063613,
+      "in_rollout": true,
+      "split_percentage": 31.10622124424885,
+      "independent_variant": "lanes_v2",
+      "engine_variant": "lanes_v2",
+      "engine_in_experiment": true
+    },
+    {
+      "identity": "task:0059",
+      "segment_percentage": 77.9355871174235,
+      "in_rollout": false,
+      "split_percentage": 52.180436087217444,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": false
+    },
+    {
+      "identity": "task:0060",
+      "segment_percentage": 36.587317463492695,
+      "in_rollout": true,
+      "split_percentage": 73.48469693938787,
+      "independent_variant": "control",
+      "engine_variant": "control",
+      "engine_in_experiment": true
+    }
+  ]
+}

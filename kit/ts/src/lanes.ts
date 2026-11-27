@@ -7,11 +7,13 @@
  * 2. otherwise the routing flag is read once with `getExperimentFlag`, which records the exposure
  *    (value = variant key) when the identity is in a running experiment;
  * 3. the value is validated as a RoutingPolicy; an invalid or missing value fails closed to the
- *    control policy, with the reason logged.
+ *    control policy, with the reason logged. With `onFailure: "throw"` nothing is substituted:
+ *    `create` rejects with a `PolicyError` that carries the reason.
  *
  * `finish(solved, turns, seconds)` sends `task_cost`, `task_solved` (only when solved),
  * `task_turns` and `task_seconds` with the exposure's identifier. The exposure and every event
  * are flushed as soon as they are tracked: a small `maxBuffer` would otherwise drop the oldest.
+ * `sendTaskEvents` sends the same four events for a caller that keeps its own totals.
  */
 
 import { parsePolicy, type RoutingPolicy } from "./policy.js";
@@ -62,6 +64,12 @@ export interface RoutedLanesOptions {
   killFlag?: string | null;
   /** Policy for the kill switch and fail-closed paths. Defaults to the flag's environment value. */
   control?: RoutingPolicy | string | Record<string, unknown>;
+  /**
+   * What to do when the kill switch or the flag cannot be read, or the flag's value is not a valid
+   * policy. `control` (the default) fails closed to the control policy. `throw` rejects with a
+   * `PolicyError` and substitutes nothing; the kill switch still serves the control policy.
+   */
+  onFailure?: "control" | "throw";
   traits?: Record<string, EventValue>;
   emitUnexposed?: boolean;
   onEvent?: (identity: string, event: string, value: number) => void;
@@ -95,10 +103,45 @@ export interface TaskResult {
 }
 
 export class PolicyError extends Error {
-  constructor(message: string) {
-    super(message);
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
     this.name = "PolicyError";
   }
+}
+
+export interface TaskOutcome {
+  usd: number;
+  solved: boolean;
+  turns: number;
+  seconds: number;
+}
+
+/** The events one finished task sends, in order. `task_solved` is only there for a solve. */
+export function taskEvents(outcome: TaskOutcome): Array<[string, number]> {
+  const events: Array<[string, number]> = [[EVENT_COST, Math.round(outcome.usd * 1e6) / 1e6]];
+  if (outcome.solved) events.push([EVENT_SOLVED, 1]);
+  events.push([EVENT_TURNS, outcome.turns]);
+  events.push([EVENT_SECONDS, Math.round(outcome.seconds * 1000) / 1000]);
+  return events;
+}
+
+/**
+ * Send a finished task's events with the exposure's identifier, flushing after each one.
+ * Returns the events in the order they were sent.
+ */
+export async function sendTaskEvents(
+  client: Pick<FlagsmithLike, "trackEvent" | "flushEvents">,
+  identity: string,
+  outcome: TaskOutcome,
+  onEvent?: (identity: string, event: string, value: number) => void,
+): Promise<Array<[string, number]>> {
+  const events = taskEvents(outcome);
+  for (const [event, value] of events) {
+    client.trackEvent(event, { identifier: identity, value });
+    await client.flushEvents();
+    onEvent?.(identity, event, value);
+  }
+  return events;
 }
 
 function isExposed(flag: FlagLike | undefined): boolean {
@@ -158,8 +201,9 @@ export class RoutedLanes {
     }
   }
 
-  private async failClosed(reason: string): Promise<[RoutingPolicy, FlagSource]> {
+  private async failClosed(reason: string, cause?: unknown): Promise<[RoutingPolicy, FlagSource]> {
     this.failReason = reason;
+    if (this.opts.onFailure === "throw") throw new PolicyError(reason, { cause });
     this.log.error(`forkbill: identity ${this.identity} fails closed to the control policy: ${reason}`);
     return [await this.control(), "fail_closed"];
   }
@@ -170,7 +214,7 @@ export class RoutedLanes {
       try {
         kill = (await this.client.getIdentityFlags(this.identity, this.opts.traits)).getFlag(killFlag);
       } catch (err) {
-        return this.failClosed(`kill switch "${killFlag}" unreadable: ${(err as Error).message}`);
+        return this.failClosed(`kill switch "${killFlag}" unreadable: ${(err as Error).message}`, err);
       }
       if (kill.enabled && kill.isDefault !== true) {
         this.log.warn(`forkbill: kill switch "${killFlag}" is on for ${this.identity}`);
@@ -182,7 +226,7 @@ export class RoutedLanes {
     try {
       served = await this.client.getExperimentFlag(this.flag, this.identity, this.opts.traits);
     } catch (err) {
-      return this.failClosed(`flag "${this.flag}" unreadable: ${(err as Error).message}`);
+      return this.failClosed(`flag "${this.flag}" unreadable: ${(err as Error).message}`, err);
     }
     this.exposed = isExposed(served);
     this.variant = served.variant ?? null;
@@ -194,7 +238,7 @@ export class RoutedLanes {
       const policy = parsePolicy(served.value);
       return [policy, this.exposed ? "experiment" : "flag"];
     } catch (err) {
-      return this.failClosed(`flag "${this.flag}" value is not a valid policy: ${(err as Error).message}`);
+      return this.failClosed(`flag "${this.flag}" value is not a valid policy: ${(err as Error).message}`, err);
     }
   }
 
@@ -234,25 +278,15 @@ export class RoutedLanes {
     return usd;
   }
 
-  private async emit(event: string, value: number): Promise<void> {
-    this.client.trackEvent(event, { identifier: this.identity, value });
-    await this.client.flushEvents();
-    this.opts.onEvent?.(this.identity, event, value);
-  }
-
   /** Send the task's events with the exposure's identifier, flushing each one. */
   async finish(solved: boolean, turns: number, seconds?: number): Promise<TaskResult> {
     if (this.finished) throw new Error("finish called twice");
     const secs = seconds ?? this.now() - this.started;
     const usd = Math.round(this.usd * 1e6) / 1e6;
-    const events: Array<[string, number]> = [];
-    if (this.exposed || this.opts.emitUnexposed) {
-      events.push([EVENT_COST, usd]);
-      if (solved) events.push([EVENT_SOLVED, 1]);
-      events.push([EVENT_TURNS, turns]);
-      events.push([EVENT_SECONDS, Math.round(secs * 1000) / 1000]);
-      for (const [name, value] of events) await this.emit(name, value);
-    }
+    const events =
+      this.exposed || this.opts.emitUnexposed
+        ? await sendTaskEvents(this.client, this.identity, { usd, solved, turns, seconds: secs }, this.opts.onEvent)
+        : [];
     this.finished = {
       identity: this.identity,
       variant: this.variant,

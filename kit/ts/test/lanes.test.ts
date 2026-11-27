@@ -11,7 +11,9 @@ import {
   parsePolicy,
   PolicyError,
   RoutedLanes,
+  sendTaskEvents,
   TablePricing,
+  taskEvents,
   usageFromAnthropic,
   type FlagLike,
   type FlagsLike,
@@ -227,6 +229,55 @@ test("policy validation matches the Python schema rules", () => {
   ];
   for (const f of accept) { const d = base(); f(d); parsePolicy(d); }
   for (const f of reject) { const d = base(); f(d); assert.throws(() => parsePolicy(d), f.toString()); }
+});
+
+test("onFailure throw: no policy is substituted and the cause is kept", async () => {
+  const down = new FakeFlagsmith(CONTROL, { lanes_v1: LANES_V1 }, { failOn: "getExperimentFlag" });
+  await assert.rejects(
+    RoutedLanes.create({ flagsmith: down, identity: "t:x", pricing: PRICING, onFailure: "throw", logger: silent }),
+    (err: unknown) => {
+      assert.ok(err instanceof PolicyError);
+      assert.equal(err.message, 'flag "agent_routing" unreadable: fake API unavailable');
+      assert.equal((err.cause as Error).message, "fake API unavailable");
+      return true;
+    },
+  );
+  assert.ok(!down.calls.includes("getEnvironmentFlags"));
+
+  const broken = new FakeFlagsmith(CONTROL, { lanes_v1: '{"policy": "broken"' });
+  await assert.rejects(
+    RoutedLanes.create({
+      flagsmith: broken, identity: idFor(broken, "lanes_v1"), pricing: PRICING, onFailure: "throw", logger: silent,
+    }),
+    /value is not a valid policy/,
+  );
+
+  const killed = new FakeFlagsmith(CONTROL, { lanes_v1: LANES_V1 }, { killed: true });
+  const lanes = await RoutedLanes.create({
+    flagsmith: killed, identity: "t:1", pricing: PRICING, onFailure: "throw", logger: silent,
+  });
+  assert.equal(lanes.flagSource, "kill_switch");
+  assert.equal(lanes.policy.policy, "control");
+});
+
+test("sendTaskEvents sends what finish sends", async () => {
+  assert.deepEqual(taskEvents({ usd: 0.1234567, solved: false, turns: 3, seconds: 1.23456 }), [
+    ["task_cost", 0.123457],
+    ["task_turns", 3],
+    ["task_seconds", 1.235],
+  ]);
+  const c = new FakeFlagsmith(CONTROL, { lanes_v1: LANES_V1 });
+  const seen: string[] = [];
+  const sent = await sendTaskEvents(c, "t:9", { usd: 8, solved: true, turns: 7, seconds: 12.5 }, (_i, e) => seen.push(e));
+  assert.deepEqual(sent, [["task_cost", 8], ["task_solved", 1], ["task_turns", 7], ["task_seconds", 12.5]]);
+  assert.deepEqual(c.delivered, [
+    ["task_cost", "t:9", 8],
+    ["task_solved", "t:9", 1],
+    ["task_turns", "t:9", 7],
+    ["task_seconds", "t:9", 12.5],
+  ]);
+  assert.equal(c.flushes, 4);
+  assert.deepEqual(seen, ["task_cost", "task_solved", "task_turns", "task_seconds"]);
 });
 
 test("usageFromAnthropic", () => {

@@ -1,0 +1,146 @@
+{
+  "allow_client_traits": true,
+  "api_key": "FIXTUREKEY",
+  "feature_states": [
+    {
+      "django_id": 9001,
+      "enabled": true,
+      "feature": {
+        "id": 501,
+        "name": "agent_routing",
+        "type": "MULTIVARIATE"
+      },
+      "feature_segment": null,
+      "feature_state_value": "{\"policy\":\"control\",\"schema\":1,\"main\":{\"model\":\"claude-sonnet-5-5\",\"max_tokens\":8000,\"cache\":true,\"effort\":\"medium\"},\"delegate\":{\"model\":\"claude-sonnet-5-5\",\"max_tokens\":2048,\"max_context_tokens\":24000,\"effort\":\"low\"},\"caps\":{\"turns\":40,\"usd_per_task\":0.60,\"seconds\":1200},\"prompt_variant\":\"delegate_v1\"}",
+      "featurestate_uuid": "11111111-1111-4111-8111-111111111111",
+      "metadata": {
+        "experiment": {
+          "id": 1,
+          "in_experiment": false,
+          "name": "fixture experiment"
+        }
+      },
+      "multivariate_feature_state_values": [
+        {
+          "id": 90011,
+          "multivariate_feature_option": {
+            "id": 601,
+            "key": "lanes_v1",
+            "value": "{\"policy\":\"lanes_v1\",\"schema\":1,\"main\":{\"model\":\"claude-sonnet-5-5\",\"max_tokens\":8000,\"cache\":true,\"effort\":\"medium\"},\"delegate\":{\"model\":\"claude-haiku-5-5\",\"max_tokens\":2048,\"max_context_tokens\":24000,\"effort\":\"low\"},\"caps\":{\"turns\":40,\"usd_per_task\":0.60,\"seconds\":1200},\"prompt_variant\":\"delegate_v1\"}"
+          },
+          "mv_fs_value_uuid": "00000000-0000-4000-8000-000000090011",
+          "percentage_allocation": 0
+        },
+        {
+          "id": 90012,
+          "multivariate_feature_option": {
+            "id": 602,
+            "key": "lanes_v2",
+            "value": "{\"policy\":\"lanes_v2\",\"schema\":1,\"main\":{\"model\":\"claude-sonnet-5-5\",\"max_tokens\":8000,\"cache\":true,\"effort\":\"medium\"},\"delegate\":{\"model\":\"claude-haiku-5-5\",\"max_tokens\":2048,\"max_context_tokens\":24000,\"effort\":\"low\"},\"caps\":{\"turns\":40,\"usd_per_task\":0.60,\"seconds\":1200},\"prompt_variant\":\"draft_review_v1\"}"
+          },
+          "mv_fs_value_uuid": "00000000-0000-4000-8000-000000090012",
+          "percentage_allocation": 0
+        }
+      ]
+    },
+    {
+      "django_id": 9003,
+      "enabled": false,
+      "feature": {
+        "id": 502,
+        "name": "routing_kill",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "33333333-3333-4333-8333-333333333333",
+      "multivariate_feature_state_values": []
+    }
+  ],
+  "hide_disabled_flags": null,
+  "hide_sensitive_data": false,
+  "id": 1,
+  "identity_overrides": [],
+  "name": "Fixture",
+  "project": {
+    "enable_realtime_updates": false,
+    "hide_disabled_flags": false,
+    "id": 1,
+    "name": "fixture",
+    "organisation": {
+      "feature_analytics": false,
+      "id": 1,
+      "name": "fixture",
+      "persist_trait_data": true,
+      "stop_serving_flags": false
+    },
+    "segments": [
+      {
+        "feature_states": [
+          {
+            "django_id": 9002,
+            "enabled": true,
+            "feature": {
+              "id": 501,
+              "name": "agent_routing",
+              "type": "MULTIVARIATE"
+            },
+            "feature_segment": {
+              "priority": 0
+            },
+            "feature_state_value": "{\"policy\":\"control\",\"schema\":1,\"main\":{\"model\":\"claude-sonnet-5-5\",\"max_tokens\":8000,\"cache\":true,\"effort\":\"medium\"},\"delegate\":{\"model\":\"claude-sonnet-5-5\",\"max_tokens\":2048,\"max_context_tokens\":24000,\"effort\":\"low\"},\"caps\":{\"turns\":40,\"usd_per_task\":0.60,\"seconds\":1200},\"prompt_variant\":\"delegate_v1\"}",
+            "featurestate_uuid": "22222222-2222-4222-8222-222222222222",
+            "metadata": {
+              "experiment": {
+                "id": 1,
+                "in_experiment": true,
+                "name": "fixture experiment"
+              }
+            },
+            "multivariate_feature_state_values": [
+              {
+                "id": 90021,
+                "multivariate_feature_option": {
+                  "id": 601,
+                  "key": "lanes_v1",
+                  "value": "{\"policy\":\"lanes_v1\",\"schema\":1,\"main\":{\"model\":\"claude-sonnet-5-5\",\"max_tokens\":8000,\"cache\":true,\"effort\":\"medium\"},\"delegate\":{\"model\":\"claude-haiku-5-5\",\"max_tokens\":2048,\"max_context_tokens\":24000,\"effort\":\"low\"},\"caps\":{\"turns\":40,\"usd_per_task\":0.60,\"seconds\":1200},\"prompt_variant\":\"delegate_v1\"}"
+                },
+                "mv_fs_value_uuid": "00000000-0000-4000-8000-000000090021",
+                "percentage_allocation": 30
+              },
+              {
+                "id": 90022,
+                "multivariate_feature_option": {
+                  "id": 602,
+                  "key": "lanes_v2",
+                  "value": "{\"policy\":\"lanes_v2\",\"schema\":1,\"main\":{\"model\":\"claude-sonnet-5-5\",\"max_tokens\":8000,\"cache\":true,\"effort\":\"medium\"},\"delegate\":{\"model\":\"claude-haiku-5-5\",\"max_tokens\":2048,\"max_context_tokens\":24000,\"effort\":\"low\"},\"caps\":{\"turns\":40,\"usd_per_task\":0.60,\"seconds\":1200},\"prompt_variant\":\"draft_review_v1\"}"
+                },
+                "mv_fs_value_uuid": "00000000-0000-4000-8000-000000090022",
+                "percentage_allocation": 30
+              }
+            ]
+          }
+        ],
+        "id": 7001,
+        "name": "experiment-1-rollout",
+        "rules": [
+          {
+            "conditions": [
+              {
+                "operator": "PERCENTAGE_SPLIT",
+                "property_": "$.identity.key",
+                "value": "60.0"
+              }
+            ],
+            "rules": [],
+            "type": "ALL"
+          }
+        ]
+      }
+    ],
+    "server_key_only_feature_ids": []
+  },
+  "updated_at": "2026-11-27T00:00:00.000000+00:00",
+  "use_identity_composite_key_for_hashing": true,
+  "use_identity_overrides_in_local_eval": true
+}
