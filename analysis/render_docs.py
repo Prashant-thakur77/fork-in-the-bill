@@ -34,7 +34,7 @@ RESULTS_END = "<!--results:end-->"
 FORMATS = ("usd2", "usd4", "pct1", "pp1", "int", "f3", "prob1", "hash12", "str")
 MISSING = "n/a"
 
-MARKDOWN_TARGETS = ("README.md", "analysis/results.md", "docs/paper.md", "docs/build/deck.html")
+MARKDOWN_TARGETS = ("README.md", "analysis/results.md", "docs/paper.md", "docs/build/deck.html", "SUBMISSION.md")
 JSON_TARGETS = ("board/web/src/seed.json", "video/captions.json")
 
 
