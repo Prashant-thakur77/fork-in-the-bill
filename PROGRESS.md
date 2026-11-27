@@ -6,16 +6,16 @@ A phase is done only when its gate passes. Evidence is command output, file path
 |---|---|---|---|
 | 1 | Access: Flagsmith project + CLI login, LLM key, budget cap, VM approval, GitHub repo | done | Flagsmith project `fork-in-the-bill` (id 56673, free plan) reachable through the Admin API; Haiku call succeeded ($0.000004, through `harness/budget.py`); `BUDGET_USD_TOTAL=100` in `.env`; AWS VM approved; public repo created. CLI v2 needs a master API key or `flagsmith login` (rejects legacy user tokens) |
 | 2 | Flagsmith smoke test | done | Managed warehouse enabled on Production, first event received 2026-11-26T18:52Z. Smoke flag `fib_smoke` (306164) with keyed variant `treat`, metric 720 (occurrence), experiment 713 started (`running`). 11 identities exposed, both variants served, conversions sent. Results API returned exposures and conversions per variant at 19:59Z (treat 4, control 4; saved in `analysis/flagsmith/smoke/`). The 3 identities tracked before the flush fix have no exposure, which confirms DECISIONS.md D9 |
-| 3 | Task pools selected and validated | in progress | pilot validated (9/12, `tasks/pools/dropped.jsonl`); exp1, rollout and exp2 validating on two VMs |
+| 3 | Task pools selected and validated | done for exp1 and the rollout; exp2b validating | exp1 and exp1b: 145 valid of 220 (`tasks/validation_report.json`); rollout 13 of 20; exp2 and exp2b validating as experiment 2 runs (D20, D26) |
 | 4 | Harness, runner, telemetry, ledger, cost; unit and replay tests; dry run 2 tasks per arm | done | CI green; dry run `runs/dryrun5-*` (2 tasks per arm, forced policies, identical caps): control $0.147 + $0.083, both solved; lanes_v1 $0.053 solved + $0.033 unsolved; ledgers verify. Earlier dry runs found the dirty-work-tree patch bug (D15) and that the agent never delegated (D16-D18) |
 | 5 | Pilot | done | `runs/pilot-*`, 9 tasks per arm, forced policies: control 5/9 solved at $0.114 mean, lanes_v1 4/9 at $0.072; ledgers verify (Merkle 4ab5f604…, d1f87905…). Report `prereg/pilot-report.md`, power `analysis/out/power.json`. One harness bug found and fixed (malformed tool arguments crashed the task) |
 | 6 | Prereg exp1, create and start experiment | done | `prereg/experiment-1.md` sha256 44d715bd… in `prereg/HASHES.txt`, tag `prereg-exp1` (annotated; signing key not available). Flagsmith experiment 822 created with the prereg hypothesis verbatim, started 2026-11-26T23:02:34Z; env snapshot 000-start shows the experiment segment at lanes_v1 50% (`runs/exp1/env/`) |
-| 7 | Main run | running | started 23:02Z on the main VM, fed by validation (D20) |
-| 8 | Decision, End Experiment, same-flag rollout, fresh batch | blocked on 7 | |
-| 9 | Exp2 prereg and run | blocked on 8 | |
-| 10 | Analysis, Merkle root, consistency gate | in progress (code) | |
-| 11 | Self-hosted portability demo, kit, board polish | in progress | |
-| 12 | README, video, rules check, submit | not started | |
+| 7 | Main run | done | `runs/exp1`: 145 analysed tasks, finished 11:54Z on 2026-11-27; ledger and assignments verify (`make verify`) |
+| 8 | Decision, End Experiment, same-flag rollout, fresh batch | done | Decision in `analysis/results.md`; experiment 822 ended 12:05Z with `lanes_v1` rolled out (D25); `runs/rollout`, 13 tasks |
+| 9 | Exp2 prereg and run | running | `prereg/experiment-2.md`, tag `prereg-exp2` 12:53Z; experiment 1423 started 12:56Z |
+| 10 | Analysis, Merkle root, consistency gate | done for exp1 and the rollout | `analysis/out/numbers.json`, `analysis/results.md`; `check_consistency` passes in CI |
+| 11 | Self-hosted portability demo, kit, board polish | done; site work continuing | `selfhost/README.md`; npm packages `forkbill` and `forkbill-mcp` 0.1.0; board live at forkbill.prashantthakur.dev |
+| 12 | README, video, rules check, submit | in progress | README, paper and deck published (releases v0.1.0, v0.2.0); video and final rules check to come |
 
 ## Log
 
