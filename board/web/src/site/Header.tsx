@@ -1,13 +1,17 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as RPointerEvent } from "react";
 import gsap from "gsap";
 import { Link, useRouter } from "./router";
 import { LogoMark } from "./Logo";
-import { ROUTES, routeFor } from "./routes";
+import { Picto } from "./Picto";
+import { MENU_GROUPS, ROUTES, type MenuGroup, type Route } from "./routes";
 import { repo } from "./data";
+import { CURRENT, batchOf, batchStatus } from "./batches";
+import { totals, useLiveState } from "./live";
 import { prefersReducedMotion } from "../motion";
+import { scrollLock } from "./scroll";
 
 const MAIN = ROUTES.filter((r) => r.group === "main");
-const MORE = ROUTES.filter((r) => r.group === "more");
+const HOME = ROUTES[0]!;
 
 const useIsoLayout = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
@@ -22,190 +26,327 @@ function GitHubIcon() {
   );
 }
 
-function MoreMenu({ active }: { active: boolean }) {
-  const { path } = useRouter();
-  const [open, setOpen] = useState(false);
-  const wrap = useRef<HTMLDivElement>(null);
-  const btn = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => setOpen(false), [path]);
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: PointerEvent) => {
-      if (!wrap.current?.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setOpen(false);
-        btn.current?.focus();
-      }
-    };
-    document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
+/** One small drawing per menu group, in the page signs' line style. */
+function GroupArt({ group }: { group: MenuGroup }) {
   return (
-    <div className="more" ref={wrap} onBlur={(e) => !wrap.current?.contains(e.relatedTarget as Node) && setOpen(false)}>
-      <button
-        ref={btn}
-        type="button"
-        className={`nav-link more-btn ${active ? "is-active" : ""}`}
-        aria-expanded={open}
-        aria-controls="more-panel"
-        onClick={() => setOpen((o) => !o)}
-      >
-        More
-        <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
-          <path d="M2 4 L6 8 L10 4" fill="none" stroke="currentColor" strokeWidth="2" />
-        </svg>
-      </button>
-      <div id="more-panel" className={`more-panel ${open ? "is-open" : ""}`} hidden={!open}>
-        <ul>
-          {MORE.map((r) => (
-            <li key={r.path}>
-              <Link to={r.path} aria-current={path === r.path ? "page" : undefined}>
-                <span className="exit-no" aria-hidden="true">
-                  {r.exit}
-                </span>
-                <span>
-                  <b>{r.label}</b>
-                  <small>{r.description.split(/[.:]/)[0]}</small>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+    <svg className="mg-art" viewBox="0 0 96 64" aria-hidden="true">
+      {group === "experiment" && (
+        <>
+          <path d="M48 62 V44 C48 30 22 32 22 18 V4 M48 44 C48 30 74 32 74 18 V4" />
+          <path className="is-accent" d="M48 62 V52 M48 46 V40" />
+          <path d="M14 12 L22 3 L30 12 M66 12 L74 3 L82 12" />
+        </>
+      )}
+      {group === "flagsmith" && (
+        <>
+          <path d="M6 10 H90 M16 10 V60 M80 10 V60" />
+          <rect x="26" y="16" width="44" height="20" rx="3" className="is-fill" />
+          <path className="is-accent" d="M34 26 H62" />
+          <path d="M48 62 V44" />
+        </>
+      )}
+      {group === "evidence" && (
+        <>
+          <path d="M22 4 H74 V52 L67 60 L61 52 L54 60 L48 52 L42 60 L35 52 L29 60 L22 52 Z" />
+          <path d="M32 18 H64 M32 30 H56" />
+          <path className="is-accent" d="M36 42 L44 49 L60 36" />
+        </>
+      )}
+      {group === "use" && (
+        <>
+          <path d="M66 62 V2 M44 6 V16 M44 24 V34" />
+          <path className="is-accent" d="M18 62 V48 C18 32 44 36 44 22" />
+          <path className="is-accent" d="M36 30 L44 20 L52 30" />
+        </>
+      )}
+    </svg>
   );
 }
 
-function MobileMenu({ open, onClose, returnFocus }: { open: boolean; onClose: () => void; returnFocus: () => void }) {
-  const { path } = useRouter();
-  const panel = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    if (open) setMounted(true);
-  }, [open]);
-
-  // Open and close: the sheet grows from the menu button as a circle; links rise from masks.
-  useEffect(() => {
-    const el = panel.current;
-    if (!el || !mounted) return;
-    const reduce = prefersReducedMotion();
-    if (open) {
-      const html = document.documentElement;
-      const prev = html.style.overflow;
-      html.style.overflow = "hidden";
-      const first = el.querySelector<HTMLElement>("a, button");
-      first?.focus({ preventScroll: true });
-      const tl = reduce
-        ? null
-        : gsap
-            .timeline()
-            .fromTo(el, { clipPath: "circle(0% at calc(100% - 40px) 34px)" }, { clipPath: "circle(150% at calc(100% - 40px) 34px)", duration: 0.5, ease: "expo.out" })
-            .from(el.querySelectorAll(".mm-link > span"), { yPercent: 110, duration: 0.5, ease: "expo.out", stagger: 0.035 }, 0.08);
-      return () => {
-        html.style.overflow = prev;
-        tl?.kill();
-      };
-    }
-    if (reduce) {
-      setMounted(false);
-      return;
-    }
-    const tl = gsap.to(el, {
-      clipPath: "circle(0% at calc(100% - 40px) 34px)",
-      duration: 0.26,
-      ease: "power2.in",
-      onComplete: () => setMounted(false),
-    });
-    return () => {
-      tl.kill();
-    };
-  }, [open, mounted]);
-
-  useEffect(() => {
-    if (open) onClose();
-    // close when the page changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [path]);
-
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      onClose();
-      returnFocus();
-      return;
-    }
-    if (e.key !== "Tab" || !panel.current) return;
-    const items = [...panel.current.querySelectorAll<HTMLElement>("a[href], button")];
-    const first = items[0];
-    const last = items[items.length - 1];
-    if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault();
-      last?.focus();
-    } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault();
-      first?.focus();
-    }
-  };
-
-  if (!mounted && !open) return null;
-  const link = (r: (typeof ROUTES)[number]) => (
-    <li key={r.path}>
-      <Link to={r.path} className="mm-link" aria-current={path === r.path ? "page" : undefined}>
+/** The run that is live now, as a small LED-style plate. */
+function LivePlate({ compact = false, onNavigate }: { compact?: boolean; onNavigate?: () => void }) {
+  const live = useLiveState(CURRENT);
+  const batch = batchOf(CURRENT);
+  const snap = live.kind === "ok" ? live.snapshot : null;
+  const st = batch ? batchStatus(batch, snap) : null;
+  const t = snap ? totals(snap) : null;
+  if (!batch || !st) return null;
+  if (compact) {
+    return (
+      <Link to="/live" className={`live-pill is-${st.key}`} onClick={onNavigate} aria-label={`${batch.label}: ${st.label}. Open the live board`}>
+        <i aria-hidden="true" />
         <span>
-          <i className="exit-no" aria-hidden="true">
-            {r.exit}
-          </i>
-          {r.label}
+          {batch.label.replace("Experiment", "Exp")} {st.label.toLowerCase()}
         </span>
       </Link>
-    </li>
-  );
+    );
+  }
   return (
-    <div ref={panel} id="site-menu" className="mobile-menu" role="dialog" aria-modal="true" aria-label="Site menu" onKeyDown={onKeyDown}>
-      <div className="mm-top">
-        <span className="mm-title">Menu</span>
-        <button
-          type="button"
-          className="mm-close"
-          onClick={() => {
-            onClose();
-            returnFocus();
-          }}
-        >
-          Close
-          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
-            <path d="M4 4 L16 16 M16 4 L4 16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-          </svg>
-        </button>
+    <Link to="/live" className={`menu-live is-${st.key}`} onClick={onNavigate} data-cursor="open">
+      <span className="menu-live-k">
+        <i aria-hidden="true" />
+        {st.label} · {batch.label}
+      </span>
+      <span className="menu-live-v">
+        {t ? (
+          <>
+            <b>{t.done.toLocaleString("en-US")}</b> tasks done · <b>{t.solved.toLocaleString("en-US")}</b> solved · <b>${t.usd.toFixed(2)}</b> spent
+          </>
+        ) : live.kind === "error" ? (
+          "Live numbers are not reachable right now."
+        ) : live.kind === "none" ? (
+          "Run status shows on the deployed site."
+        ) : (
+          "Reading the board…"
+        )}
+      </span>
+      <span className="menu-live-go">
+        Open the live board <span aria-hidden="true">→</span>
+      </span>
+    </Link>
+  );
+}
+
+function Menu({ open, onClose, returnFocus, origin }: { open: boolean; onClose: () => void; returnFocus: () => void; origin: { x: number; y: number } }) {
+  const { path } = useRouter();
+  const panel = useRef<HTMLDivElement>(null);
+  const sheet = useRef<HTMLDivElement>(null);
+  const preview = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState<Route>(HOME);
+  const wasOpen = useRef(false);
+  const drag = useRef<{ y0: number; t0: number; dy: number } | null>(null);
+
+  // Open: a wipe that grows from the button (a sheet rising from the bottom on phones); the
+  // links come up from their masks. Close is quicker than open.
+  useEffect(() => {
+    const el = panel.current;
+    const sh = sheet.current;
+    if (!el || !sh) return;
+    const phone = window.matchMedia("(max-width: 760px)").matches;
+    const reduce = prefersReducedMotion();
+    if (open) {
+      wasOpen.current = true;
+      scrollLock(true);
+      el.style.visibility = "visible";
+      gsap.killTweensOf([el, sh]);
+      if (!reduce) {
+        const tl = gsap.timeline();
+        if (phone) {
+          tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "none" }).fromTo(sh, { yPercent: 100 }, { yPercent: 0, duration: 0.42, ease: "expo.out" }, 0);
+        } else {
+          tl.set(sh, { yPercent: 0 }).fromTo(
+            el,
+            { opacity: 1, clipPath: `circle(0px at ${origin.x}px ${origin.y}px)` },
+            { clipPath: `circle(150vmax at ${origin.x}px ${origin.y}px)`, duration: 0.5, ease: "expo.out", clearProps: "clipPath" },
+          );
+        }
+        tl.fromTo(el.querySelectorAll(".mm-rise"), { yPercent: 115 }, { yPercent: 0, duration: 0.42, ease: "expo.out", stagger: 0.012 }, phone ? 0.1 : 0.08)
+          .fromTo(el.querySelectorAll(".mg-art, .menu-side > *"), { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out", stagger: 0.03 }, 0.14)
+          .fromTo(el.querySelectorAll(".mm-lane"), { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: "power3.out", stagger: 0.04 }, 0.05);
+      } else {
+        gsap.set([el, sh], { clearProps: "all" });
+        el.style.visibility = "visible";
+      }
+      (el.querySelector<HTMLElement>(".menu-close") ?? el).focus();
+    } else if (wasOpen.current) {
+      wasOpen.current = false;
+      scrollLock(false);
+      gsap.killTweensOf([el, sh]);
+      const hide = () => {
+        el.style.visibility = "hidden";
+        gsap.set(sh, { clearProps: "transform" });
+      };
+      if (reduce) hide();
+      else if (phone) gsap.to(sh, { yPercent: 100, duration: 0.26, ease: "power2.in", onComplete: hide });
+      else gsap.to(el, { clipPath: `circle(0px at ${origin.x}px ${origin.y}px)`, duration: 0.28, ease: "power2.in", onComplete: () => (hide(), gsap.set(el, { clearProps: "clipPath" })) });
+    }
+    return undefined;
+  }, [open, origin.x, origin.y]);
+
+  // Escape closes; Tab stays inside.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        returnFocus();
+        return;
+      }
+      if (e.key !== "Tab" || !panel.current) return;
+      const items = [...panel.current.querySelectorAll<HTMLElement>("a[href], button:not([disabled])")].filter((n) => n.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0]!;
+      const last = items[items.length - 1]!;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose, returnFocus]);
+
+  // The preview sign leans toward the pointer (fine pointers only); it never sits under it.
+  const onMove = (e: RPointerEvent<HTMLDivElement>) => {
+    const p = preview.current;
+    if (!p || e.pointerType !== "mouse" || prefersReducedMotion()) return;
+    const r = panel.current!.getBoundingClientRect();
+    const dx = (e.clientX - r.left) / r.width - 0.5;
+    const dy = (e.clientY - r.top) / r.height - 0.5;
+    gsap.to(p, { x: dx * 36, y: dy * 70, rotate: dx * 3, duration: 0.6, ease: "power3.out", overwrite: true });
+  };
+
+  // Phones: drag the sheet down by its handle to close it.
+  const onGrab = (e: RPointerEvent<HTMLDivElement>) => {
+    if (!window.matchMedia("(max-width: 760px)").matches) return;
+    drag.current = { y0: e.clientY, t0: performance.now(), dy: 0 };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+  const onDrag = (e: RPointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    if (!d || !sheet.current) return;
+    d.dy = Math.max(0, e.clientY - d.y0);
+    gsap.set(sheet.current, { y: d.dy });
+  };
+  const onDrop = () => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d || !sheet.current) return;
+    const fast = d.dy / Math.max(1, performance.now() - d.t0) > 0.6;
+    if (d.dy > 120 || (fast && d.dy > 30)) {
+      gsap.set(sheet.current, { y: 0, yPercent: (d.dy / sheet.current.offsetHeight) * 100 });
+      onClose();
+      returnFocus();
+    } else gsap.to(sheet.current, { y: 0, duration: 0.3, ease: "expo.out" });
+  };
+
+  const pick = (r: Route) => () => setShown(r);
+  const close = () => onClose();
+
+  return (
+    <div
+      className="menu"
+      id="site-menu"
+      ref={panel}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Site menu"
+      tabIndex={-1}
+      onPointerMove={onMove}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+          returnFocus();
+        }
+      }}
+      {...(open ? {} : ({ inert: "" } as object))}
+    >
+      <div className="menu-sheet" ref={sheet}>
+        <div className="menu-grab" onPointerDown={onGrab} onPointerMove={onDrag} onPointerUp={onDrop} onPointerCancel={onDrop}>
+          <span className="menu-handle" aria-hidden="true" />
+          <Link to="/" className="menu-home" onClick={close} onMouseEnter={pick(HOME)} onFocus={pick(HOME)}>
+            <LogoMark size={30} />
+            <span>Fork in the Bill</span>
+          </Link>
+          <button
+            type="button"
+            className="menu-close"
+            onClick={() => {
+              onClose();
+              returnFocus();
+            }}
+          >
+            <span className="menu-x" aria-hidden="true">
+              <i />
+              <i />
+            </span>
+            Close
+          </button>
+        </div>
+
+        <div className="menu-body">
+          <nav className="menu-groups" aria-label="All pages">
+            {MENU_GROUPS.map((g) => (
+              <section key={g.key} className={`mg mg-${g.key}`} aria-labelledby={`mg-${g.key}`}>
+                <span className="mm-lane" aria-hidden="true" />
+                <GroupArt group={g.key} />
+                <h2 id={`mg-${g.key}`} className="mg-title">
+                  <span className="mm-mask">
+                    <span className="mm-rise">{g.title}</span>
+                  </span>
+                </h2>
+                <p className="mg-line">
+                  <span className="mm-mask">
+                    <span className="mm-rise">{g.line}</span>
+                  </span>
+                </p>
+                <ul>
+                  {ROUTES.filter((r) => r.menu === g.key).map((r) => (
+                    <li key={r.path}>
+                      <Link
+                        to={r.path}
+                        className={`nv-link ${path === r.path ? "is-active" : ""}`}
+                        aria-current={path === r.path ? "page" : undefined}
+                        onClick={close}
+                        onMouseEnter={pick(r)}
+                        onFocus={pick(r)}
+                        data-cursor="open"
+                      >
+                        <span className="mm-mask">
+                          <span className="mm-rise">
+                            <span className="mm-label" data-text={r.label}>
+                              <span>{r.label}</span>
+                            </span>
+                            {r.path === "/live" && <i className="mm-dot" aria-hidden="true" />}
+                          </span>
+                        </span>
+                        {r.blurb && (
+                          <span className="mm-mask mm-blurb">
+                            <span className="mm-rise">{r.blurb}</span>
+                          </span>
+                        )}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </nav>
+
+          <aside className="menu-side" aria-label="Now, and elsewhere">
+            <div className="menu-preview" aria-hidden="true">
+              <div className="menu-preview-sign" ref={preview}>
+                <span className="ph-tab">
+                  Exit <b>{shown.exit}</b>
+                </span>
+                {shown.path === "/" || shown.path === "/live" ? <LogoMark size={56} /> : <Picto path={shown.path} />}
+                <p className="menu-preview-title">{shown.title}</p>
+                <p className="menu-preview-text">{shown.description}</p>
+              </div>
+            </div>
+            <LivePlate onNavigate={close} />
+            <Link to="/updates" className="menu-ticket" onClick={close} onMouseEnter={pick(ROUTES.find((r) => r.path === "/updates")!)} data-cursor="open">
+              <span className="menu-ticket-k">Updates window</span>
+              <span className="menu-ticket-v">
+                One email when the experiment 2 write-up is published <span aria-hidden="true">→</span>
+              </span>
+            </Link>
+            <a className="menu-gh" href={repo.site.repo} rel="noopener">
+              <GitHubIcon /> GitHub repository <span aria-hidden="true">↗</span>
+            </a>
+          </aside>
+        </div>
       </div>
-      <nav aria-label="All pages" className="mm-nav">
-        <p className="mm-group">The experiment</p>
-        <ul>
-          {link(ROUTES[0]!)}
-          {MAIN.map(link)}
-        </ul>
-        <p className="mm-group">More</p>
-        <ul className="mm-more">{MORE.map(link)}</ul>
-        <a className="mm-gh" href={repo.site.repo} rel="noopener">
-          <GitHubIcon /> Code on GitHub
-        </a>
-      </nav>
     </div>
   );
 }
 
 export function Header() {
   const { path } = useRouter();
-  const current = routeFor(path);
   const header = useRef<HTMLElement>(null);
   const nav = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLSpanElement>(null);
@@ -213,6 +354,7 @@ export function Header() {
   const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [origin, setOrigin] = useState({ x: 0, y: 0 });
 
   // Hide on the way down, return on the way up.
   useEffect(() => {
@@ -236,7 +378,10 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => setHidden(false), [path]);
+  useEffect(() => {
+    setHidden(false);
+    setMenu(false);
+  }, [path]);
 
   // The active marker is one painted bar that slides to the current link.
   useIsoLayout(() => {
@@ -261,6 +406,12 @@ export function Header() {
     return () => window.removeEventListener("resize", place);
   }, [path]);
 
+  const toggle = () => {
+    const r = menuBtn.current?.getBoundingClientRect();
+    if (r) setOrigin({ x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) });
+    setMenu((m) => !m);
+  };
+
   return (
     <>
       <a className="skip" href="#main">
@@ -281,26 +432,17 @@ export function Header() {
                   </Link>
                 </li>
               ))}
-              <li>
-                <MoreMenu active={current.group === "more"} />
-              </li>
             </ul>
             <span className="nav-bar" ref={bar} aria-hidden="true" />
           </div>
         </nav>
         <div className="header-end">
+          <LivePlate compact />
           <a className="gh-link" href={repo.site.repo} rel="noopener" aria-label="GitHub repository">
             <GitHubIcon />
             <span>GitHub</span>
           </a>
-          <button
-            ref={menuBtn}
-            type="button"
-            className="menu-btn"
-            aria-expanded={menu}
-            aria-controls="site-menu"
-            onClick={() => setMenu(true)}
-          >
+          <button ref={menuBtn} type="button" className={`menu-btn ${menu ? "is-open" : ""}`} aria-expanded={menu} aria-controls="site-menu" onClick={toggle} data-magnet="">
             <span className="menu-lines" aria-hidden="true">
               <i />
               <i />
@@ -309,7 +451,7 @@ export function Header() {
           </button>
         </div>
       </header>
-      <MobileMenu open={menu} onClose={() => setMenu(false)} returnFocus={() => menuBtn.current?.focus()} />
+      <Menu open={menu} onClose={() => setMenu(false)} returnFocus={() => menuBtn.current?.focus()} origin={origin} />
     </>
   );
 }

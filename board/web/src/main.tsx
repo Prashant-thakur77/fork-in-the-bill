@@ -11,6 +11,8 @@ import "./site/play.css";
 import "./site/live.css";
 import "./site/results.css";
 import "./site/home.css";
+import "./site/shell.css";
+import "./site/newpages.css";
 import { Site } from "./site/Shell";
 
 const root = document.getElementById("root")!;

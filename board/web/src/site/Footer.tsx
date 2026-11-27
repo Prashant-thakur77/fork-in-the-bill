@@ -4,11 +4,13 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { Link } from "./router";
 import { LogoMark } from "./Logo";
-import { ROUTES } from "./routes";
+import { MENU_GROUPS, ROUTES } from "./routes";
+import { BoothLineForm } from "./Booth";
+import { travelTo } from "./scroll";
 import { ghFile, repo } from "./data";
 import { totals, useLiveState, utcTime } from "./live";
 import { CURRENT, batchOf, batchStatus } from "./batches";
-import { prefersReducedMotion } from "../motion";
+import { carMarkup } from "../art/car";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -38,12 +40,6 @@ export function StatusLine() {
   );
 }
 
-const COLUMNS: { key: "experiment" | "evidence" | "build"; title: string }[] = [
-  { key: "experiment", title: "The experiment" },
-  { key: "evidence", title: "Evidence" },
-  { key: "build", title: "Build your own" },
-];
-
 const WORD = "FORK IN THE BILL";
 
 export function Footer() {
@@ -71,6 +67,27 @@ export function Footer() {
           ease: "elastic.out(1, 0.55)",
           scrollTrigger: { trigger: ".finale", start: "top 85%", once: true },
         });
+        // The painted letters lift a little under the pointer, and a car on the road drives to it.
+        const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+        const word = root.current?.querySelector<HTMLElement>(".finale-word");
+        const car = root.current?.querySelector<HTMLElement>(".finale-car");
+        if (fine && word) {
+          const letters = gsap.utils.toArray<HTMLElement>(".fw-ch");
+          const lift = letters.map((l) => gsap.quickTo(l, "y", { duration: 0.5, ease: "power3.out" }));
+          const drive = car ? gsap.quickTo(car, "x", { duration: 1.4, ease: "power2.out" }) : null;
+          const onMove = (e: PointerEvent) => {
+            if (e.pointerType !== "mouse") return;
+            letters.forEach((l, i) => {
+              const r = l.getBoundingClientRect();
+              const d = Math.abs(e.clientX - (r.left + r.width / 2));
+              lift[i]!(d < 160 ? -14 * (1 - d / 160) : 0);
+            });
+            drive?.(e.clientX - 40);
+          };
+          const onLeave = () => lift.forEach((f) => f(0));
+          word.parentElement!.addEventListener("pointermove", onMove, { passive: true });
+          word.parentElement!.addEventListener("pointerleave", onLeave);
+        }
         // Lane dashes run faster while the visitor scrolls, then settle back to cruising speed.
         const dashes = gsap.utils.toArray<HTMLElement>(".finale .lane-dashes");
         const tween = gsap.to(dashes, { backgroundPositionX: "-=320px", duration: 2.8, ease: "none", repeat: -1 });
@@ -109,7 +126,7 @@ export function Footer() {
                 type="button"
                 className="btn btn-ghost-sheet"
                 onClick={() => {
-                  window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+                  travelTo(0);
                   document.getElementById("main")?.focus({ preventScroll: true });
                 }}
               >
@@ -120,6 +137,7 @@ export function Footer() {
         </div>
         <div className="finale-road" aria-hidden="true">
           <div className="lane-dashes" />
+          <span className="finale-car" dangerouslySetInnerHTML={{ __html: `<svg viewBox="-50 -30 100 60" width="76" height="46"><g transform="rotate(90)">${carMarkup("sedan", "sheet")}</g></svg>` }} />
         </div>
         <p className="finale-word">
           <span className="sr-only">Fork in the Bill</span>
@@ -140,11 +158,11 @@ export function Footer() {
 
       <div className="footer-body">
         <div className="footer-cols">
-          {COLUMNS.map((c) => (
-            <nav key={c.key} aria-label={c.title}>
-              <p className="footer-h">{c.title}</p>
+          {MENU_GROUPS.map((g) => (
+            <nav key={g.key} aria-label={g.title}>
+              <p className="footer-h">{g.title}</p>
               <ul>
-                {ROUTES.filter((r) => r.column === c.key).map((r) => (
+                {ROUTES.filter((r) => r.menu === g.key).map((r) => (
                   <li key={r.path}>
                     <Link to={r.path}>{r.label}</Link>
                   </li>
@@ -160,6 +178,23 @@ export function Footer() {
                   GitHub repository
                 </a>
               </li>
+              {repo.paper?.hasPdf && (
+                <li>
+                  <a href="/downloads/fork-in-the-bill-paper.pdf">The paper (PDF)</a>
+                </li>
+              )}
+              {repo.paper?.hasDeck && (
+                <li>
+                  <a href="/downloads/fork-in-the-bill-deck.pdf">The deck (PDF)</a>
+                </li>
+              )}
+              {repo.releaseTag && (
+                <li>
+                  <a href={`${repo.site.repo}/releases/tag/${repo.releaseTag}`} rel="noopener">
+                    Release {repo.releaseTag}
+                  </a>
+                </li>
+              )}
               <li>
                 <a href={ghFile(prereg?.file ?? "prereg/experiment-1.md")} rel="noopener">
                   Pre-registration
@@ -177,6 +212,10 @@ export function Footer() {
               </li>
             </ul>
           </nav>
+        </div>
+        <div className="footer-booth">
+          <p className="footer-h">Updates window</p>
+          <BoothLineForm source="footer" />
         </div>
         <div className="footer-meta">
           <StatusLine />

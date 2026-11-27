@@ -270,7 +270,9 @@ export function PageHead({ route, lead, children }: { route?: Route; path?: stri
         <span className="ph-tab">
           Exit <b>{r.exit}</b>
         </span>
-        <Picto path={r.path} />
+        <span className="ph-picto-wrap" data-depth="0.25">
+          <Picto path={r.path} />
+        </span>
         <Kinetic as="h1" text={r.title} className="ph-title" />
         <p className="ph-lead">{lead}</p>
         {children}
@@ -328,6 +330,8 @@ export function OnThisPage({ items }: { items: { id: string; label: string }[] }
  *   data-reveal="stamp"  lands with a press and a small settle
  *   data-reveal="row"    list items hang in one after another
  *   data-kinetic         heading words rise from masks
+ *   data-count           a figure counts up to its real value once, when it enters
+ *   data-depth="0.3"     art drifts against the scroll, a fraction of the way (depth layers)
  */
 export function useReveals(scope: RefObject<HTMLElement | null>, deps: unknown[] = []) {
   useGSAP(
@@ -349,6 +353,31 @@ export function useReveals(scope: RefObject<HTMLElement | null>, deps: unknown[]
         });
         gsap.utils.toArray<HTMLElement>('[data-reveal="row"]').forEach((el) => {
           gsap.from(el.children, { clipPath: "inset(0 0 100% 0)", y: -10, duration: 0.7, ease: "expo.out", stagger: 0.07, scrollTrigger: st(el) });
+        });
+        gsap.utils.toArray<HTMLElement>("[data-count]").forEach((el) => {
+          // The figure on the page is the real one; only the run-up to it is animated.
+          const final = el.textContent ?? "";
+          const m = /\d[\d,]*(?:\.\d+)?/.exec(final);
+          if (!m) return;
+          const target = Number(m[0].replace(/,/g, ""));
+          const places = (m[0].split(".")[1] ?? "").length;
+          const state = { v: 0 };
+          gsap.to(state, {
+            v: target,
+            duration: 0.9,
+            ease: "power2.out",
+            scrollTrigger: st(el, "top 90%"),
+            onUpdate: () => {
+              el.textContent = final.replace(m[0], state.v.toLocaleString("en-US", { minimumFractionDigits: places, maximumFractionDigits: places }));
+            },
+            onComplete: () => {
+              el.textContent = final;
+            },
+          });
+        });
+        gsap.utils.toArray<HTMLElement>("[data-depth]").forEach((el) => {
+          const depth = Number(el.dataset.depth) || 0.2;
+          gsap.fromTo(el, { y: 60 * depth }, { y: -60 * depth, ease: "none", scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: 0.6 } });
         });
         gsap.utils.toArray<SVGElement>('[data-reveal="draw"]').forEach((el) => {
           const paths = el.querySelectorAll("[data-draw]");

@@ -3,7 +3,7 @@
 // per route with its content, title, description and share tags, so every page reads without
 // JavaScript and deep links work on reload. Also writes the share images, favicons, sitemap
 // and robots file. The Worker's asset handler serves /x from x.html and unknown paths from 404.html.
-import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Resvg } from "@resvg/resvg-js";
@@ -135,6 +135,24 @@ for (const r of pages) {
     .replace('<div id="root"></div>', `<div id="root"${isMissing ? ' data-route="/404"' : ""}>${body}</div>`);
   const file = r.path === "/" ? "index.html" : isMissing ? "404.html" : `${r.path.slice(1)}.html`;
   writeFileSync(join(dist, file), html);
+}
+
+/* ---------- files the pages link to: the paper, the deck, the figures, the ledger to verify ---------- */
+
+const { REPO_ROOT, ledgerGz } = await import("./repo-data.mjs");
+const copy = (from, to) => {
+  const src = join(REPO_ROOT, from);
+  if (!existsSync(src)) return false;
+  mkdirSync(dirname(join(dist, to)), { recursive: true });
+  copyFileSync(src, join(dist, to));
+  return true;
+};
+copy("docs/paper.pdf", "downloads/fork-in-the-bill-paper.pdf");
+copy("docs/deck.pdf", "downloads/fork-in-the-bill-deck.pdf");
+for (const f of repo.paper?.figures ?? []) copy(`analysis/charts/${f.file}`, `figures/${f.file}`);
+if (repo.verifyLedger) {
+  mkdirSync(join(dist, "data"), { recursive: true });
+  writeFileSync(join(dist, "data", `${repo.verifyLedger.run}-ledger.jsonl.gz`), ledgerGz(REPO_ROOT, repo.verifyLedger.run));
 }
 
 /* ---------- favicons, manifest, sitemap, robots ---------- */

@@ -11,6 +11,7 @@ import { Kinetic, useReveals } from "../site/ui";
 import { repo } from "../site/data";
 import { LivePanel } from "../site/LivePanel";
 import { ResultPair } from "../site/ResultPair";
+import { Booth } from "../site/Booth";
 import { useLiveState } from "../site/live";
 import { CURRENT, batchOf, batchStatus } from "../site/batches";
 import { format, money } from "../data/format";
@@ -285,7 +286,7 @@ function Result() {
         </ol>
         <div className="result-next">
           {repo.numbers?.rollout && (
-            <Link to="/results#rollout" className="next-row">
+            <Link to="/rollout" className="next-row">
               <span className="next-k">Then: rollout</span>
               <span className="next-v">
                 The experiment was ended with {SHIP1} as the flag's own value. {f["rollout.n"]} fresh tasks ran on the same flag with no code change:{" "}
@@ -297,7 +298,7 @@ function Result() {
             </Link>
           )}
           {exp2?.state === "open" && (
-            <Link to="/live" className="next-row">
+            <Link to="/experiment-2" className="next-row">
               <span className="next-k">Now: experiment 2</span>
               <span className="next-v">The winner against lanes_v2, where the small model drafts the patch. Registered before its first task. No verdict yet.</span>
               <span className="next-go" aria-hidden="true">
@@ -422,7 +423,23 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. closing */}
+      {/* 7. the updates window */}
+      <section className="closing-booth" aria-labelledby="cb-h">
+        <div className="closing-booth-copy">
+          <p className="eyebrow-sign">Updates</p>
+          <Kinetic id="cb-h" text={open && HERO_BATCH.id === "exp2" ? "Get the experiment 2 write-up" : "Get the next write-up"} />
+          <p>
+            {open && HERO_BATCH.id === "exp2" ? "Experiment 2 is still running. " : ""}Leave an address at the window and you get one email when its write-up is published, and
+            one when the kit is on npm if you ask for that too. Nothing else is sent.
+          </p>
+          <Link to="/updates#privacy" className="text-link">
+            What is stored, and how to be removed <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+        <Booth source="/" heading="h3" />
+      </section>
+
+      {/* 8. closing */}
       <section className="closing" aria-labelledby="close-h">
         <div className="closing-sign" data-reveal="hang">
           <svg className="closing-exit" viewBox="0 0 120 120" aria-hidden="true">
@@ -433,8 +450,8 @@ export default function Home() {
           <h2 id="close-h">Don't take the sign's word for it.</h2>
           <p>Every finished task is a record in a hash chain, and every arm can be recomputed offline. The commands are one line each.</p>
           <div className="cta-row">
-            <Link to="/proof" className="btn btn-sheet">
-              Check it yourself <span className="close-arrow" aria-hidden="true">→</span>
+            <Link to="/verify" className="btn btn-sheet">
+              Check a ledger in your browser <span className="close-arrow" aria-hidden="true">→</span>
             </Link>
             <Link to="/method" className="btn btn-ghost-sheet">
               Read the method

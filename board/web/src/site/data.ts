@@ -132,6 +132,42 @@ export interface Numbers {
   integrity: { merkle_root: string; task_done_records: number; by_experiment: Record<string, IntegrityRun> } | null;
 }
 
+/** What a run's first environment snapshot says about the experiment flag. */
+export interface FlagState {
+  run: string;
+  takenAt: string | null;
+  updatedAt: string | null;
+  envSha256: string | null;
+  file: string;
+  enabled: boolean;
+  valueSha256: string | null;
+  /** [variant, percentage weight] on the flag itself. */
+  variants: [string, number][];
+  experimentId: number | null;
+  experimentName: string | null;
+  /** Segment overrides Flagsmith created for a running experiment. */
+  overrides: { variants: [string, number][]; experimentId: number | null; inExperiment: boolean }[];
+}
+
+export interface PaperData {
+  title: string;
+  abstract: Block[];
+  conclusion: Block[];
+  limits: Block[];
+  sections: string[];
+  figures: { file: string; caption: string }[];
+  hasPdf: boolean;
+  hasDeck: boolean;
+  pdfBytes: number;
+  deckBytes: number;
+}
+
+export interface KitData {
+  ts: { name: string; version: string; published: boolean; node: string | null } | null;
+  py: { name: string | null; script: string | null; python: string | null };
+  mcp: { name: string; version: string; published: boolean; description: string; intro: Block[]; blocks: { lang: string; code: string }[] } | null;
+}
+
 export interface RepoData {
   site: { url: string; repo: string; commit: string; commitShort: string };
   figures: Record<string, string>;
@@ -143,6 +179,12 @@ export interface RepoData {
   numbers: Numbers | null;
   hypothesis2: string;
   prereg2: Record<"start" | "question" | "arms" | "units" | "decisionRule" | "power" | "exclusions" | "stopping" | "before", Block[]>;
+  flagStates: { before: FlagState | null; after: FlagState | null };
+  paper: PaperData | null;
+  kit: KitData;
+  releaseTag: string | null;
+  /** The ledger the verify page fetches, gzipped into the site at build. */
+  verifyLedger: { run: string; gzBytes: number } | null;
   power2: { m: number; power: number; sims: number; seed: number; pilot: { n: number; solve_rate: number }; grid: PowerRow[] } | null;
   hashes: { sha256: string; file: string }[];
   hypothesis: string;

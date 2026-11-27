@@ -223,7 +223,7 @@ function Rollout() {
       <p className="prose">
         The batch has no comparison arm, so it shows the winner working as the flag's own value, not a second estimate of the effect.
         {b?.startedAt && <> It started at {utcStamp(b.startedAt, true)}.</>} No code changed between the experiment and this batch: the runner asks
-        Flagsmith for the policy the same way. <Link to="/why-flagsmith">What End Experiment did</Link>.
+        Flagsmith for the policy the same way. <Link to="/rollout">What End Experiment did</Link>.
       </p>
     </Section>
   );
@@ -282,7 +282,7 @@ function Exp2() {
       </div>
       <p className="prose">
         Control is the rolled-out lanes_v1 policy. In lanes_v2 the small model drafts the patch and the frontier model reviews it. The rule is the same three
-        conditions, with lanes_v2 in place of lanes_v1. <a href={ghFile(b.preregFile!)}>The whole registration</a>.
+        conditions, with lanes_v2 in place of lanes_v1. <Link to="/experiment-2">The whole registration</Link>.
       </p>
       <div className="live-on-ground">
         <LivePanel experiment="exp2" />
@@ -351,7 +351,7 @@ function Checks() {
         ]}
       />
       <p className="prose">
-        The commands for each check are on the <Link to="/proof">proof page</Link>.
+        <Link to="/verify">Check a ledger in your browser</Link>, or run the commands on the <Link to="/proof">proof page</Link>.
       </p>
     </Section>
   );

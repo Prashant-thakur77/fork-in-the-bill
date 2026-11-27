@@ -54,17 +54,17 @@ export function ResultPair({ exp, treatment, n, deltas = true, heading = "h3" }:
         <dl className="res-delta">
           <div>
             <dt>Mean cost per task</dt>
-            <dd>{format(n.delta.cost_mean_pct, "pct1")}</dd>
+            <dd data-count="">{format(n.delta.cost_mean_pct, "pct1")}</dd>
             <dd className="res-range">{range(n.delta.cost_mean_pct_ci, "pct1")}</dd>
           </div>
           <div>
             <dt>Cost per solved task</dt>
-            <dd>{format(n.delta.cost_per_solve_pct, "pct1")}</dd>
+            <dd data-count="">{format(n.delta.cost_per_solve_pct, "pct1")}</dd>
             <dd className="res-range">{range(n.delta.cost_per_solve_pct_ci, "pct1")}</dd>
           </div>
           <div>
             <dt>Solve rate</dt>
-            <dd>{format(n.delta.solve_rate_pp, "pp1")}</dd>
+            <dd data-count="">{format(n.delta.solve_rate_pp, "pp1")}</dd>
             <dd className="res-range">{range(n.delta.solve_rate_ci, "pp1")}</dd>
           </div>
         </dl>

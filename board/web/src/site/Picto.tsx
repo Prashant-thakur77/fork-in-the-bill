@@ -94,6 +94,67 @@ const P: Record<string, ReactNode> = {
       <path className="pa" d="M44 76 H76" />
     </>
   ),
+  // two lanes with one job each: the left lane reads (an eye), the right lane writes (a pencil)
+  "/experiment-2": (
+    <>
+      <path d="M60 114 V88 C60 72 32 74 32 58 V10 M60 88 C60 72 88 74 88 58 V10" />
+      <path d="M16 36 C24 24 40 24 48 36 C40 48 24 48 16 36 Z" />
+      <circle cx="32" cy="36" r="5" />
+      <path className="pa" d="M76 44 L98 22 L106 30 L84 52 L74 54 Z" />
+    </>
+  ),
+  // one lane closed with an X, traffic merging into the other
+  "/rollout": (
+    <>
+      <path d="M40 114 V74 C40 54 62 54 62 34 V8" />
+      <path d="M84 114 V92" />
+      <path className="pa" d="M72 62 L96 86 M96 62 L72 86" />
+      <path d="M52 20 L62 8 L72 20" />
+    </>
+  ),
+  // a printed page with a small chart on it
+  "/paper": (
+    <>
+      <path d="M26 10 H78 L96 28 V110 H26 Z" />
+      <path d="M78 10 V28 H96" />
+      <path d="M40 46 H82 M40 60 H70" />
+      <path className="paf" d="M40 98 V82 H50 V98 Z M56 98 V74 H66 V98 Z M72 98 V88 H82 V98 Z" />
+    </>
+  ),
+  // three records linked in a chain, the last one checked
+  "/verify": (
+    <>
+      <rect x="10" y="20" width="34" height="24" rx="6" />
+      <rect x="43" y="48" width="34" height="24" rx="6" />
+      <path d="M34 44 V60 H43 M67 72 V86 H74" />
+      <circle className="paf" cx="88" cy="88" r="22" />
+      <path className="pk" d="M78 88 L86 96 L99 80" />
+    </>
+  ),
+  // a warning diamond with a question on it
+  "/faq": (
+    <>
+      <path d="M60 8 L112 60 L60 112 L8 60 Z" />
+      <path className="pa" d="M46 46 C46 30 74 30 74 46 C74 58 60 56 60 70" />
+      <circle className="paf" cx="60" cy="86" r="5" />
+    </>
+  ),
+  // an on-ramp joining the road
+  "/use-it": (
+    <>
+      <path d="M78 114 V8 M54 12 V26 M54 38 V52" />
+      <path className="pa" d="M22 114 V86 C22 62 54 66 54 44" />
+      <path className="pa" d="M44 52 L54 40 L64 52" />
+    </>
+  ),
+  // a toll ticket, torn off at the perforation
+  "/updates": (
+    <>
+      <path d="M26 10 H94 V98 L85 108 L77 98 L68 108 L60 98 L52 108 L43 98 L35 108 L26 98 Z" />
+      <path d="M40 30 H80 M40 46 H66" />
+      <path className="pa" d="M40 66 L60 80 L80 66" />
+    </>
+  ),
 };
 
 export function Picto({ path }: { path: string }) {

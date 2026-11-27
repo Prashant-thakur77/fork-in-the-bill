@@ -6,6 +6,7 @@ import { execSync } from "node:child_process";
 import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gzipSync } from "node:zlib";
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = resolve(here, "../../..");
@@ -440,6 +441,12 @@ function paperFrom(root) {
   };
 }
 
+/** A committed run ledger, gzipped, for the page that checks it in the browser. */
+export function ledgerGz(root, run) {
+  const p = join(root, `runs/${run}/ledger.jsonl`);
+  return existsSync(p) ? gzipSync(readFileSync(p), { level: 9 }) : null;
+}
+
 /** The packages a reader installs, read from their own manifests so a rename shows up here. */
 function kitFrom(root) {
   const ts = readJson(root, "kit/ts/package.json");
@@ -563,6 +570,10 @@ export function loadRepoData(root = REPO_ROOT) {
     paper: paperFrom(root),
     kit: kitFrom(root),
     releaseTag: git(root, "tag --list v0.1.0") || null,
+    verifyLedger: (() => {
+      const gz = ledgerGz(root, "rollout");
+      return gz ? { run: "rollout", gzBytes: gz.length } : null;
+    })(),
     hashes,
     hypothesis,
     policies,

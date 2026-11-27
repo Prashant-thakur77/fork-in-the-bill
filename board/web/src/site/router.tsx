@@ -4,6 +4,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { docTitle, normalize, routeFor } from "./routes";
 import { prefersReducedMotion } from "../motion";
+import { jumpTo, travelTo } from "./scroll";
 
 interface RouterCtx {
   path: string;
@@ -20,7 +21,7 @@ function scrollToHash(hash: string): boolean {
   if (!hash) return false;
   const el = document.getElementById(decodeURIComponent(hash.slice(1)));
   if (!el) return false;
-  el.scrollIntoView({ block: "start", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+  travelTo(el);
   return true;
 }
 
@@ -43,7 +44,7 @@ export function RouterProvider({ initialPath, children }: { initialPath: string;
   const swap = useCallback((target: string, hash: string) => {
     flushSync(() => setPath(target));
     setMeta(target);
-    if (!scrollToHash(hash)) window.scrollTo(0, 0);
+    if (!scrollToHash(hash)) jumpTo(0);
     const main = document.getElementById("main");
     main?.focus({ preventScroll: true });
     ScrollTrigger.refresh();
@@ -79,14 +80,14 @@ export function RouterProvider({ initialPath, children }: { initialPath: string;
       const target = normalize(url.pathname);
       if (target === path && url.search === window.location.search) {
         window.history.pushState(null, "", url.pathname + url.search + url.hash);
-        if (!scrollToHash(url.hash)) window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+        if (!scrollToHash(url.hash)) travelTo(0);
         return;
       }
       window.history.pushState(null, "", url.pathname + url.search + url.hash);
       if (target === path && !url.search) {
         // Same page with its query dropped (the board showing another batch): the page listens for this.
         window.dispatchEvent(new PopStateEvent("popstate"));
-        window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+        travelTo(0);
         return;
       }
       // The live board reads ?demo=replay once on load; a full load keeps that behaviour exact.
@@ -104,6 +105,7 @@ export function RouterProvider({ initialPath, children }: { initialPath: string;
       const target = normalize(window.location.pathname);
       flushSync(() => setPath(target));
       setMeta(target);
+      ScrollTrigger.refresh();
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
