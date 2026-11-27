@@ -11,8 +11,8 @@ runs/<exp>/                 exp is one of: dryrun, pilot, exp1, rollout, exp2
   events.jsonl              one line per Flagsmith event sent: {ts, identity, event, value}
   ledger.jsonl              hash-chained LedgerRecord lines (integrity/ledger.py)
   exclusions.jsonl          {identity, reason, attempts}
-  env_snapshots/            <ts>.json from `flagsmith environment document --json`
-  meta.json                 {experiment, pool_file, pool_sha256, prereg_tag, flagsmith_experiment_id, started_at}
+  env/                      <nnn>-<label>.json from `flagsmith environment document --json` (000-start.json, ...)
+  meta.json                 {experiment, pool_file, pool_sha256, force_policy, flagsmith_experiment_id, started_at}
 runs/raw/                   transcripts and test logs (gitignored, published as a release asset)
 ```
 

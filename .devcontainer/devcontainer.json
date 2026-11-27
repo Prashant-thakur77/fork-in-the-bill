@@ -1,0 +1,23 @@
+// Python 3.12, uv and Node 22: enough to run `make check`, `make verify` and `make analyse`.
+// None of those needs a key, so the container sets none. See docs/reproduce.md.
+{
+  "name": "fork-in-the-bill",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" }
+  },
+  "containerEnv": {
+    // The uv cache and the workspace are on different filesystems, so hardlinks cannot be used.
+    "UV_LINK_MODE": "copy"
+  },
+  "onCreateCommand": "pipx install uv==0.10.9",
+  "postCreateCommand": "uv sync --locked --all-extras --dev",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python", "charliermarsh.ruff"],
+      "settings": {
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python"
+      }
+    }
+  }
+}
