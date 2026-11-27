@@ -163,3 +163,69 @@ The batch the site reads live (hero signs, live strip, menu, footer line) is the
 **Batch rail (live board).** Three plates hung from one steel rail above the board: state chip (green diamond = final or done, blinking green dot = live), name, one line of what it compares. The active plate is a green guide sign. Picking one swaps the board in place (signs re-hang, 600 ms), updates the URL (`/live?experiment=exp1`) and works with back and forward. Status LED per batch: `EXP1 · FINAL · LANES_V1 SHIPPED`, `ROLLOUT · DONE · 13 TASKS`, `EXP2 · RUNNING · 50/50`.
 
 **Figures.** Per-task costs are shown to four decimals (`$0.0784`), as in the README, because they are cents. The board and every page read `analysis/out/numbers.json` at build through `virtual:repo-data` (`figures` formatted per `src/data/keys.json`, `numbers` raw for intervals and per-trait tables).
+
+---
+
+# Round 3: the site grows around a decided experiment
+
+Experiment 1 is decided, the winner is rolled out and experiment 2 is running. The site now says so first, and everything else is arranged around that. Same taste, tokens, type and motion vocabulary.
+
+## Sitemap (20 pages, four groups; `src/site/routes.ts`)
+Exit numbers follow this order. The header keeps four links (Live board, Results, Method, Why Flagsmith), a live pill and the Menu button at every width.
+
+| Group | Page | Job | Layout and motif |
+|---|---|---|---|
+| | `/` | The story in eight regions | hero, journey, split lab, decision, result, live strip, updates window, exit sign |
+| The experiment | `/live` | The board, per batch | batch rail above the junction |
+| | `/results` | Experiment 1 decided, rollout, experiment 2 as it stands, checks | two signs on one beam, change plates, per-trait folds |
+| | `/experiment-2` | The running experiment, in the order it happened | hypothesis sign; two role lanes drawn as roads with hand-off plates; registration mileposts; asphalt live strip; ship or keep fork |
+| | `/rollout` | What End Experiment did, and the batch after it | two flag plates, before and after, with an arrow between; one sign on asphalt |
+| | `/method`, `/how-it-works` | as before; how-it-works now opens with the toll table and the guess | |
+| Flagsmith | `/why-flagsmith`, `/flagsmith` | as before | |
+| Evidence | `/verify` | Check a ledger in the browser | chain diagram that draws; dark console with a receipt tape; verdict sign (green intact, red broken) |
+| | `/proof`, `/timeline` | as before | |
+| | `/paper` | The paper and the deck | a sheet of paper with a stacked edge; a sideways rail of figures; two download plates |
+| | `/decisions` | DECISIONS.md | index as one sticky guide sign with a search box; decisions along a road line with a yellow post each |
+| | `/faq` | Honest answers | four groups by kilometre, sticky group heads |
+| Use it | `/use-it` | Getting started in six steps | step map on a road line; sticky green step plates |
+| | `/kit`, `/glossary` | reference; the glossary is a road with a sticky letter post per group and a search box | |
+| | `/updates` | The updates list | the updates window beside "what you will get" |
+
+## Home page (restructured)
+The page was about 16,000 px at 1440 and told the result nowhere. It is now about 11,000 px in this order, and nothing was deleted: the toll table and the guess moved to `/how-it-works`, the rule and the receipt live on `/method`, `/proof` and `/verify`, the kit on `/use-it` and `/kit`, the questions on `/faq`.
+
+| Region | Entrance | Scroll | Idle | Response |
+|---|---|---|---|---|
+| Hero | headline lines rise; the answer plate swings in on its hanger (1 s elastic) after the lead; gantry, signs, signals, road as before | — | traffic; signs alternate job and live spend of the running batch | art leans with the pointer in two depth layers (gantry against road) |
+| Journey | heading words rise | pinned, scrubbed, 7 steps over 210% of the viewport (was 385%) | — | — |
+| Split lab | hangs in | — | — | drag, keys, tap; cursor label "drag" |
+| Decision | hangs in | — | — | play "what happened" or "the other outcome"; signs carry experiment 1's figures once decided |
+| Result | two signs hang in one after the other; change figures count up once | — | — | rows tilt a little under the pointer |
+| Live strip | LED meters roll | — | refresh each minute | — |
+| Updates window | — | — | — | one question at a time |
+| Exit sign | swings in | — | arrow nudges | — |
+
+**The answer plate.** Under the hero lead: a green sign with a yellow "Experiment 1 · decided" tab, the cost change on an LED panel and one sentence with the solve-rate change and the margin. It links to the results. It shows only when `numbers.json` holds the decision.
+
+## Menu (every width)
+A showpiece, and fast: content is readable within 500 ms.
+- **Button.** Two lines (the short one yellow) turn into an X.
+- **Desktop.** A full asphalt sheet grows as a circle from the button (500 ms expo.out; closes in 280 ms). Four lanes, one per group, each with a painted lane line that draws down, its own line drawing, and links that rise from masks (420 ms, 12 ms stagger). Link hover: the label rolls up and its yellow copy rolls in. To the right: the sign of the page under the pointer or focus (exit number, pictogram, title, purpose) which leans toward the pointer and never sits under it; the live run as an LED plate; the updates window as a toll ticket; the repository.
+- **Phone.** A bottom sheet rises from the foot of the screen (420 ms) and is dragged down by its handle to close (past 120 px, or a fast flick).
+- Focus is trapped, Escape closes and returns focus, the page behind is locked, and the panel is `inert` while closed.
+
+## Footer finale
+Same road and exit sign, with more on it: the four menu groups and a Source column (repository, paper, deck, release, pre-registration, decisions, licence), the one-line updates form, the live run line. On mice the painted letters lift under the pointer and a car on the road drives to where the pointer is.
+
+## The updates window (`src/site/Booth.tsx`)
+A scripted exchange in the voice of a toll booth, one question at a time: what to send (three choices), what the visitor runs their agent on (four choices or free text, skippable), where to send it. Each answer becomes the visitor's line with a Change link; the next prompt slides in (280 ms); the confirmation is a toll ticket that prints (900 ms, 14 steps) and repeats back the answers, with a stamp. States: joined, already on the list, not an address, too many tries, could not reach the list. It says in its header that nobody is typing back. Underneath it is one real form: without JavaScript every question shows at once and the worker answers the post with a small receipt page. The footer has a one-line version.
+
+## Scroll and pointer
+- **Smooth scroll**: Lenis on the animation ticker, synced to ScrollTrigger; off for reduced motion and touch. Panels that scroll on their own keep native wheel.
+- **Kilometre post**: on wide screens a yellow diamond rides the painted lane line in the left margin and reads the scroll position as a chainage (`km 3+400`).
+- **Count-up** (`data-count`): a stand-alone figure runs up to its real value once on entering.
+- **Depth** (`data-depth`): page-sign pictograms drift a quarter of the way against the scroll.
+- **Pointer** (mice only; the system pointer is never hidden): a yellow diamond travels beside the pointer and shows a label over things that can be dragged, played, opened, picked, sent or saved; primary buttons lean a third of the way toward the pointer; outline buttons fill from the side the pointer came from; plates tilt up to 3 degrees with a band of light.
+
+## Colour meaning, corrected
+Orange now means one thing: a closed lane or a work zone (cones, barricade, "Lane closed", the 404 board, results pending). Labels for things that are not results (Illustration, Preview, Replay) are drafting notes: a dashed dark outline and no fill.

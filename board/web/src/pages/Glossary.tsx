@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
-import { DocPage } from "../site/DocPage";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Link } from "../site/router";
+import { PageHead, useReveals } from "../site/ui";
+import { routeFor } from "../site/routes";
 
 export const TERMS: { term: string; def: ReactNode; see?: [string, string] }[] = [
   { term: "Amendment", def: "A change to the registered plan, written as its own hashed file before it applies. The original file is never edited.", see: ["/method#amendment", "The amendment"] },
@@ -39,36 +40,70 @@ export const TERMS: { term: string; def: ReactNode; see?: [string, string] }[] =
   { term: "Worker lane", def: "The model that runs bash in the task's container and reports back as JSON. The only thing that differs between the arms." },
 ];
 
+const slug = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
 export default function Glossary() {
-  const letters = [...new Set(TERMS.map((t) => t.term[0]!.toUpperCase()))];
+  const root = useRef<HTMLDivElement>(null);
+  useReveals(root);
+  const [q, setQ] = useState("");
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const match = (t: (typeof TERMS)[number]) => words.every((w) => `${t.term} ${typeof t.def === "string" ? t.def : ""}`.toLowerCase().includes(w));
+  const groups = useMemo(() => {
+    const m = new Map<string, typeof TERMS>();
+    for (const t of TERMS) {
+      const l = t.term[0]!.toUpperCase();
+      m.set(l, [...(m.get(l) ?? []), t]);
+    }
+    return [...m.entries()];
+  }, []);
+  const n = TERMS.filter(match).length;
   return (
-    <DocPage path="/glossary" lead={<>The words this site uses, in plain terms. Each one links to the page where it matters most.</>}>
-      <nav className="gl-letters" aria-label="Jump to letter">
-        {letters.map((l) => (
-          <a key={l} href={`#gl-${l.toLowerCase()}`}>
-            {l}
-          </a>
-        ))}
-      </nav>
-      <dl className="glossary">
-        {TERMS.map((t, i) => {
-          const first = i === 0 || TERMS[i - 1]!.term[0]!.toUpperCase() !== t.term[0]!.toUpperCase();
+    <div className="page-wrap gl-page" ref={root}>
+      <PageHead route={routeFor("/glossary")} lead={<>The words this site uses, in plain terms. Each one links to the page where it matters most.</>} />
+      <div className="gl-bar">
+        <div className="dec-find">
+          <label htmlFor="gl-q">Find a word</label>
+          <input id="gl-q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="exposure, margin, root…" autoComplete="off" spellCheck={false} />
+          <p role="status">{q ? `${n} of ${TERMS.length} match` : `${TERMS.length} terms`}</p>
+        </div>
+        <nav className="gl-letters" aria-label="Jump to letter">
+          {groups.map(([l, items]) => (
+            <a key={l} href={`#gl-${l.toLowerCase()}`} aria-disabled={items.some(match) ? undefined : true}>
+              {l}
+            </a>
+          ))}
+        </nav>
+      </div>
+      <div className="gl-road">
+        {groups.map(([l, items]) => {
+          const visible = items.filter(match);
           return (
-            <div className="gl-item" key={t.term} id={first ? `gl-${t.term[0]!.toLowerCase()}` : undefined}>
-              <dt>{t.term}</dt>
-              <dd>
-                {t.def}
-                {t.see && (
-                  <>
-                    {" "}
-                    <Link to={t.see[0]}>{t.see[1]} →</Link>
-                  </>
-                )}
-              </dd>
-            </div>
+            <section className="gl-group" key={l} id={`gl-${l.toLowerCase()}`} aria-labelledby={`gl-h-${l}`} hidden={visible.length === 0}>
+              <h2 className="gl-post" id={`gl-h-${l}`}>
+                <span className="sr-only">Letter </span>
+                {l}
+              </h2>
+              <dl className="glossary">
+                {visible.map((t) => (
+                  <div className="gl-item" key={t.term} id={slug(t.term)}>
+                    <dt>{t.term}</dt>
+                    <dd>
+                      {t.def}
+                      {t.see && (
+                        <>
+                          {" "}
+                          <Link to={t.see[0]}>{t.see[1]} →</Link>
+                        </>
+                      )}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
           );
         })}
-      </dl>
-    </DocPage>
+        {n === 0 && <p className="dec-none">No term matches that. Try one word, or clear the box.</p>}
+      </div>
+    </div>
   );
 }
