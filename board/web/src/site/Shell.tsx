@@ -10,7 +10,11 @@ import Home from "../pages/Home";
 import Live from "../pages/Live";
 import HowItWorks from "../pages/HowItWorks";
 import WhyFlagsmith from "../pages/WhyFlagsmith";
+import Method from "../pages/Method";
+import Results from "../pages/Results";
 import FlagsmithUses from "../pages/FlagsmithUses";
+import Proof from "../pages/Proof";
+import Kit from "../pages/Kit";
 import NotFound from "../pages/NotFound";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -20,7 +24,11 @@ export const PAGES: Record<string, ComponentType> = {
   "/live": Live,
   "/how-it-works": HowItWorks,
   "/why-flagsmith": WhyFlagsmith,
+  "/method": Method,
+  "/results": Results,
   "/flagsmith": FlagsmithUses,
+  "/proof": Proof,
+  "/kit": Kit,
   "/404": NotFound,
 };
 
