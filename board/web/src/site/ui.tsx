@@ -6,6 +6,7 @@ import { Link } from "./router";
 import { ghFile, type Block, type Snippet } from "./data";
 import { routeFor, type Route } from "./routes";
 import { Picto } from "./Picto";
+import { PageProp } from "./PageProp";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -274,6 +275,7 @@ export function PageHead({ route, lead, children }: { route?: Route; path?: stri
         <p className="ph-lead">{lead}</p>
         {children}
       </div>
+      <PageProp path={r.path} />
     </header>
   );
 }
