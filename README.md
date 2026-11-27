@@ -326,6 +326,14 @@ Flagsmith's readout and our replication:
 
 Decision: ship <!--n:exp1.decision.ship:str-->lanes_v1<!--/n-->. Flagsmith chance to beat control at the bar: <!--n:exp1.decision.rule_met.flagsmith_95:str-->True<!--/n-->. Guardrail posterior at the bar: <!--n:exp1.decision.rule_met.guardrail_90:str-->True<!--/n-->. No Flagsmith guardrail loss: <!--n:exp1.decision.rule_met.no_guardrail_loss:str-->True<!--/n-->.
 
+| Cost per solved task | Solve-rate posteriors |
+|---|---|
+| ![Cost per solved task per arm with bootstrap intervals](analysis/charts/exp1-cost-per-solve.png) | ![Posterior densities of the solve rate per arm](analysis/charts/exp1-solve-posteriors.png) |
+| **Cost per task, distribution** | **Solve rate by difficulty** |
+| ![Distribution of cost per task per arm](analysis/charts/exp1-cost-distribution.png) | ![Solve rate per arm by difficulty band](analysis/charts/exp1-by-difficulty.png) |
+
+The charts are drawn by [`analysis/charts.py`](analysis/charts.py) from the same run logs as every figure here; `make analyse` redraws them. More, by language and by the month a task was created, are in [`analysis/charts/`](analysis/charts/).
+
 #### By tier (secondary, not part of the decision)
 
 On the fresh tier alone (<!--n:exp1.by_tier.fresh.control.n:int-->54<!--/n--> control and <!--n:exp1.by_tier.fresh.lanes_v1.n:int-->40<!--/n--> lanes_v1 tasks), `lanes_v1` solved <!--n:exp1.by_tier.fresh.lanes_v1.solve_rate:prob1-->37.5%<!--/n--> against <!--n:exp1.by_tier.fresh.control.solve_rate:prob1-->50.0%<!--/n--> for `control`: a difference of <!--n:exp1.by_tier.fresh.delta.solve_rate_pp:pp1-->−12.5 pp<!--/n-->, posterior interval <!--n:exp1.by_tier.fresh.delta.solve_rate_ci.0:pp1-->−31.1 pp<!--/n--> to <!--n:exp1.by_tier.fresh.delta.solve_rate_ci.1:pp1-->+7.9 pp<!--/n-->. The posterior probability that this drop is within m is <!--n:exp1.by_tier.fresh.delta.p_solve_drop_within_m:prob1-->78.9%<!--/n-->, below the <!--n:exp1.decision.bars.guardrail_posterior:prob1-->90.0%<!--/n--> bar that the guardrail clears on the full pool. On the pre-cutoff tier (<!--n:exp1.by_tier.pre_cutoff.control.n:int-->22<!--/n--> and <!--n:exp1.by_tier.pre_cutoff.lanes_v1.n:int-->29<!--/n--> tasks) the difference runs the other way, <!--n:exp1.by_tier.pre_cutoff.delta.solve_rate_pp:pp1-->+13.0 pp<!--/n--> (interval <!--n:exp1.by_tier.pre_cutoff.delta.solve_rate_ci.0:pp1-->−14.0 pp<!--/n--> to <!--n:exp1.by_tier.pre_cutoff.delta.solve_rate_ci.1:pp1-->+36.5 pp<!--/n-->). Cost per solved task changed by <!--n:exp1.by_tier.fresh.delta.cost_per_solve_pct:pct1-->−40.9%<!--/n--> on fresh tasks and <!--n:exp1.by_tier.pre_cutoff.delta.cost_per_solve_pct:pct1-->−70.3%<!--/n--> on pre-cutoff tasks. The registered decision uses both tiers together, and neither tier alone is large enough for a verdict. But a reader who cares only about tasks the models cannot have seen should take the fresh-tier figures: the saving holds there, and a real solve-rate loss of ten points or more is not ruled out. Tables are in [`analysis/results.md`](analysis/results.md).
@@ -362,6 +370,20 @@ Without these, the two arms would have run the same model on nearly every call a
 Each run writes a hash-chained ledger (`runs/<exp>/ledger.jsonl`): every record's hash is `sha256(prev_hash + canonical_json(payload))`, so changing or deleting any record breaks every hash after it. The ledger holds task completions, events sent, exclusions, environment snapshots, config checks and kill-switch uses. Environment snapshots ([D21](DECISIONS.md#d21-environment-snapshots)) are taken at the start, every 15 minutes and at the end of a run, and would show any change to the flag or the split.
 
 For experiment 1: Merkle root over <!--n:integrity.task_done_records:int-->146<!--/n--> `task_done` records is <!--n:integrity.merkle_root:str-->7ed364648c7513ef22280eaed97a2ab77e92d91b8f88f5bbfab08d747a989929<!--/n-->. <!--n:integrity.env_snapshots:int-->56<!--/n--> environment snapshots were taken, with <!--n:integrity.env_snapshot_distinct_hashes:int-->1<!--/n--> distinct hashes. <!--n:integrity.assignment.matched:int-->146<!--/n--> of <!--n:integrity.assignment.checked:int-->146<!--/n--> recorded arms match Flagsmith's engine offline.
+
+```mermaid
+flowchart LR
+  T1[task_done record n-1] -->|hash| H1[hash n-1]
+  H1 --> T2[task_done record n]
+  T2 -->|"sha256(prev_hash + canonical JSON)"| H2[hash n]
+  H2 --> T3[next record]
+  subgraph Merkle[Merkle root over task_done records]
+    LF[leaf hashes] --> NODES[pairwise sha256, odd node paired with itself] --> ROOT[published root]
+  end
+  T2 -.leaf.-> LF
+  ENV[Flagsmith environment document, snapshotted every 15 minutes] -->|sha256| SNAP[env_snapshot records]
+  ENV -->|flag-engine, offline| RE[every arm re-derived from the identity] -->|compare| T2
+```
 
 One command each, from a clean clone after `uv sync`:
 
@@ -419,6 +441,78 @@ flowchart LR
   LG --> A
   A --> N[numbers.json] --> D[README, results.md, board seed]
 ```
+
+### One task, step by step
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Q as Queue (Redis Streams)
+  participant W as Runner worker
+  participant F as Flagsmith
+  participant A as Agent (planner and worker lanes)
+  participant G as Grading container
+  participant L as Ledger
+  Q->>W: lease a validated task
+  W->>F: get_experiment_flag(identity = swelive:TASK_ID, traits)
+  F-->>W: variant key + routing policy JSON (hash bucketing, 50/50)
+  W->>F: exposure event (recorded once, before the agent starts)
+  W->>A: run the policy: planner on Sonnet, worker lane on Sonnet or Haiku
+  A-->>W: patch, turns, tokens, dollars per call
+  W->>G: apply the patch in a fresh container, run FAIL_TO_PASS and PASS_TO_PASS
+  G-->>W: solved or not
+  W->>F: task_cost, task_turns, task_seconds, and task_solved when solved
+  W->>L: append task_done (hash-chained to the record before it)
+  W-->>Q: ack
+```
+
+The runner never chooses an arm: step 3 is the only place the arm comes from, and step 4 records that Flagsmith served it. A kill switch flag (`routing_kill`) short-circuits step 2 to the control policy with no exposure and no events.
+
+### How the experiment was run and decided
+
+```mermaid
+flowchart TD
+  P[Pilot: both policies forced on the same small pool] --> R[Registration written: hypothesis, metrics, margin, decision rule]
+  R --> H[Hashed into prereg/HASHES.txt, committed and tagged before the first task]
+  H --> C[Experiment created in Flagsmith from the registration: hypothesis pasted verbatim, four metrics, 50/50 split]
+  C --> S[Started: every task is an identity, Flagsmith assigns its arm]
+  S --> RUN[Run until every task in the pool is done, excluded or invalid: no early stop]
+  RUN --> PULL[Flagsmith results pulled and saved raw; our own replication from the ledger]
+  PULL --> D1{Flagsmith chance to beat control on task_cost at least 95%?}
+  D1 -- no --> KEEP[Keep control, publish why]
+  D1 -- yes --> D2{Posterior that the solve-rate drop is within the margin at least 0.90?}
+  D2 -- no --> KEEP
+  D2 -- yes --> D3{Flagsmith not reporting task_solved as losing?}
+  D3 -- no --> KEEP
+  D3 -- yes --> SHIP[Ship: End Experiment with the variant as the rollout decision]
+  SHIP --> ROLL[Same flag serves the winner to everyone; a fresh batch runs with no code change]
+  ROLL --> NEXT[Next experiment registered against the rolled-out winner]
+```
+
+### Timeline of the study (UTC, from tags, ledgers and DECISIONS.md)
+
+```mermaid
+gantt
+  dateFormat YYYY-MM-DDTHH:mm
+  axisFormat %d %b %H:%M
+  section Experiment 1
+  Pilot runs                           :done, 2026-11-26T21:37, 2026-11-26T22:49
+  Registration tagged (prereg-exp1)    :milestone, 2026-11-26T22:57, 0m
+  Experiment 822 running               :done, 2026-11-26T23:02, 2026-11-27T11:54
+  Amendment tagged (prereg-exp1-amend1):milestone, 2026-11-26T23:14, 0m
+  End Experiment, lanes_v1 rolled out  :milestone, 2026-11-27T12:05, 0m
+  section Rollout
+  Fresh batch on the same flag         :done, 2026-11-27T12:05, 2026-11-27T12:37
+  section Experiment 2
+  Registration tagged (prereg-exp2)    :milestone, 2026-11-27T12:53, 0m
+  Experiment 1423 running              :active, 2026-11-27T12:56, 2026-11-27T19:30
+  section Releases
+  v0.1.0                               :milestone, 2026-11-27T12:20, 0m
+  v0.2.0                               :milestone, 2026-11-27T13:50, 0m
+  v0.3.0                               :milestone, 2026-11-27T15:30, 0m
+```
+
+### Technology map
 
 | Layer | Technology | Where |
 |---|---|---|
