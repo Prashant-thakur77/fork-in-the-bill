@@ -641,6 +641,8 @@ export function loadRepoData(root = REPO_ROOT) {
     // The analysis output's own scale block wins wherever it has a key; the rest is counted here.
     scale: withNumbersScale(scaleFrom(root), numbers?.scale),
     references: referencesFrom(read(root, "docs/references.md")),
+    // runs whose Merkle root is published and whose ledger is committed: one task can be proved under each
+    proofRuns: ["exp1", "rollout", "exp2"].filter((r) => numbers?.integrity?.by_experiment?.[r]?.merkle_root && existsSync(join(root, `runs/${r}/ledger.jsonl`))),
     charts: existsSync(join(root, "analysis/charts")) ? readdirSync(join(root, "analysis/charts")).filter((f) => f.endsWith(".png")).sort() : [],
     shots: shotsFrom(root),
     transcripts: transcriptsFrom(root),

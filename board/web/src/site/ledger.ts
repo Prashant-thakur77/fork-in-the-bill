@@ -188,6 +188,74 @@ export async function merkleRoot(hexLeaves: string[]): Promise<string> {
   return hex(level[0]!.buffer as ArrayBuffer);
 }
 
+export interface PathStep {
+  /** The other child of this node's parent. */
+  sibling: string;
+  /** Which side the sibling sits on: the node is hashed as left + right. */
+  side: "left" | "right";
+  /** True when the node is the last of an odd-sized level and is paired with itself. */
+  self: boolean;
+}
+
+/**
+ * The audit path of one leaf: the sibling at every level from the leaf up to the root, in the
+ * tree integrity/merkle.py builds (an odd last node is paired with itself).
+ */
+export async function inclusionPath(hexLeaves: string[], index: number): Promise<PathStep[]> {
+  if (index < 0 || index >= hexLeaves.length) throw new RangeError("no such leaf");
+  let level: Uint8Array[] = hexLeaves.map(unhex);
+  let i = index;
+  const path: PathStep[] = [];
+  while (level.length > 1) {
+    const last = level.length - 1;
+    const sib = i % 2 === 0 ? Math.min(i + 1, last) : i - 1;
+    path.push({ sibling: hex(level[sib]!.slice().buffer as ArrayBuffer), side: i % 2 === 0 ? "right" : "left", self: sib === i });
+    if (level.length % 2 === 1) level = [...level, level[last]!];
+    const next: Uint8Array[] = [];
+    for (let k = 0; k < level.length; k += 2) {
+      const pair = new Uint8Array(64);
+      pair.set(level[k]!, 0);
+      pair.set(level[k + 1]!, 32);
+      next.push(new Uint8Array(await sha256(pair)));
+    }
+    level = next;
+    i = Math.floor(i / 2);
+  }
+  return path;
+}
+
+/**
+ * Climbs from a leaf to the root with the siblings of an audit path. Returns the node at every
+ * level, the last one being the root. The side at each level follows from the leaf's index.
+ */
+export async function climb(leafHex: string, index: number, siblings: string[]): Promise<string[]> {
+  let node = unhex(leafHex);
+  let i = index;
+  const nodes = [leafHex];
+  for (const s of siblings) {
+    const sib = unhex(s);
+    const pair = new Uint8Array(64);
+    if (i % 2 === 0) {
+      pair.set(node, 0);
+      pair.set(sib, 32);
+    } else {
+      pair.set(sib, 0);
+      pair.set(node, 32);
+    }
+    node = new Uint8Array(await sha256(pair));
+    nodes.push(hex(node.buffer as ArrayBuffer));
+    i = Math.floor(i / 2);
+  }
+  return nodes;
+}
+
+/** True when the leaf at `index`, with these siblings, hashes up to `rootHex`. */
+export async function verifyInclusion(leafHex: string, index: number, siblings: string[], rootHex: string): Promise<boolean> {
+  if (!/^[0-9a-f]{64}$/.test(leafHex) || siblings.some((s) => !/^[0-9a-f]{64}$/.test(s))) return false;
+  const nodes = await climb(leafHex, index, siblings);
+  return nodes[nodes.length - 1] === rootHex;
+}
+
 export interface RecordCheck {
   line: number;
   seq: number;

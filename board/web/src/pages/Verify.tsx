@@ -3,6 +3,7 @@ import { Code, Kinetic, PageHead, RepoCode, useReveals } from "../site/ui";
 import { Link } from "../site/router";
 import { routeFor } from "../site/routes";
 import { ghFile, repo } from "../site/data";
+import { ProofLab } from "../site/ProofLab";
 import { tamper, verifyLedger, type LedgerReport, type RecordCheck } from "../site/ledger";
 
 // A real check, run in the reader's browser: fetch the rollout batch's committed ledger, walk its
@@ -210,6 +211,8 @@ export default function Verify() {
           )}
         </div>
       </section>
+
+      <ProofLab />
 
       <section className="vf-sec vf-full" aria-labelledby="vf-full-h">
         <div className="x2-copy wide">

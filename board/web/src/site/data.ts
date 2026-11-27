@@ -259,6 +259,8 @@ export interface RepoData {
   kit: KitData;
   releaseTag: string | null;
   scale: ScaleData;
+  /** Runs with a published Merkle root and a committed ledger; /data/proofs-<run>.json holds their leaves. */
+  proofRuns: string[];
   /** docs/references.md, one entry per source. */
   references: Reference[];
   /** Chart files present in analysis/charts, copied to /figures at build. */

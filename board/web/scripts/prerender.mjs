@@ -151,6 +151,14 @@ copy("docs/paper.pdf", "downloads/fork-in-the-bill-paper.pdf");
 copy("docs/deck.pdf", "downloads/fork-in-the-bill-deck.pdf");
 for (const f of repo.charts ?? []) copy(`analysis/charts/${f}`, `figures/${f}`);
 for (const shot of Object.values(repo.shots ?? {})) copy(`docs/img/${shot.file}`, `img/${shot.file}`);
+// the leaves of each finished run's Merkle tree, for the single-task proof on the verify page
+const { proofFile } = await import("./proof-data.mjs");
+for (const run of repo.proofRuns ?? []) {
+  const data = proofFile(REPO_ROOT, run, repo.numbers?.integrity?.by_experiment?.[run]?.merkle_root);
+  if (!data) continue;
+  mkdirSync(join(dist, "data"), { recursive: true });
+  writeFileSync(join(dist, "data", `proofs-${run}.json`), JSON.stringify(data));
+}
 if (repo.verifyLedger) {
   mkdirSync(join(dist, "data"), { recursive: true });
   writeFileSync(join(dist, "data", `${repo.verifyLedger.run}-ledger.jsonl.gz`), ledgerGz(REPO_ROOT, repo.verifyLedger.run));

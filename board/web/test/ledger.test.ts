@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { canonicalJson, merkleRoot, parseKeepingNumbers, pyFloat, recordHash, tamper, verifyLedger, GENESIS, type RecordCheck } from "../src/site/ledger";
+import { canonicalJson, climb, inclusionPath, merkleRoot, parseKeepingNumbers, pyFloat, recordHash, tamper, verifyInclusion, verifyLedger, GENESIS, type RecordCheck } from "../src/site/ledger";
+// @ts-expect-error plain ESM build script without types
+import { pathHashes, proofFile, taskLeaves } from "../scripts/proof-data.mjs";
 
 const REPO = resolve(__dirname, "../../..");
 const numbers = existsSync(resolve(REPO, "analysis/out/numbers.json")) ? JSON.parse(readFileSync(resolve(REPO, "analysis/out/numbers.json"), "utf8")) : null;
@@ -119,3 +121,53 @@ async function collect(text: string): Promise<RecordCheck[]> {
   await verifyLedger(text, (r) => void out.push(r));
   return out;
 }
+
+describe("one task's path to the root", () => {
+  for (const run of ["rollout", "exp1"]) {
+    it(`climbs from every task of runs/${run} to the published root`, async () => {
+      const leaves = taskLeaves(REPO, run) as { i: number; leaf: string; identity: string }[];
+      const hashes = leaves.map((l) => l.leaf);
+      const root = await merkleRoot(hashes);
+      if (numbers) expect(root).toBe(numbers.integrity.by_experiment[run].merkle_root);
+      const depth = Math.ceil(Math.log2(hashes.length));
+      for (const l of leaves) {
+        const path = await inclusionPath(hashes, l.i);
+        expect(path).toHaveLength(depth);
+        const sib = path.map((s) => s.sibling);
+        expect(await verifyInclusion(l.leaf, l.i, sib, root), l.identity).toBe(true);
+        // a different hash, a different position or a missing step does not reach the root
+        const changed = ((parseInt(l.leaf[0]!, 16) + 1) % 16).toString(16) + l.leaf.slice(1);
+        expect(await verifyInclusion(changed, l.i, sib, root)).toBe(false);
+        expect(await verifyInclusion(l.leaf, l.i, sib.slice(1), root)).toBe(false);
+      }
+      const first = await inclusionPath(hashes, 0);
+      expect((await climb(hashes[0]!, 0, first.map((s) => s.sibling))).at(-1)).toBe(root);
+    }, 60_000);
+  }
+
+  it("pairs the last node of an odd level with itself, as integrity/merkle.py does", async () => {
+    const leaves = ["aa", "bb", "cc"].map((b) => b.repeat(32));
+    const path = await inclusionPath(leaves, 2);
+    expect(path[0]).toMatchObject({ sibling: leaves[2], self: true, side: "right" });
+    expect(await verifyInclusion(leaves[2]!, 2, path.map((s) => s.sibling), await merkleRoot(leaves))).toBe(true);
+    await expect(inclusionPath(leaves, 3)).rejects.toThrow(RangeError);
+    expect(await inclusionPath([leaves[0]!], 0)).toEqual([]);
+  });
+
+  it("reproduces the proofs the analysis exports, when it has exported them", async () => {
+    for (const run of ["exp1", "rollout", "exp2"]) {
+      const file = resolve(REPO, `analysis/out/proofs/${run}.json`);
+      if (!existsSync(file)) continue; // not exported in this checkout yet
+      const data = proofFile(REPO, run, numbers?.integrity?.by_experiment?.[run]?.merkle_root) as { root: string; leaves: { i: number; leaf: string; identity: string; published?: string[] }[] };
+      const hashes = data.leaves.map((l) => l.leaf);
+      const withProof = data.leaves.filter((l) => l.published);
+      expect(withProof.length, `${run}: exported proofs read`).toBe(data.leaves.length);
+      for (const l of withProof) {
+        expect(await verifyInclusion(l.leaf, l.i, l.published!, data.root), l.identity).toBe(true);
+        expect((await inclusionPath(hashes, l.i)).map((s) => s.sibling)).toEqual(l.published);
+      }
+    }
+    expect(pathHashes(["ab".repeat(32), { hash: "cd".repeat(32), side: "left" }, ["right", "ef".repeat(32)]])).toEqual(["ab".repeat(32), "cd".repeat(32), "ef".repeat(32)]);
+    expect(pathHashes([{ nothing: 1 }])).toBeNull();
+  }, 60_000);
+});
