@@ -24,6 +24,7 @@ dependencies = [
   "typer>=0.15",
   "rich>=13.9",
   "matplotlib>=3.9",
+  "flagsmith-flag-engine>=11.1,<12",
 ]
 
 [project.optional-dependencies]
