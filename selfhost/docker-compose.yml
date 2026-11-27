@@ -79,6 +79,31 @@ services:
       migrate-db:
         condition: service_completed_successfully
 
+  # Optional (profile `edge`): the open-source Edge Proxy, which evaluates flags from a polled copy
+  # of the environment document. It serves flags only; SDK events and analytics still go to the
+  # `flagsmith` service. bootstrap.sh writes the key pair to .state/edge.env.
+  #   docker compose -f selfhost/docker-compose.yml --profile edge up -d
+  edge-proxy:
+    image: flagsmith/edge-proxy:2.24.0@sha256:d85d754fc2a0e587f0a7928226a2b283792dc9db8861ef3b22301a9b32ab2801
+    profiles: ["edge"]
+    restart: unless-stopped
+    env_file:
+      - path: .state/edge.env # ENVIRONMENT_KEY_PAIRS
+        required: false
+    environment:
+      API_URL: http://flagsmith:8000/api/v1
+      API_POLL_FREQUENCY_SECONDS: "5"
+    ports:
+      - "127.0.0.1:${EDGE_PROXY_PORT:-8001}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/proxy/health/readiness')"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    depends_on:
+      flagsmith:
+        condition: service_started
+
 networks:
   default:
     # An explicit subnet keeps the stack startable on hosts whose default address pools are used up.

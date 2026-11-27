@@ -136,7 +136,7 @@ else
   echo "exists"
 fi
 ENV_KEY=$(jq -r '.[] | select(.name == "Demo") | .api_key' <<<"$ENVS")
-(cd "$STATE" && unset FLAGSMITH_CONFIG_PATH && fs init --project "$PROJECT_ID" --environment "$ENV_KEY" >/dev/null)
+(cd "$STATE" && unset FLAGSMITH_CONFIG_PATH && fs init --project "$PROJECT_ID" --environment "$ENV_KEY" --yes >/dev/null)
 export FLAGSMITH_CONFIG_PATH="$STATE/flagsmith.json"
 echo "CLI bound: $(jq -c '{project, apiUrl}' "$STATE/flagsmith.json")"
 
@@ -150,6 +150,17 @@ if ! grep -q '^FLAGSMITH_SERVER_KEY=' "$CREDS"; then
   } >>"$CREDS"
   echo "server-side SDK key created"
 fi
+
+# Edge Proxy key pair (compose profile `edge`): the proxy polls the environment document with the
+# server-side key and answers SDKs that send either key. Written on every run, never printed.
+SERVER_KEY=$(grep '^FLAGSMITH_SERVER_KEY=' "$CREDS" | cut -d= -f2-)
+jq -nc --arg s "$SERVER_KEY" --arg c "$ENV_KEY" '[{server_side_key: $s, client_side_key: $c}]' \
+  | { printf 'ENVIRONMENT_KEY_PAIRS='; cat; } >"$STATE/edge.env"
+chmod 600 "$STATE/edge.env"
+if ! grep -q '^FLAGSMITH_EDGE_API_URL=' "$CREDS"; then
+  echo "FLAGSMITH_EDGE_API_URL=http://localhost:${EDGE_PROXY_PORT:-8001}/api/v1/" >>"$CREDS"
+fi
+echo "Edge Proxy key pair written (start it with: docker compose -f selfhost/docker-compose.yml --profile edge up -d)"
 
 echo "== warehouse: Flagsmith database (Postgres, evaluation only)"
 WH=$(fs_api GET "api/v1/environments/$ENV_KEY/warehouse-connections/")
@@ -166,5 +177,5 @@ Credentials file (keys and admin password, mode 600): ${CREDS#"$ROOT"/}
 CLI config (project and client-side environment key):  ${STATE#"$ROOT"/}/flagsmith.json
 Use it from a shell:  set -a; source ${CREDS#"$ROOT"/}; set +a
 Next: selfhost/demo.sh
-Tear down:  docker compose -f selfhost/docker-compose.yml down -v && rm -rf selfhost/.state
+Tear down:  docker compose -f selfhost/docker-compose.yml --profile edge down -v && rm -rf selfhost/.state
 EOT

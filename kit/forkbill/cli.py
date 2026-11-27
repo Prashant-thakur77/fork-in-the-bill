@@ -10,10 +10,11 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 import typer
 
+from forkbill.client import MODES, Mode, make_client
 from forkbill.demo import run_demo, summarise
 from forkbill.experiment import Ids, default_body, empty_ids, include_all_variants, load_policy_json, render
 from forkbill.flagsmith_cli import (
@@ -122,6 +123,10 @@ def demo(
     kill_flag: str = "routing_kill",
     api_url: Annotated[str | None, typer.Option(help="SDK API URL, e.g. http://localhost:8000/api/v1/.")] = None,
     events_api_url: Annotated[str | None, typer.Option(help="Events URL, e.g. http://localhost:8000/api/.")] = None,
+    mode: Annotated[str, typer.Option(help=f"Evaluation mode: {', '.join(MODES)}.")] = "remote",
+    edge_url: Annotated[
+        str | None, typer.Option(help="Edge Proxy SDK URL, e.g. http://localhost:8001/api/v1/.")
+    ] = None,
     offline: Annotated[bool, typer.Option(help="Use an in-memory fake client (CI).")] = False,
     control: Annotated[Path | None, typer.Option(help="Control policy JSON for offline.")] = None,
     variant: Annotated[list[str] | None, typer.Option(help="KEY=PATH variant policy for offline; repeatable.")] = None,
@@ -130,6 +135,9 @@ def demo(
     """Run the deterministic fake agent loop (no model calls) through RoutedLanes.
 
     Online, the environment key is read from FLAGSMITH_SERVER_KEY or FLAGSMITH_ENVIRONMENT_KEY.
+    `--mode local` and `--mode edge-local` evaluate from the environment document and need a
+    server-side key; `--mode edge` and `--mode edge-local` read flags from the Edge Proxy at
+    `--edge-url`. Events always go to `--events-api-url`, the core API.
     """
     control_policy: RoutingPolicy | None = None
     if control is not None:
@@ -145,19 +153,9 @@ def demo(
             variants[key] = Path(path).read_text()
         client: Any = FakeFlagsmith(flag=flag, control=control.read_text(), variants=variants)
     else:
-        from flagsmith.analytics import EventProcessorConfig
-
-        from flagsmith import Flagsmith
-
-        key = os.environ.get("FLAGSMITH_SERVER_KEY") or os.environ.get("FLAGSMITH_ENVIRONMENT_KEY")
-        if not key:
-            raise _fail("set FLAGSMITH_SERVER_KEY (or FLAGSMITH_ENVIRONMENT_KEY)")
         # max_buffer_items is the buffer's capacity in SDK 6.7: a value of 1 drops events tracked
         # back to back. Keep the default capacity; RoutedLanes.finish flushes explicitly.
-        cfg = EventProcessorConfig()
-        if events_api_url:
-            cfg = EventProcessorConfig(events_api_url=events_api_url)
-        client = Flagsmith(environment_key=key, api_url=api_url, enable_events=True, event_processor_config=cfg)
+        client = _online_client(mode, api_url=api_url, events_api_url=events_api_url, edge_url=edge_url)
     try:
         results = run_demo(
             client,
@@ -172,7 +170,53 @@ def demo(
         if hasattr(client, "close"):
             client.close(10.0)
     typer.echo("deterministic fake agent loop (no model calls, illustrative prices)")
-    typer.echo(json.dumps({"identities": n, "by_variant": summarise(results)}, indent=2))
+    summary = {"mode": "offline" if offline else mode, "identities": n, "by_variant": summarise(results)}
+    typer.echo(json.dumps(summary, indent=2))
+
+
+def _online_client(mode: str, *, api_url: str | None, events_api_url: str | None, edge_url: str | None) -> Any:
+    key = os.environ.get("FLAGSMITH_SERVER_KEY") or os.environ.get("FLAGSMITH_ENVIRONMENT_KEY")
+    if not key:
+        raise _fail("set FLAGSMITH_SERVER_KEY (or FLAGSMITH_ENVIRONMENT_KEY)")
+    if mode not in MODES:
+        raise _fail(f"--mode must be one of {', '.join(MODES)}, not {mode!r}")
+    try:
+        return make_client(
+            cast(Mode, mode), environment_key=key, api_url=api_url, events_api_url=events_api_url, edge_url=edge_url
+        )
+    except ValueError as exc:
+        raise _fail(f"error: {exc}") from None
+
+
+@app.command()
+def compare(
+    mode: Annotated[list[str], typer.Option(help=f"Modes to compare, first is the baseline: {', '.join(MODES)}.")],
+    n: int = 200,
+    prefix: str = "kitdemo-compare",
+    flag: str = "agent_routing",
+    api_url: Annotated[str | None, typer.Option(help="SDK API URL, e.g. http://localhost:8000/api/v1/.")] = None,
+    events_api_url: Annotated[str | None, typer.Option(help="Events URL, e.g. http://localhost:8000/api/.")] = None,
+    edge_url: Annotated[
+        str | None, typer.Option(help="Edge Proxy SDK URL, e.g. http://localhost:8001/api/v1/.")
+    ] = None,
+    fail_on_disagreement: Annotated[bool, typer.Option(help="Exit 1 unless every mode agrees.")] = True,
+) -> None:
+    """Read the routing flag for the same N identities in each mode and report agreement.
+
+    Reads use `get_identity_flags`: no exposure is recorded and no event is sent.
+    """
+    from forkbill.modes import compare_modes
+
+    identities = [f"{prefix}:{i:04d}" for i in range(n)]
+    clients = {m: _online_client(m, api_url=api_url, events_api_url=events_api_url, edge_url=edge_url) for m in mode}
+    try:
+        report = compare_modes(clients, identities, flag)
+    finally:
+        for c in clients.values():
+            c.close(5.0)
+    typer.echo(json.dumps(report, indent=2))
+    if fail_on_disagreement and not report["all_agree"]:
+        raise typer.Exit(1)
 
 
 def _fallback_report(run_dir: Path) -> dict[str, Any]:

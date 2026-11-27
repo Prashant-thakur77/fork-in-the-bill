@@ -16,4 +16,5 @@ export {
   type TaskResult,
 } from "./lanes.js";
 export { parsePolicy, PolicyValidationError, type RoutingPolicy } from "./policy.js";
+export { flagsmithConfig, MODES, type Mode, type ModeOptions } from "./client.js";
 export { TablePricing, totalTokens, usageFromAnthropic, type ModelPrice, type Pricing, type Usage } from "./pricing.js";

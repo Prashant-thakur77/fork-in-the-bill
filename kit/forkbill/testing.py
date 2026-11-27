@@ -57,6 +57,9 @@ class FakeFlagsmith:
     calls: list[str] = field(default_factory=list[str])
     flushes: int = 0
     fail_on: set[str] = field(default_factory=set[str])
+    serve_metadata: bool = True
+    """False serves flags the way Edge Proxy 2.24.0 does: the variant's value, with no variant key
+    and no experiment metadata, so `get_experiment_flag` records no exposure."""
 
     def assign(self, identifier: str) -> str:
         keys = ["control", *sorted(self.variants)]
@@ -70,6 +73,8 @@ class FakeFlagsmith:
             return FakeFlag(enabled=self.flag_enabled, value=self.control, feature_name=self.flag)
         key = self.assign(identifier)
         value = self.control if key == "control" else self.variants[key]
+        if not self.serve_metadata:
+            return FakeFlag(enabled=self.flag_enabled, value=value, feature_name=self.flag)
         return FakeFlag(
             enabled=self.flag_enabled,
             value=value,

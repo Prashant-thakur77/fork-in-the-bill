@@ -67,6 +67,29 @@ await flagsmith.close();
 experiment), `kill_switch` or `fail_closed`. Events are only sent for exposed tasks unless you set
 `emitUnexposed: true`.
 
+## Local evaluation and the Edge Proxy
+
+`flagsmithConfig(mode, opts)` returns `Flagsmith` constructor options for `remote`, `local`
+(environment document, needs a `ser.` key), `edge` (flags from an Edge Proxy) or `edge-local`
+(the Edge Proxy's copy of the environment document). Events always go to `eventsApiUrl`, the
+core API.
+
+```ts
+const flagsmith = new Flagsmith(
+  flagsmithConfig("local", {
+    environmentKey: process.env.FLAGSMITH_SERVER_KEY!,
+    apiUrl: "http://localhost:8000/api/v1/",
+    eventsApiUrl: "http://localhost:8000/api/",
+  }),
+);
+```
+
+In `@flagsmith/nodejs` 9.5 locally evaluated identity flags keep their `experiment`, so
+`getExperimentFlag` records exposures in `local` and `edge-local`. Edge Proxy 2.24.0 returns no
+`variant` or `metadata` from `POST /identities/`, so `edge` serves the right value but records
+no exposure. The 9.5 client has no analytics URL option: keep `enableAnalytics` off in the edge
+modes, since analytics would go to the proxy. See `selfhost/README.md` for a run of all four modes.
+
 ## Event buffer
 
 In `@flagsmith/nodejs` 9.5, `eventProcessorConfig.maxBuffer` is the buffer's capacity. When it is

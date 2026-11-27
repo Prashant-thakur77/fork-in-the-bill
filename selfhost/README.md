@@ -19,6 +19,7 @@ instance with identities prefixed `kitdemo:`. Its numbers are never copied into 
 | `migrate-db` | `docker.flagsmith.com/flagsmith/flagsmith:2.295.2` (pinned by digest) | One-shot migrations |
 | `flagsmith` | same image | API and dashboard on `127.0.0.1:8000` |
 | `flagsmith-task-processor` | same image | Background tasks (exposure and results refreshes) |
+| `edge-proxy` (profile `edge`, optional) | `flagsmith/edge-proxy:2.24.0` (pinned by digest) | Edge Proxy on `127.0.0.1:8001`, serving flags from a polled copy of the environment document |
 
 Experimentation settings: `EXPERIMENTATION_ENABLED=true`, `WAREHOUSE_CREDENTIALS_SECRET`
 (random, in `selfhost/.env`) and `DATABASE_URL`. First-run setup uses the documented
@@ -53,7 +54,11 @@ Needs Docker with Compose v2, `jq`, `curl`, `openssl`, the Flagsmith CLI v2
 ```bash
 selfhost/bootstrap.sh   # bring up, initialise, create env + keys + warehouse, bind the CLI
 selfhost/demo.sh        # forkbill init + start experiment, forkbill demo, refresh, print results
+selfhost/demo.sh all    # the same experiment in the four evaluation modes below
 ```
+
+If port 8000 is taken on your machine, set `FLAGSMITH_PORT` (and, for the proxy, `EDGE_PROXY_PORT`)
+in `selfhost/.env` before the first `bootstrap.sh`.
 
 `bootstrap.sh` writes:
 
@@ -63,6 +68,8 @@ selfhost/demo.sh        # forkbill init + start experiment, forkbill demo, refre
   self-hosted URL; CLI v2 does not accept user auth tokens), the server-side SDK key, the SDK and
   events URLs, and the dashboard admin email and password.
 - `selfhost/.state/flagsmith.json`: the CLI's project and environment binding (`flagsmith init`).
+- `selfhost/.state/edge.env` (mode 600): `ENVIRONMENT_KEY_PAIRS` for the Edge Proxy, the Demo
+  environment's server-side key paired with its client-side key.
 
 `selfhost/.state/` contains a `.gitignore` of `*`, so nothing in it can be committed. The scripts
 print where these files are, never what is in them.
@@ -72,10 +79,51 @@ After that, `flagsmith ...`, `flagsmith/setup.sh` and `flagsmith/smoke_test.sh` 
 The dashboard is at http://localhost:8000; log in as `admin@forkbill.local` with the password in
 the credentials file.
 
+## Evaluation modes: remote, local and Edge Proxy
+
+`forkbill demo --mode MODE` (and `make_client(mode, ...)` in `kit/forkbill/client.py`,
+`flagsmithConfig(mode, ...)` in `kit/ts`) runs the same experiment with the flags coming from a
+different place. Exposures and task events always go to the core API (`events_api_url`), and
+flag analytics, if a caller turns them on, to the core API too (`analytics_url`): the Edge Proxy
+serves flags only and has no events or analytics endpoint.
+
+| mode | flags from | key | exposure recorded |
+|---|---|---|---|
+| `remote` | core API, `POST /api/v1/identities/` per task | any SDK key | yes |
+| `local` | environment document, evaluated in process (`enable_local_evaluation=True`) | server-side (`ser.`) | yes |
+| `edge` | Edge Proxy, `POST /api/v1/identities/` per task | either key in `ENVIRONMENT_KEY_PAIRS` | **no** |
+| `edge-local` | the Edge Proxy's copy of the environment document, evaluated in process | server-side | yes |
+
+Why, from the installed sources:
+
+- **Local evaluation records exposures (Python SDK 6.5.0 and later).** The environment document
+  carries `metadata.experiment` on each feature state. The experiment's rollout is a segment
+  override (`experiment-1-rollout`, a `PERCENTAGE_SPLIT` on `$.identity.key`) whose feature state
+  has `in_experiment: true`, while the base feature state has `in_experiment: false`. SDK 6.5.0+
+  (`mappers.py`) copies that metadata onto identity flags, so `get_experiment_flag` sees
+  `experiment.in_experiment` and records the exposure exactly as it does remotely. SDK 6.3.0 has
+  `get_experiment_flag` but does not copy the metadata, so it records nothing under local
+  evaluation. `@flagsmith/nodejs` 9.5.0 also keeps `experiment` on locally evaluated identity flags.
+- **The Edge Proxy's identity endpoint drops the experiment.** Edge Proxy 2.24.0
+  (`edge_proxy/mappers.py`) answers `POST /api/v1/identities/` with `feature`, `enabled`,
+  `feature_state_value` and `reason` only: no `variant`, no `metadata`. The value served is the
+  right variant's value, but the SDK cannot tell that the identity is in an experiment, so
+  `get_experiment_flag` records no exposure and the kit, which only reports exposed tasks, sends no
+  task events. Use `edge` to serve flags, not to run an experiment.
+- **`edge-local` keeps the experiment working through the proxy.** The proxy also serves
+  `GET /api/v1/environment-document` to a configured server-side key, so the SDK can poll the
+  proxy instead of the core API and evaluate locally, with exposures recorded as in `local`.
+
+`selfhost/demo.sh all` starts the `edge-proxy` service, then runs `forkbill compare`, which reads
+the flag for the same 200 identities in every mode with `get_identity_flags` (no exposures, no
+events) and stops unless all modes serve the same policy, and the same variant key wherever both
+modes report one. Then it runs `forkbill demo` once per mode, each with its own identity prefix
+so no task is reported twice, and checks the stored event count against what the kit sent.
+
 Tear down (removes the database volume):
 
 ```bash
-docker compose -f selfhost/docker-compose.yml down -v && rm -rf selfhost/.state
+docker compose -f selfhost/docker-compose.yml --profile edge down -v && rm -rf selfhost/.state
 ```
 
 If Docker reports "all predefined address pools have been fully subnetted", set `SELFHOST_SUBNET`
@@ -200,3 +248,50 @@ run above, `task_cost` with `direction: down` and a -33% lift got `chance_to_win
 `expected_direction` is stored and shown, but it does not enter the statistics in 2.295.2.
 `flagsmith/setup.sh` and `forkbill init` check every literal they use against the target
 instance's `OPTIONS` before they create anything.
+
+## Verified run: four evaluation modes (2026-11-27)
+
+Host: Linux, Docker 29.2.1, Compose v5.0.2. Flagsmith image 2.295.2, Edge Proxy 2.24.0 (pulled,
+digest above), Python SDK `flagsmith` 6.7.0, Flagsmith CLI v2. Port 8000 was taken by another
+process on this host, so `selfhost/.env` set `FLAGSMITH_PORT=8010`; the proxy used the default
+8001. Started from an empty volume (`down -v`, `rm -rf selfhost/.state`), then
+`selfhost/bootstrap.sh` (65 s) and `selfhost/demo.sh all` (42 s). Keys are left out.
+
+`forkbill compare`, the same 200 identities (`kitdemo-compare:0000` to `0199`) in each mode:
+
+| mode | policy served | variant key reported | `in_experiment` | same policy as remote | same variant as remote |
+|---|---|---|---|---|---|
+| remote | control 105, lanes_v1 95 | control 105, lanes_v1 95 | 200 | 200 / 200 | 200 / 200 |
+| local | control 105, lanes_v1 95 | control 105, lanes_v1 95 | 200 | 200 / 200 | 200 / 200 |
+| edge | control 105, lanes_v1 95 | none (200) | 0 | 200 / 200 | not reported |
+| edge-local | control 105, lanes_v1 95 | control 105, lanes_v1 95 | 200 | 200 / 200 | 200 / 200 |
+
+`all_agree: true`, no errors. Every mode put every identity in the same arm.
+
+`forkbill demo`, 120 identities per mode with a prefix per mode (fake loop, illustrative prices):
+
+| mode | arms (n, all exposed) | events the kit sent | stored events |
+|---|---|---|---|
+| remote (`kitdemo:`) | control 67, lanes_v1 53 | 529 | 0 -> 529 |
+| local (`kitdemo-local:`) | control 52, lanes_v1 68 | 545 | 529 -> 1074 |
+| edge (`kitdemo-edge:`) | 120 served, 0 exposed (`flag_source: flag`) | 0 | 1074 -> 1074 |
+| edge-local (`kitdemo-edge-local:`) | control 60, lanes_v1 60 | 539 | 1074 -> 1613 |
+
+"Events the kit sent" is one exposure per exposed task plus the task events in `events.jsonl`;
+every one was stored (`total_events_received: 1613`). The Admin API's identity search found 120
+`kitdemo:` identities and 200 `kitdemo-compare:` identities (created by the remote reads), and
+none for the `local`, `edge` and `edge-local` prefixes: those reads never reached the core API's
+identities endpoint, and the Edge Proxy stores nothing.
+
+After one refresh, the exposures endpoint returned `new_identities: {"control": 179, "lanes_v1": 181}`,
+which is 67+52+60 and 53+68+60: the three exposing modes, and nothing from `edge`. Results:
+
+| metric | control n / sum | lanes_v1 n / sum | lift | 95% interval | chance_to_win |
+|---|---|---|---|---|---|
+| task_cost | 179 / 92.1284 | 181 / 61.0987 | -0.344 | [-0.391, -0.298] | 1.000 |
+| task_solved | 179 / 65 | 181 / 108 | +0.643 | [0.267, 1.019] | 1.000 |
+| task_turns | 179 / 2377 | 181 / 2672 | +0.112 | [0.037, 0.187] | 0.998 |
+| task_seconds | 179 / 23084.3 | 181 / 26310.2 | +0.127 | [0.049, 0.205] | 0.999 |
+
+These are fake-loop numbers; they show the three exposing modes feeding one experiment, nothing
+about real routing.
