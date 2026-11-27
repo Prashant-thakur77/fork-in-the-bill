@@ -155,6 +155,34 @@ const P: Record<string, ReactNode> = {
       <path className="pa" d="M40 66 L60 80 L80 66" />
     </>
   ),
+  // a distance sign: three rows of figures
+  "/scale": (
+    <>
+      <rect x="10" y="12" width="100" height="84" rx="8" />
+      <path d="M24 34 H58 M24 54 H50 M24 74 H64" />
+      <path className="pa" d="M76 34 H96 M70 54 H96 M82 74 H96" />
+      <path d="M36 96 V112 M84 96 V112" />
+    </>
+  ),
+  // two roads side by side: one ends at a barrier, one runs on
+  "/different": (
+    <>
+      <path d="M34 112 V52" />
+      <path className="pa" d="M18 52 H50 M22 42 L30 52 M34 42 L42 52" />
+      <path d="M86 112 V10" />
+      <path d="M76 22 L86 10 L96 22" />
+      <path d="M60 112 V96 M60 84 V68 M60 56 V40" />
+    </>
+  ),
+  // an open book with a marked line
+  "/research": (
+    <>
+      <path d="M60 28 C46 16 26 16 12 22 V98 C26 92 46 92 60 104 C74 92 94 92 108 98 V22 C94 16 74 16 60 28 Z" />
+      <path d="M60 28 V104" />
+      <path d="M24 40 H46 M24 56 H46" />
+      <path className="pa" d="M74 48 H96" />
+    </>
+  ),
 };
 
 export function Picto({ path }: { path: string }) {

@@ -149,7 +149,7 @@ const copy = (from, to) => {
 };
 copy("docs/paper.pdf", "downloads/fork-in-the-bill-paper.pdf");
 copy("docs/deck.pdf", "downloads/fork-in-the-bill-deck.pdf");
-for (const f of repo.paper?.figures ?? []) copy(`analysis/charts/${f.file}`, `figures/${f.file}`);
+for (const f of repo.charts ?? []) copy(`analysis/charts/${f}`, `figures/${f}`);
 for (const shot of Object.values(repo.shots ?? {})) copy(`docs/img/${shot.file}`, `img/${shot.file}`);
 if (repo.verifyLedger) {
   mkdirSync(join(dist, "data"), { recursive: true });

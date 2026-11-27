@@ -87,6 +87,15 @@ const DRAFTS: Draft[] = [
     menu: "experiment",
     blurb: "Planner lane, worker lane",
   },
+  {
+    path: "/scale",
+    label: "By the numbers",
+    title: "By the numbers",
+    description: "How big the study is: task attempts, test results, model calls, tokens, dollars, ledger records and lines of code, each counted from the repository.",
+    group: "more",
+    menu: "experiment",
+    blurb: "Every count, from the repo",
+  },
   /* ---- Flagsmith ---- */
   {
     path: "/why-flagsmith",
@@ -105,6 +114,15 @@ const DRAFTS: Draft[] = [
     group: "more",
     menu: "flagsmith",
     blurb: "Each one, with the code",
+  },
+  {
+    path: "/different",
+    label: "How this is different",
+    title: "How this is different",
+    description: "How claims about model routing are usually supported, beside what this project did, row by row, with the evidence for each.",
+    group: "more",
+    menu: "flagsmith",
+    blurb: "The usual way, and this one",
   },
   /* ---- evidence ---- */
   {
@@ -133,6 +151,15 @@ const DRAFTS: Draft[] = [
     group: "more",
     menu: "evidence",
     blurb: "Read it or download it",
+  },
+  {
+    path: "/research",
+    label: "Research",
+    title: "From the research to the code",
+    description: "One card per published source the project uses: what it says, what was taken from it, where it lives in the code and what it produces here.",
+    group: "more",
+    menu: "evidence",
+    blurb: "Each source, and its code",
   },
   {
     path: "/timeline",

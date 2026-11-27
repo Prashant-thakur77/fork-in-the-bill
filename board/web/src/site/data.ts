@@ -114,7 +114,10 @@ export interface ExperimentNumbers {
   flagsmith: { chance_to_beat_control_cost: number; lift_cost: number; ci_cost: [number, number]; solve_rate_status: string; pulled_at: string; guardrail_loss: boolean };
   decision: { ship: string; rule_met: Record<string, boolean>; bars: { flagsmith_chance: number; guardrail_posterior: number; m: number } };
   power: { n_per_arm: number; mde_solve_pp: number; mde_cost_pct: number; power: number };
+  cuped?: { variance_reduction_pct: number | null; note?: string };
   by_trait: Record<string, Record<string, TraitLevel>>;
+  /** Analyses added after the decision; each key appears when the analysis has written it. */
+  secondary?: Record<string, unknown>;
   /** The same estimates for the fresh tier and the pre-cutoff tier alone; reported, not part of the decision. */
   by_tier?: Record<string, TierNumbers>;
   bootstrap_resamples: number;
@@ -135,8 +138,10 @@ export interface Numbers {
   exp1: ExperimentNumbers | null;
   exp2: ExperimentNumbers | null;
   rollout: { n: number; cost_mean: number; solve_rate: number } | null;
+  /** Cost and solve rate of every arm on one chart, when the analysis has written it. */
+  frontier: unknown;
   spend: { total_usd: number; by_experiment: Record<string, number> } | null;
-  integrity: { merkle_root: string; task_done_records: number; by_experiment: Record<string, IntegrityRun> } | null;
+  integrity: { merkle_root: string; task_done_records: number; by_experiment: Record<string, IntegrityRun>; proofs?: unknown } | null;
 }
 
 /** What a run's first environment snapshot says about the experiment flag. */
@@ -175,6 +180,69 @@ export interface KitData {
   mcp: { name: string; version: string; published: boolean; description: string; intro: Block[]; node: string | null; blocks: { lang: string; code: string }[]; tools: { name: string; does: string; flagsmith: string }[] } | null;
 }
 
+export interface Reference {
+  id: string;
+  section: string;
+  /** "Kapoor et al., 2024" */
+  short: string;
+  authors: string;
+  year: string;
+  title: string;
+  venue: string;
+  url: string;
+  /** The note the reference list gives under the entry. */
+  note: string;
+}
+
+export interface ScaleGroup {
+  key: string;
+  label: string;
+  runs: string[];
+  attempts: number;
+  tasks: number;
+  solved: number;
+  tests: number;
+  calls: number;
+  tokens: number;
+  ledger: number;
+  transcripts: number;
+  events: number;
+  envSnapshots: number;
+}
+
+/** Counts made from the repository at build time (scripts/scale-data.mjs). */
+export interface ScaleData {
+  groups: ScaleGroup[];
+  totals: {
+    runs: number;
+    attempts: number;
+    tasks: number;
+    distinctTasks: number;
+    solved: number;
+    tests: number;
+    calls: number;
+    tokens: number;
+    ledger: number;
+    events: number;
+    envSnapshots: number;
+    transcripts: number;
+    languages: string[];
+    languageCount: number;
+    repos: number;
+  };
+  /** Figures that came from the `scale` block of numbers.json rather than from the site's own count. */
+  fromNumbers: string[];
+  packageCount: number;
+  exampleCount: number;
+  preregCount: number;
+  code: { byLang: { lang: string; files: number; lines: number }[]; files: number; lines: number; tracked: number };
+  tests: { python: number; pythonFiles: number; typescript: number; typescriptFiles: number };
+  ci: { file: string; jobs: string[] }[];
+  examples: string[];
+  packages: { name: string; version: string; dir: string }[];
+  tags: { prereg: string[]; releases: string[] };
+}
+
 export interface RepoData {
   site: { url: string; repo: string; commit: string; commitShort: string };
   figures: Record<string, string>;
@@ -190,6 +258,11 @@ export interface RepoData {
   paper: PaperData | null;
   kit: KitData;
   releaseTag: string | null;
+  scale: ScaleData;
+  /** docs/references.md, one entry per source. */
+  references: Reference[];
+  /** Chart files present in analysis/charts, copied to /figures at build. */
+  charts: string[];
   /** Flagsmith dashboard screenshots in docs/img, keyed by name (results, experiments, flags, experiment-2-running). */
   shots: Record<string, { file: string; width: number; height: number }>;
   transcripts: { exp1: number; rollout: number; examples: boolean };

@@ -27,6 +27,9 @@ import Paper from "../pages/Paper";
 import Verify from "../pages/Verify";
 import UseIt from "../pages/UseIt";
 import Updates from "../pages/Updates";
+import Scale from "../pages/Scale";
+import Different from "../pages/Different";
+import Research from "../pages/Research";
 import NotFound from "../pages/NotFound";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -51,6 +54,9 @@ export const PAGES: Record<string, ComponentType> = {
   "/verify": Verify,
   "/use-it": UseIt,
   "/updates": Updates,
+  "/scale": Scale,
+  "/different": Different,
+  "/research": Research,
   "/404": NotFound,
 };
 

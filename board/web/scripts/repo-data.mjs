@@ -7,6 +7,7 @@ import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync } 
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
+import { scaleFrom, withNumbersScale } from "./scale-data.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = resolve(here, "../../..");
@@ -462,6 +463,40 @@ function transcriptsFrom(root) {
   return { exp1: count("exp1"), rollout: count("rollout"), examples: existsSync(join(root, "examples/transcripts/README.md")) };
 }
 
+/**
+ * docs/references.md as data: one entry per source, with the note the file gives under it.
+ * The id is the first two authors' surnames and the year, e.g. "kapoor-stroebl-2024".
+ */
+export function referencesFrom(md) {
+  const out = [];
+  if (!md) return out;
+  let section = "";
+  const seen = new Map();
+  const rows = md.split("\n");
+  for (let i = 0; i < rows.length; i++) {
+    const h = /^##\s+\d+\.\s+(.*)$/.exec(rows[i]);
+    if (h) {
+      section = h[1].trim();
+      continue;
+    }
+    const m = /^- (.+?) \((\d{4}|n\.d\.)\)\. (.+?)\s+(https?:\/\/\S+)\s*$/.exec(rows[i]);
+    if (!m) continue;
+    const [, authors, year, rest, url] = m;
+    const surnames = [...authors.matchAll(/([A-Z][\p{L}'’-]+(?: [A-Z][\p{L}'’-]+)?), (?:[A-Z]\.[ -]?)+/gu)].map((x) => x[1]);
+    const names = surnames.length ? surnames : [authors.replace(/[.,]+$/, "")];
+    const slug = (t) => t.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    let id = [slug(names[0]), names[1] ? slug(names[1]) : null, year === "n.d." ? "nd" : year].filter(Boolean).join("-");
+    const k = (seen.get(id) ?? 0) + 1;
+    seen.set(id, k);
+    if (k > 1) id = `${id}-${k}`;
+    const short = `${names.length === 1 ? names[0] : names.length === 2 ? `${names[0]} & ${names[1]}` : `${names[0]} et al.`}, ${year}`;
+    const note = /^\s+- (.*)$/.exec(rows[i + 1] ?? "")?.[1]?.trim() ?? "";
+    const title = rest.split(/(?<=[a-z0-9?!)])\. /)[0].replace(/\.$/, "");
+    out.push({ id, section, short, authors, year, title, venue: rest.slice(title.length).replace(/^\.\s*/, "").replace(/\.$/, ""), url, note });
+  }
+  return out;
+}
+
 /** A committed run ledger, gzipped, for the page that checks it in the browser. */
 export function ledgerGz(root, run) {
   const p = join(root, `runs/${run}/ledger.jsonl`);
@@ -574,6 +609,7 @@ export function loadRepoData(root = REPO_ROOT) {
       ? {
           generatedAt: numbers.generated_at ?? null,
           exp1: numbers.exp1 ?? null,
+          frontier: numbers.frontier ?? null,
           exp2: numbers.exp2 ?? null,
           rollout: numbers.rollout ?? null,
           spend: numbers.spend ?? null,
@@ -596,7 +632,16 @@ export function loadRepoData(root = REPO_ROOT) {
     flagStates: { before: flagStateAt(root, "exp1"), after: flagStateAt(root, "rollout") },
     paper: paperFrom(root),
     kit: kitFrom(root),
-    releaseTag: git(root, "tag --list v0.1.0") || null,
+    releaseTag:
+      git(root, "tag --list 'v*'")
+        .split("\n")
+        .filter((t) => /^v\d+\.\d+\.\d+$/.test(t))
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+        .pop() ?? null,
+    // The analysis output's own scale block wins wherever it has a key; the rest is counted here.
+    scale: withNumbersScale(scaleFrom(root), numbers?.scale),
+    references: referencesFrom(read(root, "docs/references.md")),
+    charts: existsSync(join(root, "analysis/charts")) ? readdirSync(join(root, "analysis/charts")).filter((f) => f.endsWith(".png")).sort() : [],
     shots: shotsFrom(root),
     transcripts: transcriptsFrom(root),
     verifyLedger: (() => {

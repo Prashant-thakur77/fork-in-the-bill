@@ -125,8 +125,8 @@ export default function Paper() {
         </div>
         {repo.releaseTag && (
           <p className="prose">
-            Release <a href={`${repo.site.repo}/releases/tag/${repo.releaseTag}`}>{repo.releaseTag}</a> marks the code and the run records the paper was written
-            from. Every figure in the paper is filled from one JSON file and checked by a script.
+            The latest release is <a href={`${repo.site.repo}/releases/tag/${repo.releaseTag}`}>{repo.releaseTag}</a>, with the code and the run records. Every
+            figure in the paper is filled from one JSON file and checked by a script.
           </p>
         )}
       </section>

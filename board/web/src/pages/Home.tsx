@@ -12,6 +12,8 @@ import { repo } from "../site/data";
 import { LivePanel } from "../site/LivePanel";
 import { ResultPair } from "../site/ResultPair";
 import { Booth } from "../site/Booth";
+import { HEADLINE } from "./Scale";
+import { ROWS } from "./Different";
 import { useLiveState } from "../site/live";
 import { CURRENT, batchOf, batchStatus } from "../site/batches";
 import { format, money } from "../data/format";
@@ -419,6 +421,50 @@ export default function Home() {
 
       {/* 5. the result so far */}
       <Result />
+
+      {/* 5b. by the numbers, and how this is different */}
+      <section className="hsec strip-sec" aria-labelledby="nums-h">
+        <div className="strip-head">
+          <p className="eyebrow-sign">By the numbers</p>
+          <Kinetic id="nums-h" text="Two arms, and everything behind them" />
+          <Link to="/scale" className="text-link">
+            Every count, with its source <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+        <ul className="strip-figs" data-reveal="row">
+          {HEADLINE.map((x) => (
+            <li key={x.label}>
+              <b data-count="">{x.value}</b>
+              <span>{x.label}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className="hsec strip-sec is-diff" aria-labelledby="diff-h">
+        <div className="strip-head">
+          <p className="eyebrow-sign">How this is different</p>
+          <Kinetic id="diff-h" text="Not a benchmark score" />
+          <Link to="/different" className="text-link">
+            All {ROWS.length} differences, with the evidence <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+        <ol className="strip-rows" data-reveal="row">
+          {[
+            ["A score measured offline", "A controlled experiment on real bug fixes"],
+            ["The analyst picks what runs where", "Flagsmith assigns every task by hash"],
+            ["The rule is written after the data", "The rule was hashed and tagged first"],
+            ["Trust the chart", "Verify the ledger in your browser"],
+          ].map(([usual, here]) => (
+            <li key={here}>
+              <span className="sr-usual">{usual}</span>
+              <span className="sr-arrow" aria-hidden="true">
+                →
+              </span>
+              <span className="sr-here">{here}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
 
       {/* 6. live strip */}
       <section className="hsec live-sec" aria-labelledby="live-h">
