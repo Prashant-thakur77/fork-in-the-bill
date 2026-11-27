@@ -7,6 +7,17 @@ export interface StoredSnapshot {
   updatedAt: number;
 }
 
+/** Everything stored about one sign-up, besides when it happened. */
+export interface WaitlistEntry {
+  email: string;
+  /** "writeup", "kit", "both" or empty. */
+  wants: string;
+  /** What they run their agent on, if they said: at most 200 characters. */
+  stack: string;
+  /** The site path the form was on. */
+  source: string;
+}
+
 export interface Store {
   /** Records a signature; returns false if it was already seen (a replay). */
   claimSignature(signature: string, ts: number, nowSeconds: number): Promise<boolean>;
@@ -19,7 +30,7 @@ export interface Store {
   /** The most recent flag changes, oldest first, optionally for one feature. */
   flagHistory(opts?: { feature?: string; limit?: number }): Promise<StoredFlagChange[]>;
   /** Adds an address to the updates list; returns false if it was already there. */
-  joinWaitlist(email: string, source: string, nowSeconds: number): Promise<boolean>;
+  joinWaitlist(entry: WaitlistEntry, nowSeconds: number): Promise<boolean>;
   /** How many addresses are on the updates list. Addresses themselves are never read back. */
   waitlistCount(): Promise<number>;
   /**
@@ -177,10 +188,10 @@ export class D1Store implements Store {
     return results.map(rowToChange).reverse();
   }
 
-  async joinWaitlist(email: string, source: string, nowSeconds: number): Promise<boolean> {
+  async joinWaitlist(e: WaitlistEntry, nowSeconds: number): Promise<boolean> {
     const insert = await this.db
-      .prepare("INSERT INTO waitlist (email, created_at, source) VALUES (?, ?, ?) ON CONFLICT (email) DO NOTHING")
-      .bind(email, nowSeconds, source)
+      .prepare("INSERT INTO waitlist (email, wants, stack, created_at, source) VALUES (?, ?, ?, ?, ?) ON CONFLICT (email) DO NOTHING")
+      .bind(e.email, e.wants, e.stack, nowSeconds, e.source)
       .run();
     return (insert.meta.changes ?? 0) === 1;
   }
@@ -208,7 +219,7 @@ export class MemoryStore implements Store {
   private flags: StoredFlagChange[] = [];
   private dedupes = new Set<string>();
   /** The updates list, exposed to tests only so they can check what was stored. */
-  readonly waitlist: { email: string; created_at: number; source: string }[] = [];
+  readonly waitlist: (WaitlistEntry & { created_at: number })[] = [];
   readonly attempts: { key: string; at: number }[] = [];
 
   async claimSignature(signature: string, ts: number, nowSeconds: number): Promise<boolean> {
@@ -253,9 +264,9 @@ export class MemoryStore implements Store {
     return rows.slice(-clampLimit(opts.limit));
   }
 
-  async joinWaitlist(email: string, source: string, nowSeconds: number): Promise<boolean> {
-    if (this.waitlist.some((r) => r.email === email)) return false;
-    this.waitlist.push({ email, created_at: nowSeconds, source });
+  async joinWaitlist(e: WaitlistEntry, nowSeconds: number): Promise<boolean> {
+    if (this.waitlist.some((r) => r.email === e.email)) return false;
+    this.waitlist.push({ ...e, created_at: nowSeconds });
     return true;
   }
 

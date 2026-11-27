@@ -3,7 +3,7 @@
 // repo (or from git). A missing file gives an empty value, and the page shows its empty state.
 import { createHash } from "node:crypto";
 import { execSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -344,6 +344,125 @@ export function batchesFrom(root, numbers, hashes) {
   return { batches, current: (open ?? newest.find((b) => b.state === "final" && b.id !== "rollout") ?? batches[0]).id };
 }
 
+/** The first line of a file that may be very large (a run ledger), without reading the rest. */
+function firstLine(root, rel) {
+  const p = join(root, rel);
+  if (!existsSync(p)) return null;
+  const fd = openSync(p, "r");
+  try {
+    const chunks = [];
+    const buf = Buffer.alloc(65536);
+    let pos = 0;
+    for (let i = 0; i < 64; i++) {
+      const n = readSync(fd, buf, 0, buf.length, pos);
+      if (n <= 0) break;
+      const nl = buf.subarray(0, n).indexOf(10);
+      if (nl >= 0) {
+        chunks.push(Buffer.from(buf.subarray(0, nl)));
+        break;
+      }
+      chunks.push(Buffer.from(buf.subarray(0, n)));
+      pos += n;
+    }
+    return Buffer.concat(chunks).toString("utf8");
+  } finally {
+    closeSync(fd);
+  }
+}
+
+/** What a run's first environment snapshot says about the experiment flag (the ledger's first record). */
+function flagStateAt(root, run, feature = "agent_routing") {
+  const line = firstLine(root, `runs/${run}/ledger.jsonl`);
+  if (!line) return null;
+  let rec;
+  try {
+    rec = JSON.parse(line);
+  } catch {
+    return null;
+  }
+  if (rec.kind !== "env_snapshot" || !rec.payload?.flags) return null;
+  const flags = rec.payload.flags;
+  const base = flags[feature];
+  if (!base) return null;
+  const overrides = Object.entries(flags)
+    .filter(([k]) => k.startsWith(`${feature}@segment:`))
+    .map(([, v]) => ({ variants: v.variants ?? [], experimentId: v.experiment?.id ?? null, inExperiment: !!v.experiment?.in_experiment }));
+  return {
+    run,
+    takenAt: isoSecond(rec.payload.taken_at ?? rec.ts),
+    updatedAt: isoSecond(rec.payload.updated_at),
+    envSha256: rec.payload.sha256 ?? null,
+    file: `runs/${run}/${rec.payload.file ?? ""}`,
+    enabled: !!base.enabled,
+    valueSha256: base.value_sha256 ?? null,
+    variants: base.variants ?? [],
+    experimentId: base.experiment?.id ?? null,
+    experimentName: base.experiment?.name ?? null,
+    overrides,
+  };
+}
+
+/** A fenced code block from a markdown file, found by the text just before it. Throws when it has moved. */
+function fenced(root, file, before, lang = "[a-z]*") {
+  const text = read(root, file);
+  if (text === null) throw new Error(`snippet: ${file} is missing`);
+  const re = new RegExp(`${before.source}[^\\n]*\\n+\`\`\`${lang}\\n([\\s\\S]*?)\`\`\``);
+  const m = re.exec(text);
+  if (!m) throw new Error(`snippet: ${before} not found in ${file}`);
+  const line = text.slice(0, m.index + m[0].indexOf("```")).split("\n").length + 1;
+  return { file, line, code: m[1].replace(/\s+$/, "") };
+}
+
+/** The paper, as the page needs it: abstract, conclusion, limits, the section list and the figures. */
+function paperFrom(root) {
+  const md = read(root, "docs/paper.md");
+  if (!md) return null;
+  const sec = sections(md);
+  const find = (re) => Object.keys(sec).find((k) => re.test(k));
+  const figures = [...md.matchAll(/^!\[([^\]]*)\]\(\.\.\/analysis\/charts\/([a-z0-9-]+\.png)\)/gm)]
+    .filter((m) => existsSync(join(root, "analysis/charts", m[2])))
+    .map((m) => ({ file: m[2], caption: m[1] }));
+  const title = (/^#\s+(.*)$/m.exec(md) ?? [])[1] ?? "";
+  const pick = (re) => blocks((sec[find(re) ?? ""] ?? "").split(/\n###\s/)[0]);
+  return {
+    title,
+    abstract: pick(/^Abstract/),
+    conclusion: pick(/Conclusion/),
+    limits: pick(/Threats to validity/),
+    sections: Object.keys(sec)
+      .filter((k) => /^\d+\s/.test(k))
+      .map((k) => k.replace(/^\d+\s+/, "")),
+    figures,
+    hasPdf: existsSync(join(root, "docs/paper.pdf")),
+    hasDeck: existsSync(join(root, "docs/deck.pdf")),
+    pdfBytes: existsSync(join(root, "docs/paper.pdf")) ? readFileSync(join(root, "docs/paper.pdf")).length : 0,
+    deckBytes: existsSync(join(root, "docs/deck.pdf")) ? readFileSync(join(root, "docs/deck.pdf")).length : 0,
+  };
+}
+
+/** The packages a reader installs, read from their own manifests so a rename shows up here. */
+function kitFrom(root) {
+  const ts = readJson(root, "kit/ts/package.json");
+  const mcpPkg = readJson(root, "kit/mcp/package.json");
+  const mcpReadme = read(root, "kit/mcp/README.md");
+  const py = read(root, "pyproject.toml") ?? "";
+  const mcpBlocks = mcpReadme ? [...mcpReadme.matchAll(/```([a-z]*)\n([\s\S]*?)```/g)].slice(0, 3).map((m) => ({ lang: m[1] || "sh", code: m[2].replace(/\s+$/, "") })) : [];
+  return {
+    ts: ts ? { name: ts.name, version: ts.version, published: ts.private !== true, node: ts.engines?.node ?? null } : null,
+    py: { name: (/^name\s*=\s*"([^"]+)"/m.exec(py) ?? [])[1] ?? null, script: /^forkbill\s*=/m.test(py) ? "forkbill" : null, python: (/^requires-python\s*=\s*"([^"]+)"/m.exec(py) ?? [])[1] ?? null },
+    mcp: mcpPkg
+      ? {
+          name: mcpPkg.name,
+          version: mcpPkg.version,
+          published: mcpPkg.private !== true,
+          description: mcpPkg.description ?? "",
+          intro: mcpReadme ? blocks(mcpReadme.split(/\n##\s/)[0].split("\n").slice(1).join("\n")).slice(0, 2) : [],
+          blocks: mcpBlocks,
+        }
+      : null,
+  };
+}
+
 export function loadRepoData(root = REPO_ROOT) {
   const keys = readJson(root, "board/web/src/data/keys.json") ?? [];
   const numbers = readJson(root, "analysis/out/numbers.json");
@@ -440,6 +559,10 @@ export function loadRepoData(root = REPO_ROOT) {
       before: blocks(prereg2["Before the run"]),
     },
     power2: readJson(root, "analysis/out/power-exp2/power.json"),
+    flagStates: { before: flagStateAt(root, "exp1"), after: flagStateAt(root, "rollout") },
+    paper: paperFrom(root),
+    kit: kitFrom(root),
+    releaseTag: git(root, "tag --list v0.1.0") || null,
     hashes,
     hypothesis,
     policies,
@@ -511,6 +634,15 @@ export function loadRepoData(root = REPO_ROOT) {
       grading: S("runner/grading.py", /^Per instance, in a fresh container/, { end: /including its handling of truncated/ }),
       tools: S("harness/tools/defs.py", /^MAIN_TOOLS = /, { count: 3 }),
       forkbillInit: S("selfhost/demo.sh", /^INIT_ARGS=\(init --control/, { count: 2 }),
+      kitInit: S("README.md", /^uv run forkbill init --control/, { count: 4 }),
+      kitPy: fenced(root, "README.md", /Python \(\[`kit\/forkbill\/lanes\.py`\]/, "python"),
+      kitTs: fenced(root, "README.md", /TypeScript \(\[`kit\/ts`\]/, "ts"),
+      kitOpenFeature: fenced(root, "README.md", /OpenFeature \(\[`kit\/forkbill\/openfeature\.py`\]/, "python"),
+      tsInstall: fenced(root, "kit/ts/README.md", /## Install and build/, "bash"),
+      selfhostRun: fenced(root, "README.md", /It uses a fake agent loop: no model is called and no money is spent\./, "sh"),
+      selfhostDown: S("selfhost/README.md", /^docker compose -f selfhost\/docker-compose\.yml --profile edge down -v/, { count: 1 }),
+      verifyLedgerUsage: S("integrity/verify_ledger.py", /^Usage: python -m integrity\.verify_ledger/, { count: 2 }),
+      recordHash: S("integrity/canonical.py", /^def canonical_json/, { end: /return hashlib\.sha256\(prev_hash/ }),
     },
   };
 }

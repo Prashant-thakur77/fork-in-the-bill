@@ -1,7 +1,10 @@
--- The updates list: one row per address. Nothing else about a person is stored.
+-- The updates list: one row per address, with only what the form asks. Nothing else about a
+-- person is stored.
 CREATE TABLE IF NOT EXISTS waitlist (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   email      TEXT    NOT NULL UNIQUE,       -- trimmed and lower-cased
+  wants      TEXT    NOT NULL DEFAULT '',   -- what to send: writeup | kit | both
+  stack      TEXT    NOT NULL DEFAULT '',   -- optional: what they run their agent on, at most 200 characters
   created_at INTEGER NOT NULL,              -- server unix seconds
   source     TEXT    NOT NULL DEFAULT ''    -- the site path the form was on, e.g. /updates
 );

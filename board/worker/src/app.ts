@@ -6,6 +6,8 @@ import {
   attemptKey,
   cleanEmail,
   cleanSource,
+  cleanStack,
+  cleanWants,
   JOIN_COPY,
   joinPage,
   parseJoinBody,
@@ -162,10 +164,11 @@ export function createApp(opts: AppOptions) {
    */
   async function joinWaitlist(request: Request, cors: Record<string, string>): Promise<Response> {
     const wantsJson = (request.headers.get("Content-Type") ?? "").includes("application/json") || (request.headers.get("Accept") ?? "").includes("application/json");
+    let said: { wants: ReturnType<typeof cleanWants>; stack: string } = { wants: "", stack: "" };
     const answer = (state: JoinState, extra: Record<string, string> = {}): Response => {
       const c = JOIN_COPY[state];
       if (wantsJson) return json({ ok: state === "joined" || state === "already", state, message: `${c.title} ${c.text}` }, c.status, { ...cors, ...extra });
-      return new Response(joinPage(state), { status: c.status, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", ...extra } });
+      return new Response(joinPage(state, said), { status: c.status, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", ...extra } });
     };
     const origin = request.headers.get("Origin");
     if (!origin || !opts.allowedOrigins.includes(origin)) return json({ error: "origin not allowed" }, 403);
@@ -185,7 +188,8 @@ export function createApp(opts: AppOptions) {
       if (typeof body.trap === "string" && body.trap.trim() !== "") return answer("joined");
       const email = cleanEmail(body.email);
       if (!email) return answer("invalid");
-      const added = await store.joinWaitlist(email, cleanSource(body.source), nowS);
+      said = { wants: cleanWants(body.wants), stack: cleanStack(body.stack) };
+      const added = await store.joinWaitlist({ email, wants: said.wants, stack: said.stack, source: cleanSource(body.source) }, nowS);
       return answer(added ? "joined" : "already");
     } catch {
       return answer("error");

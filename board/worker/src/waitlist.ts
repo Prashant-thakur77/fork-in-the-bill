@@ -1,4 +1,5 @@
-// The updates list: one email address per person, the page they signed up on, and when.
+// The updates list: one email address per person, what they asked to be told about, what they
+// run their agent on if they chose to say, the page they signed up on, and when.
 // Nothing here ever returns a stored address. The only read is a count, and it is withheld
 // until the list is large enough that the number says nothing about any one person.
 
@@ -47,8 +48,27 @@ export async function attemptKey(salt: string, ip: string, nowSeconds: number): 
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+/** What a person can ask to be emailed about. Each is sent once, when it is published. */
+export const WANTS = { writeup: "The experiment 2 write-up", kit: "A note when the kit is on npm", both: "Both: the write-up and the kit note" } as const;
+export type Want = keyof typeof WANTS;
+export const STACK_MAX_CHARS = 200;
+
+/** One of the three choices, or empty when none was given. */
+export function cleanWants(raw: unknown): Want | "" {
+  return typeof raw === "string" && Object.hasOwn(WANTS, raw) ? (raw as Want) : "";
+}
+
+/** The optional free-text answer: one line, no control characters, at most 200 characters. */
+export function cleanStack(raw: unknown): string {
+  if (typeof raw !== "string") return "";
+  const one = raw.replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim();
+  return Array.from(one).slice(0, STACK_MAX_CHARS).join("");
+}
+
 export interface JoinBody {
   email: unknown;
+  wants: unknown;
+  stack: unknown;
   source: unknown;
   /** Honeypot: a field people never see. Anything in it means a script filled the form. */
   trap: unknown;
@@ -61,21 +81,22 @@ export function parseJoinBody(contentType: string, raw: string): JoinBody | null
       const v: unknown = JSON.parse(raw);
       if (!v || typeof v !== "object" || Array.isArray(v)) return null;
       const o = v as Record<string, unknown>;
-      return { email: o.email, source: o.source, trap: o.website };
+      return { email: o.email, wants: o.wants, stack: o.stack, source: o.source, trap: o.website };
     } catch {
       return null;
     }
   }
   if (contentType.includes("application/x-www-form-urlencoded")) {
     const p = new URLSearchParams(raw);
-    return { email: p.get("email"), source: p.get("source"), trap: p.get("website") };
+    // A plain form sends the free text and, when a preset was picked instead, the preset.
+    return { email: p.get("email"), wants: p.get("wants"), stack: p.get("stack") || p.get("stack_choice"), source: p.get("source"), trap: p.get("website") };
   }
   return null;
 }
 
 export const JOIN_COPY: Record<JoinState, { title: string; text: string; status: number }> = {
-  joined: { title: "You are on the list.", text: "We will email you once, when the experiment 2 write-up is published. Nothing else.", status: 200 },
-  already: { title: "You were already on the list.", text: "That address is stored once. You will get the one email when the write-up is published.", status: 200 },
+  joined: { title: "You are on the list.", text: "We will email you once for each thing you asked for, when it is published. Nothing else.", status: 200 },
+  already: { title: "You were already on the list.", text: "That address is stored once, with the answers from the first time. You will get what you asked for then.", status: 200 },
   invalid: { title: "That does not look like an email address.", text: "Check it and try again.", status: 400 },
   slow: { title: "Too many tries from this connection.", text: "Wait ten minutes and try again.", status: 429 },
   error: { title: "The list could not be reached.", text: "Nothing was stored. Try again in a minute.", status: 503 },
@@ -87,9 +108,13 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
  * The answer to a plain form post (no JavaScript): a small page in the site's own colours, drawn
  * as a toll receipt, with a way back.
  */
-export function joinPage(state: JoinState): string {
+export function joinPage(state: JoinState, answers: { wants?: Want | ""; stack?: string } = {}): string {
   const c = JOIN_COPY[state];
   const ok = state === "joined" || state === "already";
+  const lines =
+    state === "joined"
+      ? [answers.wants ? ["Send me", WANTS[answers.wants]] : null, answers.stack ? ["I run my agent on", answers.stack] : null].filter((x): x is string[] => !!x)
+      : [];
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -105,6 +130,8 @@ main{width:min(100%,460px)}
 .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:${ok ? "#0b6b45" : "#a91c15"};font-weight:700}
 h1{font:800 26px/1.15 system-ui,sans-serif;margin:8px 0 10px}
 p{margin:0 0 14px}
+.row span{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#4a514c}
+.row b{overflow-wrap:anywhere}
 a{display:inline-block;padding:12px 18px;border-radius:6px;background:#1b211e;color:#eceae3;text-decoration:none;font:700 16px system-ui,sans-serif}
 a:focus-visible{outline:3px solid #1b211e;outline-offset:3px}
 </style>
@@ -116,6 +143,7 @@ a:focus-visible{outline:3px solid #1b211e;outline-offset:3px}
 <div class="k">${ok ? "Updates list · receipt" : "Updates list · not stored"}</div>
 <h1>${esc(c.title)}</h1>
 <p>${esc(c.text)}</p>
+${lines.map(([k, v]) => `<p class="row"><span>${esc(k!)}</span><br><b>${esc(v!)}</b></p>`).join("\n")}
 <a href="/updates">${ok ? "Back to the site" : "Back to the form"}</a>
 </div>
 </main>
