@@ -93,8 +93,8 @@ export function SplitLab() {
   const sx = xOf(split);
   const message =
     split === registered
-      ? `This is the registered split, ${registered} / ${100 - registered}: ${nV} of ${cars.length} tasks take lanes_v1. Drag the divider.`
-      : `Split moved from ${registered} to ${split}: ${moved.length} ${moved.length === 1 ? "task changes" : "tasks change"} lane, marked in yellow. The other ${cars.length - moved.length} keep theirs, because a task's hash never changes.`;
+      ? `This is the registered split, ${registered} / ${100 - registered}: ${nV} of ${cars.length} tasks take lanes_v1, ${cars.length - nV} take control. Drag the divider.`
+      : `Split moved from ${registered} to ${split} (lanes_v1 ${nV}, control ${cars.length - nV}): ${moved.length} ${moved.length === 1 ? "task changes" : "tasks change"} lane, marked in yellow. The other ${cars.length - moved.length} keep theirs, because a task's hash never changes.`;
 
   return (
     <div className="splitlab">
@@ -127,14 +127,14 @@ export function SplitLab() {
           <g className="sl-plates">
             <rect x={20} y={8} width={Math.max(0, sx - 26)} height={36} rx={6} className="sl-plate" />
             <rect x={sx + 6} y={8} width={Math.max(0, W - 20 - sx - 6)} height={36} rx={6} className="sl-plate" />
-            {sx - 26 > plateMin && (
+            {sx - 26 > 44 && (
               <text x={34} y={32} className="sl-plate-t">
-                {`lanes_v1: ${nV} tasks`}
+                {sx - 26 > plateMin ? `lanes_v1: ${nV} tasks` : String(nV)}
               </text>
             )}
-            {W - 20 - sx > plateMin && (
+            {W - 20 - sx > 44 && (
               <text x={W - 34} y={32} className="sl-plate-t" textAnchor="end">
-                {`control: ${cars.length - nV} tasks`}
+                {W - 20 - sx > plateMin ? `control: ${cars.length - nV} tasks` : String(cars.length - nV)}
               </text>
             )}
           </g>

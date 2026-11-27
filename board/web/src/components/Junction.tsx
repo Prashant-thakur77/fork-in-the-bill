@@ -154,6 +154,12 @@ export function Junction({ board }: { board: Board }) {
         </div>
       </div>
       <Road lanes={lanes} />
+      {phase === "running" && lanes.every((l) => l.cars === 0) && (
+        <p className="road-idle">
+          <span>No task on the road right now</span>
+          <span>The signs keep each lane's totals</span>
+        </p>
+      )}
       <div className="queue-label">
         <span>Task queue</span>
         <span>Flagsmith splits 50 / 50</span>

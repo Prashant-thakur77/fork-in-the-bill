@@ -82,6 +82,11 @@ export function ShareGuess() {
       <p className="sg-verdict" role="status">
         {shown ? `${verdict} With the small model in the worker lane, that share fell to ${pct(v.delegate_share)}.` : ""}
       </p>
+      {shown && (
+        <button type="button" className="rb-btn sg-again" onClick={() => setShown(false)}>
+          Guess again
+        </button>
+      )}
       <p className="share-foot">
         Pilot only: {c.n} tasks per arm, arms forced by the runner, not the result. Source: <a href={ghFile("analysis/out/pilot.json")}>analysis/out/pilot.json</a>
       </p>

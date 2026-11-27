@@ -206,7 +206,7 @@ function Proof({ board }: { board: Board }) {
   const line = (k: string, v: string | undefined, suffix = "") => (
     <div className="receipt-line">
       <span>{k}</span>
-      <span>{v ? `${v}${suffix}` : "pending"}</span>
+      <span>{v ? `${v}${suffix}` : "fills when the run ends"}</span>
     </div>
   );
   return (
