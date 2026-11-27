@@ -52,7 +52,10 @@ export function RolloutPreview() {
           ))}
         </div>
       </div>
-      <div className="junction rollout-junction" data-phase={outcome === "running" ? "running" : "rolled_out"} aria-live="polite">
+      <p className="sr-only" role="status">
+        {outcome === "running" ? "Preview reset: both lanes open." : outcome === "control" ? "Preview: control stays, lanes_v1 lane closed." : "Preview: lanes_v1 ships, control lane closed."}
+      </p>
+      <div className="junction rollout-junction" data-phase={outcome === "running" ? "running" : "rolled_out"}>
         <div className="gantry">
           <div className="signs">
             {KEYS.map((k) => (
