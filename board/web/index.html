@@ -5,9 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#ECEAE3" />
-    <title>Fork in the Bill · live board</title>
-    <meta name="description" content="A live, pre-registered Flagsmith A/B test on a coding agent's model routing: dollars spent and bugs solved per arm." />
+    <title>Fork in the Bill</title>
+    <meta name="description" content="A pre-registered A/B test of a coding agent's model routing, run as a Flagsmith experiment." />
+    <!--head-->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <script>
+      // Lets the hero hold its first frame until the load animation starts; cleared by script or
+      // after 2.5 s if the bundle never runs, so content is never hidden for long.
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        document.documentElement.classList.add("js-intro");
+        setTimeout(function () { document.documentElement.classList.remove("js-intro"); }, 2500);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

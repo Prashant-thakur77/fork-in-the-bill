@@ -2,13 +2,13 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { Led } from "./led/Led";
-import { textColumns } from "./led/font";
-import { useBoard, type ReplayControls } from "./data/useBoard";
-import type { Board } from "./data/types";
-import { Junction, phaseOf, type Phase } from "./components/Junction";
-import { Sections } from "./components/Sections";
-import { DUR, EASE } from "./motion";
+import { Led } from "../led/Led";
+import { textColumns } from "../led/font";
+import { useBoard, type ReplayControls } from "../data/useBoard";
+import type { Board } from "../data/types";
+import { Junction, phaseOf, type Phase } from "../components/Junction";
+import { Sections } from "../components/Sections";
+import { DUR, EASE } from "../motion";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -101,7 +101,7 @@ function ReplayBar({ c }: { c: ReplayControls }) {
   );
 }
 
-export default function App() {
+export default function Live() {
   const { board, replay } = useBoard();
   const phase = phaseOf(board);
   const root = useRef<HTMLDivElement>(null);
@@ -111,7 +111,7 @@ export default function App() {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         const tl = gsap.timeline({ defaults: { ease: EASE.reveal } });
-        tl.from(".masthead > *", { y: -14, opacity: 0, duration: DUR.ui, stagger: 0.05 })
+        tl.from(".board-bar > *", { y: -14, opacity: 0, duration: DUR.ui, stagger: 0.05 })
           .from(".hero-title .line > span", { yPercent: 110, duration: DUR.reveal, stagger: 0.08 }, 0.1)
           .from(".hero-copy > *:not(.hero-title)", { opacity: 0, y: 10, duration: 0.6, stagger: 0.06 }, 0.35)
           .from(".beam", { scaleX: 0, transformOrigin: "left center", duration: 0.7, ease: "power3.inOut" }, 0.2)
@@ -136,17 +136,8 @@ export default function App() {
   );
 
   return (
-    <div className="page" ref={root} data-mode={board.mode}>
-      <a className="skip" href="#rule">
-        Skip to the rule and results
-      </a>
-      <header className="masthead">
-        <div className="wordmark" aria-label="Fork in the Bill">
-          <svg viewBox="0 0 28 28" aria-hidden="true" className="wordmark-mark">
-            <path d="M14 27 V17 C14 12 6 12 6 6 V1 M14 17 C14 12 22 12 22 6 V1" />
-          </svg>
-          <span>Fork in the Bill</span>
-        </div>
+    <div className="page board-page" ref={root} data-mode={board.mode}>
+      <div className="board-bar">
         <div className="vms" aria-label={`Experiment status: ${statusText(board, phase).toLowerCase()}`}>
           <Led
             text={statusText(board, phase)}
@@ -160,9 +151,9 @@ export default function App() {
           <ModeBadge board={board} />
           <FlagsmithLink url={board.flagsmithUrl} />
         </div>
-      </header>
+      </div>
 
-      <main>
+      <div className="board-main">
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
             <h1 id="hero-title" className="hero-title">
@@ -192,21 +183,7 @@ export default function App() {
         </section>
 
         <Sections board={board} phase={phase} />
-      </main>
-
-      <footer className="footer">
-        <div className="footer-road" aria-hidden="true">
-          <div className="footer-dashes" />
-        </div>
-        <div className="footer-inner">
-          <div className="footer-sign">
-            <span className="footer-tab">exit</span>
-            <strong>Fork in the Bill</strong>
-            <span>Pre-registered. Measured in dollars per solved task.</span>
-          </div>
-          <FlagsmithLink url={board.flagsmithUrl} />
-        </div>
-      </footer>
+      </div>
     </div>
   );
 }

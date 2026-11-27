@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import seedJson from "../seed.json";
 import { EXPERIMENT_FLAG, type FlagChange } from "./flags";
 import type { Board, Connection, Seed, Snapshot } from "./types";
@@ -19,7 +19,7 @@ function seedFigures(): Record<string, string> {
 }
 
 /** API base: runtime /board-config.json wins over the build-time VITE_BOARD_API. */
-async function resolveApi(): Promise<string> {
+export async function resolveApi(): Promise<string> {
   try {
     const res = await fetch(`${import.meta.env.BASE_URL}board-config.json`, { cache: "no-store" });
     if (res.ok) {
@@ -42,9 +42,13 @@ function flagsOf(v: unknown): FlagChange[] | null {
 }
 
 export function useBoard(): { board: Board; replay: ReplayControls | null } {
-  const isReplay = useMemo(() => new URLSearchParams(window.location.search).get("demo") === "replay", []);
-  const live = useLive(!isReplay);
-  const replay = useReplay(isReplay);
+  // Read after mount so the prerendered page and the first client render agree.
+  const [mode, setMode] = useState<"pending" | "live" | "replay">("pending");
+  useEffect(() => {
+    setMode(new URLSearchParams(window.location.search).get("demo") === "replay" ? "replay" : "live");
+  }, []);
+  const live = useLive(mode === "live");
+  const replay = useReplay(mode === "replay");
 
   if (replay) return { board: replay.board, replay: replay.controls };
   return {
