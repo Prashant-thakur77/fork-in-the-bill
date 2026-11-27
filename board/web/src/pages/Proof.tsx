@@ -75,7 +75,7 @@ export default function Proof() {
             {prereg.map((h) => (
               <div className="receipt-line" key={h.file}>
                 <span>{h.file.replace("prereg/", "")}</span>
-                <span>{h.sha256.slice(0, 16)}…</span>
+                <span>{h.sha256}</span>
               </div>
             ))}
             <div className="receipt-cut" aria-hidden="true" />
@@ -84,7 +84,7 @@ export default function Proof() {
                 <span>
                   {l.run} · {l.taskDone} tasks
                 </span>
-                <span>{l.merkleRoot.slice(0, 16)}…</span>
+                <span>{l.merkleRoot}</span>
               </div>
             ))}
             <div className="receipt-line">

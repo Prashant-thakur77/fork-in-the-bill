@@ -63,7 +63,7 @@ export default defineConfig({
     // Local checks against the real API: BOARD_PROXY=https://<board host> forwards the API paths,
     // so a build made with VITE_BOARD_API=http://localhost:<port> reads live data same-origin.
     proxy: process.env.BOARD_PROXY
-      ? Object.fromEntries(["/state", "/flags", "/stream"].map((p) => [p, { target: process.env.BOARD_PROXY, changeOrigin: true }]))
+      ? Object.fromEntries(["^/state(\\?|$)", "^/flags/", "^/stream(\\?|$)"].map((p) => [p, { target: process.env.BOARD_PROXY, changeOrigin: true }]))
       : undefined,
   },
 });

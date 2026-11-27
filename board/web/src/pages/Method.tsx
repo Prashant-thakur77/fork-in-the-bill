@@ -165,7 +165,7 @@ export default function Method() {
                       <td className="num">{v.count}</td>
                       <td className="num">{v.languages}</td>
                       <td>
-                        <code>{v.sha256.slice(0, 16)}…</code>
+                        <code>{v.sha256}</code>
                       </td>
                     </tr>
                   ))}

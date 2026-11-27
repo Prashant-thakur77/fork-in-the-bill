@@ -448,7 +448,7 @@ export default function Home() {
           {preregHash && (
             <a className="reg-stamp" data-reveal="stamp" href={ghFile(preregHash.file)} rel="noopener">
               <span className="reg-k">Registered · sha256</span>
-              <code>{preregHash.sha256.slice(0, 16)}…</code>
+              <code>{preregHash.sha256}</code>
               <span className="reg-file">{preregHash.file}</span>
             </a>
           )}
@@ -487,19 +487,19 @@ export default function Home() {
               {preregHash && (
                 <div className="receipt-line">
                   <span>Pre-reg sha256</span>
-                  <span>{preregHash.sha256.slice(0, 12)}…</span>
+                  <span>{preregHash.sha256}</span>
                 </div>
               )}
               {amendHash && (
                 <div className="receipt-line">
                   <span>Amendment sha256</span>
-                  <span>{amendHash.sha256.slice(0, 12)}…</span>
+                  <span>{amendHash.sha256}</span>
                 </div>
               )}
               {repo.ledgers.map((l) => (
                 <div className="receipt-line" key={l.run}>
                   <span>Merkle root, {l.run}</span>
-                  <span>{l.merkleRoot.slice(0, 12)}…</span>
+                  <span>{l.merkleRoot}</span>
                 </div>
               ))}
               <div className="receipt-line">
@@ -599,6 +599,10 @@ export default function Home() {
       {/* 10. closing */}
       <section className="closing" aria-labelledby="close-h">
         <div className="closing-sign" data-reveal="hang">
+          <svg className="closing-exit" viewBox="0 0 120 120" aria-hidden="true">
+            <path d="M34 98 L34 60 C34 44 46 34 62 34 L84 34" />
+            <path d="M70 18 L88 34 L70 50" />
+          </svg>
           <span className="closing-tab">Next exit</span>
           <h2 id="close-h">Follow the run to the end.</h2>
           <p>Watch both lanes fill up live, or read exactly how the verdict will be made.</p>

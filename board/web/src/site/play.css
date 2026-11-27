@@ -347,3 +347,96 @@ html:not(.js) .sg-guess {
 .share.is-shown .sg-guess .sg-btns {
   display: none;
 }
+
+/* ---------- nothing clipped ---------- */
+/* table heads wrap so the whole table fits its column on desktop */
+.data-table thead th,
+.data-table thead th.num {
+  white-space: normal;
+  min-width: 9ch;
+}
+/* commands and code wrap instead of running out of their box (indentation is kept) */
+.check-cmd,
+.code pre,
+.diff pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* hashes are shown in full: label above, the whole hash below in mono */
+.receipt-line {
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+.receipt-line span:last-child {
+  flex: 1 1 100%;
+  text-align: left;
+  white-space: normal;
+  word-break: break-all;
+  font-family: var(--mono);
+  font-size: 14px;
+}
+.reg-stamp code {
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  font-size: 14px;
+}
+/* page-sign pictograms: dark line work on a yellow fill (the method stamp's tick) */
+.ph-picto .pk {
+  stroke: var(--sign-deep);
+  stroke-width: 6;
+}
+
+/* home section plates carry their chainage along the road, like stationing on a junction drawing */
+.home {
+  counter-reset: km;
+}
+.home .hsec .eyebrow-sign::before {
+  counter-increment: km;
+  content: "km " counter(km);
+  display: inline-block;
+  margin-right: 10px;
+  padding: 0 7px;
+  border-radius: 4px;
+  background: var(--paint-yellow);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+.home .hsec .eyebrow-sign.is-dark::before {
+  background: var(--led);
+}
+
+/* closing: an exit sign with its exit arrow */
+.closing-sign {
+  position: relative;
+  padding-right: clamp(24px, 16vw, 220px);
+}
+.closing-exit {
+  position: absolute;
+  right: clamp(20px, 4vw, 56px);
+  top: 50%;
+  width: clamp(90px, 12vw, 150px);
+  transform: translateY(-50%);
+  fill: none;
+  stroke: var(--sheet);
+  stroke-width: 12;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+@media (max-width: 700px) {
+  .closing-sign {
+    padding-right: clamp(24px, 4vw, 56px);
+  }
+  .closing-exit {
+    position: static;
+    transform: none;
+    width: 64px;
+    order: -1;
+  }
+}
+
+/* lane cards: one painted lane line, not two */
+.lane-card {
+  background-image: none;
+}
