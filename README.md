@@ -36,7 +36,7 @@ uv run python -m analysis.check_consistency                                   # 
 | Looking for | Where to look |
 |---|---|
 | **Use of Flagsmith**: do the flags and the experiment do real work? | [How Flagsmith is used](#how-flagsmith-is-used); the exposure point in [`harness/policy.py`](harness/policy.py); the experiment body [`flagsmith/experiment-1.json`](flagsmith/experiment-1.json); dashboard screenshots in this README |
-| **Impact**: a real problem, and would a team use it? | [The problem](#the-problem); [use the kit on your own agent](#use-the-kit-on-your-own-agent) (`npm i forkbill`, `npx -y forkbill-mcp`, Python kit, self-hosted path) |
+| **Impact**: a real problem, and would a team use it? | [The problem](#the-problem); [use the kit on your own agent](#use-the-kit-on-your-own-agent) (`npm i forkbill`, `npx -y forkbill-mcp`, Python kit, self-hosted path); [nine examples with real output](#examples); [real task transcripts](examples/transcripts/README.md) |
 | **Creativity** | The routing policy as a flag value; cost per solved task as the readout; a [registration](#hypothesis-and-pre-registration) hashed before the run; [every assignment re-derived offline](#offline-assignment-re-derivation) with Flagsmith's own engine |
 | A clear hypothesis | [Hypothesis and pre-registration](#hypothesis-and-pre-registration), [`prereg/experiment-1.md`](prereg/experiment-1.md) |
 | Versions behind a flag | [`flagsmith/policies/control.json`](flagsmith/policies/control.json) and [`lanes_v1.json`](flagsmith/policies/lanes_v1.json), served by `agent_routing` |
@@ -56,6 +56,7 @@ uv run python -m analysis.check_consistency                                   # 
 - [Architecture](#architecture)
 - [Setup](#setup)
 - [Use the kit on your own agent](#use-the-kit-on-your-own-agent)
+- [Examples](#examples)
 - [Background and references](#background-and-references)
 - [Limits](#limits)
 - [Cite](#cite)
@@ -173,7 +174,7 @@ When `routing_kill` is on, a task runs the control policy, sends no exposure and
 
 ### End Experiment and same-flag rollout
 
-After the decision, the experiment is ended in Flagsmith with the winning variation as the rollout decision, so the winner becomes `agent_routing`'s own value. A fresh batch ([`tasks/pools/rollout.txt`](tasks/pools/rollout.txt), 20 tasks disjoint from every other pool) then runs with `make rollout`, on the same flag and with no code change. Experiment 2 starts from that state: [`flagsmith/experiment-2.json`](flagsmith/experiment-2.json) assumes the exp1 winner is the control value and adds `lanes_v2`.
+After the decision, the experiment is ended in Flagsmith with the winning variation as the rollout decision. Flagsmith then serves the winner to every identity through the flag itself: it sets that variation's weight to 100% on the environment default and removes the experiment's override ([D25](DECISIONS.md#d25-ending-experiment-1-and-making-the-winner-the-flags-own-value)). A fresh batch ([`tasks/pools/rollout.txt`](tasks/pools/rollout.txt), 20 tasks disjoint from every other pool) then runs with `make rollout`, on the same flag and with no code change. Experiment 2 starts from that state: [`flagsmith/experiment-2.json`](flagsmith/experiment-2.json) assumes the exp1 winner is the control value and adds `lanes_v2`.
 
 ### Exact CLI v2 commands
 
@@ -207,7 +208,7 @@ flagsmith api api/v1/environments/<env>/experiments/<id>/results/
 flagsmith environment document --no-input
 
 # ending an experiment (the form printed by flagsmith/smoke_test.sh)
-flagsmith api api/v1/environments/<env>/experiments/<id>/complete/ -X POST -F rollout_decision=<variation>
+flagsmith api api/v1/environments/<env>/experiments/<id>/complete/ -X POST -F rollout_decision=variant -F rollout_variant=<option id>   # or rollout_decision=control
 ```
 
 ### Offline assignment re-derivation
@@ -638,6 +639,25 @@ For self-hosted Flagsmith add `FLAGSMITH_SDK_API_URL` and `FLAGSMITH_EVENTS_API_
 
 The server never picks an arm. When Flagsmith cannot serve a valid policy, `get_routing_policy` returns Flagsmith's error and no models, unless the caller passed its own `fallback_policy`. It also exposes the pricing table, its configuration (without the key) and the policy format as resources, and a `route_behind_experiment` prompt that gives an agent the whole loop. The bucketing code is shared: the kit's [`bucket.ts`](kit/ts/src/bucket.ts) is what the site's "move the split" lab runs, and the tests compare it with [`integrity/verify_assignment.py`](integrity/verify_assignment.py) and with every arm recorded in `runs/exp1`.
 
+## Examples
+
+[`examples/`](examples/README.md) has nine runnable examples of the kit. Each was run against a real self-hosted Flagsmith, and what it printed is committed next to it. None needs a Flagsmith Cloud account or a model key: where an agent would work, a simulated task stands in, and every output says so.
+
+| Example | What it shows | Real output |
+|---|---|---|
+| [Python quickstart](examples/01-python-quickstart/README.md) | Ask Flagsmith for a task's routing policy, run the task, report the outcome | [run.txt](examples/01-python-quickstart/output/run.txt) |
+| [TypeScript quickstart](examples/02-typescript-quickstart/README.md) | The same loop with `forkbill` from the npm registry | [run.txt](examples/02-typescript-quickstart/output/run.txt) |
+| [Full experiment, self-hosted](examples/03-full-experiment-selfhosted/README.md) | Create, start, run 200 identities, read Flagsmith's results, end with a rollout | [run.txt](examples/03-full-experiment-selfhosted/output/run.txt), [screenshot](examples/03-full-experiment-selfhosted/output/flagsmith-experiment-results.png) |
+| [MCP agent session](examples/04-mcp-agent-session/README.md) | `npx -y forkbill-mcp` driven over stdio | [transcript](examples/04-mcp-agent-session/output/transcript.jsonl) |
+| [OpenFeature](examples/05-openfeature/README.md) | The same decision through the OpenFeature API | [run.txt](examples/05-openfeature/output/run.txt) |
+| [Kill switch](examples/06-kill-switch/README.md) | `routing_kill` flipped while a worker runs | [run.txt](examples/06-kill-switch/output/run.txt) |
+| [Verify offline](examples/07-verify-offline/README.md) | Every arm re-derived from the environment document, and a wrong key caught | [run.txt](examples/07-verify-offline/output/run.txt) |
+| [Verify a run in CI](examples/08-ci-verify-run/README.md) | The `verify-run` action on `runs/exp1`, passing and failing | [run.txt](examples/08-ci-verify-run/output/run.txt) |
+| [Compare evaluation modes](examples/09-compare-modes/README.md) | The same identities get the same arm from the API, local evaluation and an Edge Proxy | [run.txt](examples/09-compare-modes/output/run.txt) |
+| [Real task transcripts](examples/transcripts/README.md) | What the agent did on four experiment 1 tasks: planner steps, worker answers, the graded patch | four rendered transcripts |
+
+The experiment itself ran on [`harness/`](harness/) and [`runner/`](runner/); the kit packages the same loop for other agents, and these examples are where it has been run.
+
 ## Background and references
 
 The routing question comes from work on LLM cascades and routers, which send a query to a cheaper model when that model is likely to be good enough ([FrugalGPT](https://arxiv.org/abs/2305.05176), [RouteLLM](https://arxiv.org/abs/2406.18665)), and from the case for reporting an agent's cost next to its accuracy ([Kapoor et al., 2024](https://arxiv.org/abs/2407.01502)).
@@ -665,7 +685,7 @@ Citation metadata is in [`CITATION.cff`](CITATION.cff); GitHub's "Cite this repo
 
 <details>
 <summary>Every top-level directory and what it holds</summary>
-
+| [`.github/workflows/`](.github/workflows/ci.yml) | CI and the release workflow; [`.github/actions/verify-run/`](.github/actions/verify-run/README.md) is the reusable ledger and assignment check |
 | Path | Contents |
 |---|---|
 | [`prereg/`](prereg/experiment-1.md) | Registrations, amendment, pilot report, hashes |
