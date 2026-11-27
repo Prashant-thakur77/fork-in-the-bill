@@ -101,6 +101,9 @@ describe("POST /waitlist", () => {
     expect((await app.fetch(join({ email: "a@example.org" }, { origin: "https://elsewhere.example" }))).status).toBe(403);
     expect((await app.fetch(join({ email: "a@example.org" }, { origin: null }))).status).toBe(403);
     expect(store.waitlist).toHaveLength(0);
+    // the Worker's own origin is the site too (the form posts to the host it was served from)
+    expect((await app.fetch(join({ email: "a@example.org" }, { origin: "https://board.test" }))).status).toBe(200);
+    expect(store.waitlist).toHaveLength(1);
   });
 
   it("answers a plain form post with a page, not JSON", async () => {

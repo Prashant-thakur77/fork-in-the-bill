@@ -126,7 +126,7 @@ export function Booth({ source, heading = "h2" }: { source: string; heading?: "h
   // After an answer, focus moves to the next question's first control.
   useEffect(() => {
     if (!moved.current) return;
-    const el = root.current?.querySelector<HTMLElement>(step === "done" ? ".ticket" : ".booth-now input:not([type=hidden]):not(.booth-trap), .booth-now button");
+    const el = root.current?.querySelector<HTMLElement>(step === "done" ? ".ticket" : ".booth-q:not([hidden]) input:not([type=hidden]), .booth-q:not([hidden]) button");
     if (step === "done") el?.setAttribute("tabindex", "-1");
     el?.focus({ preventScroll: false });
   }, [step]);

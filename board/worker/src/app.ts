@@ -159,8 +159,9 @@ export function createApp(opts: AppOptions) {
   }
 
   /**
-   * Adds one address to the updates list. Same-origin only: the request must carry an Origin the
-   * site is served from. Answers JSON to a script and a small page to a plain form post.
+   * Adds one address to the updates list. Same-origin only: the request must carry an Origin, and
+   * it must be this Worker's own origin or one the site is served from. Answers JSON to a script
+   * and a small page to a plain form post.
    */
   async function joinWaitlist(request: Request, cors: Record<string, string>): Promise<Response> {
     const wantsJson = (request.headers.get("Content-Type") ?? "").includes("application/json") || (request.headers.get("Accept") ?? "").includes("application/json");
@@ -171,7 +172,8 @@ export function createApp(opts: AppOptions) {
       return new Response(joinPage(state, said), { status: c.status, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", ...extra } });
     };
     const origin = request.headers.get("Origin");
-    if (!origin || !opts.allowedOrigins.includes(origin)) return json({ error: "origin not allowed" }, 403);
+    const own = new URL(request.url).origin;
+    if (!origin || !(origin === own || opts.allowedOrigins.includes(origin))) return json({ error: "origin not allowed" }, 403);
 
     const rawBody = await readCapped(request, WAITLIST_MAX_BODY_BYTES);
     if (rawBody === null) return json({ error: "body too large" }, 413, cors);
