@@ -27,6 +27,7 @@ uv run python -m analysis.check_consistency                                   # 
 [![ci](https://github.com/Prashant-thakur77/fork-in-the-bill/actions/workflows/ci.yml/badge.svg)](https://github.com/Prashant-thakur77/fork-in-the-bill/actions/workflows/ci.yml)
 [![release](https://img.shields.io/github/v/release/Prashant-thakur77/fork-in-the-bill.svg)](https://github.com/Prashant-thakur77/fork-in-the-bill/releases)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Prashant-thakur77/fork-in-the-bill)
 
 > Status: experiment 1 is complete, decided and rolled out on the same flag. Experiment 2, a follow-up on the same flag, is registered and running; the [live board](https://forkbill.prashantthakur.dev/live) shows its running totals, and its section below fills in from `analysis/out/numbers.json` when it ends.
 
@@ -57,6 +58,7 @@ uv run python -m analysis.check_consistency                                   # 
 - [Use the kit on your own agent](#use-the-kit-on-your-own-agent)
 - [Background and references](#background-and-references)
 - [Limits](#limits)
+- [Cite](#cite)
 - [Repo map](#repo-map)
 - [Licence](#licence)
 
@@ -379,6 +381,8 @@ sha256sum -c prereg/HASHES.txt
 make verify
 ```
 
+Every task attempt's planner transcript and graded patch is public too: [`runs/exp1/transcripts/`](runs/exp1/transcripts/) and [`runs/rollout/transcripts/`](runs/rollout/transcripts/) hold the raw files, and [`examples/transcripts/`](examples/transcripts/README.md) renders four of them (a solved and an unsolved task from each arm) so you can read what the agent did.
+
 Three things a careful reader will ask about:
 
 - **The ledger has one more `task_done` record than the results table has tasks.** `swelive:gui-cs__Terminal.Gui-4860` ran twice in `lanes_v1`, because the worker was interrupted and its lease was re-queued as an infra retry; both attempts were unsolved. The analysis keeps the last attempt. Both attempts sent events to Flagsmith, which departs from the registration's "events are sent only for a task's final attempt"; the effect on the arm's mean cost in Flagsmith is about a hundredth of a cent, visible in the agreement check in [`analysis/results.md`](analysis/results.md).
@@ -441,12 +445,27 @@ make setup          # uv sync, npm ci for the board and the kit's npm workspace
 make check          # lint, types, unit tests, consistency gate (no network, no spend)
 ```
 
-### Reproduce the analysis from the published logs
+### Reproduce it
 
-The run logs (`runs/<exp>/*.jsonl`) and the raw Flagsmith results (`analysis/flagsmith/<exp>/`) are committed. One command rebuilds every number in this README from them, with no API key:
+No key, no Docker and no spend. From a clone, or from a codespace on this repository:
 
 ```sh
-make analyse        # numbers.json, charts, results.md, then the consistency gate
+uv sync --locked
+sha256sum -c prereg/HASHES.txt            # the registrations are the tagged ones
+make verify                               # hash chains, Merkle roots, every arm recomputed with Flagsmith's engine
+make analyse                              # numbers.json rebuilt from the run logs, then the consistency gate
+uv run python -m tools.compare_numbers    # the rebuilt numbers against the committed ones, value by value
+git restore analysis/out/numbers.json analysis/results.md
+```
+
+[`docs/reproduce.md`](docs/reproduce.md) shows the output to expect at each step and lists what cannot be reproduced without keys. Release assets carry a `SHA256SUMS` file, and releases built by the release workflow carry a build provenance attestation (`gh attestation verify <file> --repo Prashant-thakur77/fork-in-the-bill`).
+
+To run the same ledger and assignment checks on a run directory in another repository:
+
+```yaml
+- uses: Prashant-thakur77/fork-in-the-bill/.github/actions/verify-run@<tag>
+  with:
+    run-dir: runs/my-experiment
 ```
 
 ### Environment
@@ -633,6 +652,10 @@ The full list of 28 sources, each checked against its own page and with a note o
 - Single provider. All calls go to the Anthropic API at list prices on one date; cached-token pricing and price changes move the dollar figures.
 - Harness design. The planner has no shell by design (D18). An agent that does its own grunt work would see a different split of cost between lanes.
 - Flagsmith Experimentation is in beta. Its results response shape is undocumented, so [`analysis/pull_results.py`](analysis/pull_results.py) parses the shape seen on Cloud and saves every raw response for re-checking.
+
+## Cite
+
+Citation metadata is in [`CITATION.cff`](CITATION.cff); GitHub's "Cite this repository" button reads it. Changes between releases are in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Repo map
 
