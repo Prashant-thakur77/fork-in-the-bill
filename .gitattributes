@@ -1,0 +1,17 @@
+# Text files are stored and checked out with LF on every platform. The registration files
+# are checked byte for byte against prereg/HASHES.txt, so a CRLF checkout would fail that.
+* text=auto eol=lf
+
+# Run logs and environment snapshots are written by the runner and never edited. Git leaves
+# their bytes alone, and GitHub collapses their diffs and keeps them out of language stats.
+runs/**/*.jsonl -text linguist-generated
+runs/**/env/*.json -text linguist-generated
+
+# Lockfiles
+uv.lock linguist-generated
+**/package-lock.json linguist-generated
+
+# Binary
+*.pdf binary
+*.png binary
+*.gz binary

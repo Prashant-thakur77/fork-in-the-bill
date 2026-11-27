@@ -15,7 +15,7 @@ help: ## List targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-16s %s\n", $$1, $$2}'
 
 setup: ## Install Python and Node dependencies
-	$(UV) sync --group dev
+	$(UV) sync --all-extras --group dev
 	cd board/web && npm ci
 	cd board/worker && npm ci
 	cd kit && npm ci

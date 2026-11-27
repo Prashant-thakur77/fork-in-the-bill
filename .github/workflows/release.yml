@@ -55,6 +55,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: CITATION.cff names this version
+        if: ${{ github.ref_type == 'tag' }}
+        run: |
+          set -euo pipefail
+          want="${GITHUB_REF_NAME#v}"
+          have="$(sed -n 's/^version: *"\{0,1\}\([^"]*\)"\{0,1\} *$/\1/p' CITATION.cff)"
+          if [ "$have" != "$want" ]; then
+            echo "::warning file=CITATION.cff::version is $have but the tag is $GITHUB_REF_NAME"
+          fi
       - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
         with:
           version: ${{ env.UV_VERSION }}

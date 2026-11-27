@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this experiment, its data or its code, please cite it with the metadata below."
+type: software
+title: "Fork in the Bill: a pre-registered Flagsmith experiment on a coding agent's model routing"
+abstract: >-
+  A pre-registered A/B experiment, run through Flagsmith, on whether handing a coding
+  agent's routine work to a small model cuts the dollars spent per solved task. The
+  repository holds the registrations, the run logs with hash-chained ledgers, the
+  analysis that derives every published number, and the tools to verify all of it.
+authors:
+  - name: "Fork in the Bill team (CoffeeAndToggle)"
+version: "0.2.0"
+date-released: "2026-11-27"
+license: MIT
+repository-code: "https://github.com/Prashant-thakur77/fork-in-the-bill"
+keywords:
+  - feature flags
+  - A/B testing
+  - pre-registration
+  - coding agents
+  - model routing

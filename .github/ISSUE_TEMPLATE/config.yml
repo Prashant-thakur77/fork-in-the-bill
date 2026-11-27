@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security report
+    url: https://github.com/Prashant-thakur77/fork-in-the-bill/security/policy
+    about: Do not open a public issue for a vulnerability or a leaked key. The security policy says how to report it privately.

@@ -192,7 +192,7 @@ The second command needs the GitHub CLI. It confirms the file came out of a work
 
 ## What this does not reproduce
 
-The agent runs themselves. Running the tasks again needs an Anthropic key, a Flagsmith environment and Docker, costs money, and would not give the same transcripts, because model output is not deterministic. What you verified above is that the published numbers follow from the published logs, and that the logs have not been altered since their Merkle root was published.
+The agent runs themselves. Running the tasks again needs a model provider key, a Flagsmith environment and Docker, costs money, and would not give the same transcripts, because model output is not deterministic. What you verified above is that the published numbers follow from the published logs, and that the logs have not been altered since their Merkle root was published.
 
 Whether a task was solved. `tasks.jsonl` records the grading result for each task, but the transcripts and test logs behind it (`runs/raw/`) are too large for git. They are not in the repository, and not among the `v0.1.0` and `v0.2.0` release assets. Re-grading means re-running the task's container.
 

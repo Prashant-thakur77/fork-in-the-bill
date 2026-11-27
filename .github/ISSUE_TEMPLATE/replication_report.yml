@@ -1,0 +1,62 @@
+name: Replication report
+description: You ran the steps in docs/reproduce.md and want to report what you got, matching or not
+title: "Replication: "
+labels: ["replication"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A report that everything matched is as useful as one that found a difference, because it tells us the steps work on a machine that is not ours.
+        The steps are in [docs/reproduce.md](https://github.com/Prashant-thakur77/fork-in-the-bill/blob/main/docs/reproduce.md). No key is needed for any of them.
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or tag you checked
+      description: Output of `git rev-parse --short HEAD`, or the release tag
+    validations:
+      required: true
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Outcome
+      options:
+        - Everything matched
+        - Something differed
+        - A step failed before I could compare
+    validations:
+      required: true
+  - type: checkboxes
+    id: steps
+    attributes:
+      label: Steps you ran
+      options:
+        - label: "`sha256sum -c prereg/HASHES.txt`"
+        - label: "`make verify`"
+        - label: "`make analyse`, then `uv run python -m tools.compare_numbers`"
+        - label: "`make check`"
+        - label: "Checksums or attestations of a release download"
+  - type: input
+    id: merkle
+    attributes:
+      label: Merkle root you got for runs/exp1
+      description: The `merkle_root=` line that `uv run python -m integrity.verify_ledger runs/exp1` prints
+  - type: textarea
+    id: compare
+    attributes:
+      label: Output of tools.compare_numbers
+      description: Paste all of it. If values differ, it lists each key with the committed and the re-derived value.
+      render: text
+  - type: textarea
+    id: differences
+    attributes:
+      label: What differed or failed
+      description: The command, the output you got, and the output docs/reproduce.md led you to expect.
+      render: text
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Operating system and CPU architecture, the output of `uv --version` and `uv run python --version`, and whether you used the devcontainer
+      render: text
+    validations:
+      required: true
