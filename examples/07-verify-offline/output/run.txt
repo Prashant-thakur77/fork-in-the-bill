@@ -1,0 +1,78 @@
+== npm ci (forkbill comes from the npm registry)
+
+added 23 packages in 616ms
+== 1. 40 simulated identities through the experiment (remote evaluation: Flagsmith's API picks each arm)
+recorded in tasks.jsonl: control 19  lanes_v1 21  
+== 2. flagsmith environment document > env/000-start.json
+{"segment":"experiment-2-rollout","rule":[{"operator":"PERCENTAGE_SPLIT","value":"100.0"}],"split":{"lanes_v1":50}}
+== 3a. Python: python -m integrity.verify_assignment --run <run>  (Flagsmith's flag-engine)
+{
+  "flag_engine_version": "11.1.2",
+  "flagsmith_sdk_version": "6.7.0",
+  "records": 40,
+  "checked": 40,
+  "matched": 40,
+  "match_rate": 1.0,
+  "recorded_counts": {
+    "control": 19,
+    "lanes_v1": 21
+  },
+  "expected_counts": {
+    "control": 19,
+    "lanes_v1": 21
+  },
+  "mismatched": 0,
+  "independent_check": {
+    "agree": 40,
+    "disagree": 0
+  },
+  "ok": true
+}
+== 3b. TypeScript: explainAssignment from the published forkbill package
+ex07:0000  segment experiment-2-rollout: md5 a1a10406f47d.. -> 66.7834 <= 100  split: md5 7e394b01b311.. -> 40.4581 in lanes_v1 [0, 50)  recorded lanes_v1  ok
+ex07:0001  segment experiment-2-rollout: md5 0a6a7e1fc82f.. -> 46.1292 <= 100  split: md5 8ff1d7618518.. -> 57.0414 in control [50, 100)  recorded control  ok
+ex07:0002  segment experiment-2-rollout: md5 3bc266d904cd.. -> 23.5247 <= 100  split: md5 139025cc5dba.. -> 87.7475 in control [50, 100)  recorded control  ok
+ex07:0003  segment experiment-2-rollout: md5 d15c6aefef92.. -> 84.4969 <= 100  split: md5 cd7eed34fe4f.. -> 41.8884 in lanes_v1 [0, 50)  recorded lanes_v1  ok
+ex07:0004  segment experiment-2-rollout: md5 20dc5b5aa161.. ->  6.2613 <= 100  split: md5 ee8a2c3470ee.. ->  7.3815 in lanes_v1 [0, 50)  recorded lanes_v1  ok
+... 35 more
+explainAssignment (forkbill, TypeScript): 40 of 40 recorded arms re-derived from work/run/env/000-start.json
+== 4. the same checks against a document with the wrong environment key
+{
+  "checked": 40,
+  "matched": 20,
+  "match_rate": 0.5,
+  "recorded_counts": {
+    "control": 19,
+    "lanes_v1": 21
+  },
+  "expected_counts": {
+    "control": 23,
+    "lanes_v1": 17
+  },
+  "mismatched": 20,
+  "first_mismatch": {
+    "identity": "ex07:0002",
+    "attempt": 1,
+    "recorded": "control",
+    "expected": "lanes_v1",
+    "reason": "SPLIT; weight=50"
+  },
+  "ok": false
+}
+python exit code: 1
+ex07:0000  segment experiment-2-rollout: md5 19aa7a1d2cce.. -> 83.0066 <= 100  split: md5 13671858dd2b.. ->  4.4109 in lanes_v1 [0, 50)  recorded lanes_v1  ok
+ex07:0001  segment experiment-2-rollout: md5 082a79751c83.. -> 37.4075 <= 100  split: md5 07fab260a5ed.. -> 64.7730 in control [50, 100)  recorded control  ok
+ex07:0002  segment experiment-2-rollout: md5 2d4ebc45f525.. -> 91.2282 <= 100  split: md5 c1a03d93e477.. ->  2.6205 in lanes_v1 [0, 50)  recorded control  MISMATCH
+ex07:0003  segment experiment-2-rollout: md5 1edcefff974b.. -> 71.9244 <= 100  split: md5 126706b5c0a5.. -> 56.1112 in control [50, 100)  recorded lanes_v1  MISMATCH
+ex07:0004  segment experiment-2-rollout: md5 8b9f09c052b2.. -> 15.7031 <= 100  split: md5 1c217d123f2b.. -> 83.2767 in control [50, 100)  recorded lanes_v1  MISMATCH
+... 35 more
+explainAssignment (forkbill, TypeScript): 20 of 40 recorded arms re-derived from work/wrong-key.json
+mismatched: 20
+  ex07:0002: recorded control, re-derived lanes_v1
+  ex07:0003: recorded lanes_v1, re-derived control
+  ex07:0004: recorded lanes_v1, re-derived control
+  ex07:0007: recorded lanes_v1, re-derived control
+  ex07:0009: recorded lanes_v1, re-derived control
+  ... 15 more
+node exit code: 1
+both checks caught the wrong key

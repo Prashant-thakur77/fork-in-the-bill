@@ -1,0 +1,19 @@
+{
+  "name": "forkbill-example-verify-offline",
+  "private": true,
+  "type": "module",
+  "description": "Re-derive each identity's arm from a saved Flagsmith environment document with the forkbill kit",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "dependencies": {
+    "forkbill": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.7",
+    "typescript": "~5.9.3"
+  }
+}

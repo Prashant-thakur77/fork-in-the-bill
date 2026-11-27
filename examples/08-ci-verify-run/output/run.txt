@@ -1,0 +1,23 @@
+== 1. the run as committed
+runs/exp1: records=467 task_done=146 merkle_root=7ed364648c7513ef22280eaed97a2ab77e92d91b8f88f5bbfab08d747a989929
+runs/exp1: 146 of 146 recorded arms match the Flagsmith engine
+exit code: 0
+== 2. a copy with one recorded arm changed in tasks.jsonl
+examples/08-ci-verify-run/work/arm-changed: records=467 task_done=146 merkle_root=7ed364648c7513ef22280eaed97a2ab77e92d91b8f88f5bbfab08d747a989929
+::error::examples/08-ci-verify-run/work/arm-changed: only 145 of 146 recorded arms match the Flagsmith engine
+exit code: 1
+== 3. a copy with one dollar figure changed in the ledger
+::error::examples/08-ci-verify-run/work/ledger-changed: line 4: hash mismatch (seq 3)
+examples/08-ci-verify-run/work/ledger-changed: 146 of 146 recorded arms match the Flagsmith engine
+exit code: 1
+== 4. the assignment check for a repository with no Python: example 07's verify.ts and the forkbill npm package
+
+added 23 packages in 617ms
+swelive:c-ares__c-ares-1189  segment experiment-822-rollout: md5 fb230f486326.. -> 29.6259 <= 100  split: md5 a43b2f07366e.. -> 13.3627 in lanes_v1 [0, 50)  recorded lanes_v1  ok
+swelive:angularsen__UnitsNet-1698  segment experiment-822-rollout: md5 9706e5aed371.. -> 64.8630 <= 100  split: md5 afd4a4734949.. -> 63.7327 in control [50, 100)  recorded control  ok
+swelive:colbymchenry__codegraph-1201  segment experiment-822-rollout: md5 4e422c50e12c.. -> 66.9434 <= 100  split: md5 d163158bfe6d.. -> 12.3725 in lanes_v1 [0, 50)  recorded lanes_v1  ok
+swelive:agentscope-ai__agentscope-java-2260  segment experiment-822-rollout: md5 d49b3a072d60.. -> 40.2681 <= 100  split: md5 5feea7a69ab1.. -> 48.4397 in lanes_v1 [0, 50)  recorded lanes_v1  ok
+swelive:colbymchenry__codegraph-1207  segment experiment-822-rollout: md5 735cbffe4206.. -> 31.8764 <= 100  split: md5 462bef317431.. -> 65.0630 in control [50, 100)  recorded control  ok
+... 141 more
+explainAssignment (forkbill, TypeScript): 146 of 146 recorded arms re-derived from runs/exp1/env/000-start.json
+exit code: 0

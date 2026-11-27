@@ -1,0 +1,69 @@
+== forkbill compare: 200 identities (ex09-compare:0000 to 0199) in remote local
+{
+  "identities": 200,
+  "baseline": "remote",
+  "all_agree": true,
+  "first_disagreements": [],
+  "modes": {
+    "remote": {
+      "by_policy": {
+        "control": 93,
+        "lanes_v1": 107
+      },
+      "by_variant": {
+        "control": 93,
+        "lanes_v1": 107
+      },
+      "in_experiment": 200,
+      "errors": 0,
+      "same_policy_as_baseline": 200,
+      "same_variant_as_baseline": 200,
+      "variant_compared": 200
+    },
+    "local": {
+      "by_policy": {
+        "control": 93,
+        "lanes_v1": 107
+      },
+      "by_variant": {
+        "control": 93,
+        "lanes_v1": 107
+      },
+      "in_experiment": 200,
+      "errors": 0,
+      "same_policy_as_baseline": 200,
+      "same_variant_as_baseline": 200,
+      "variant_compared": 200
+    }
+  }
+}
+events sent: 0; rows in Flagsmith's events table for ex09-compare:*: 0 ()
+== forkbill demo --mode local: 20 simulated identities, flags evaluated in process
+deterministic fake agent loop (no model calls, illustrative prices)
+{
+  "mode": "local",
+  "client": "flagsmith",
+  "identities": 20,
+  "by_variant": {
+    "control": {
+      "n": 5,
+      "exposed": 5,
+      "cost_mean": 0.4295,
+      "solve_rate": 0.2,
+      "cost_per_solve": 2.1476,
+      "delegate_share_cost": 0.6353
+    },
+    "lanes_v1": {
+      "n": 15,
+      "exposed": 15,
+      "cost_mean": 0.3873,
+      "solve_rate": 0.6,
+      "cost_per_solve": 0.6455,
+      "delegate_share_cost": 0.3768
+    }
+  }
+}
+events sent: 90; rows in Flagsmith's events table for ex09-local:*: 90 ($flag_exposure 20, task_cost 20, task_seconds 20, task_solved 10, task_turns 20)
+== identities Flagsmith's API has seen, by prefix (Admin API identity search)
+ex09-compare: 200
+ex09-local: 0

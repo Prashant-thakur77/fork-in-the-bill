@@ -1,0 +1,33 @@
+# Copy to .github/workflows/verify-run.yml.
+#
+# On every pull request that touches runs/, recompute each run ledger's hash chain and re-derive
+# each recorded arm from the environment snapshot saved with the run. The job needs no secret:
+# both checks work from files, so it also runs on pull requests from forks.
+name: verify run
+
+on:
+  pull_request:
+    paths: ["runs/**"]
+  workflow_dispatch:
+    inputs:
+      run_dir:
+        description: Run directory to verify
+        type: string
+        default: "runs/*/"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # In this repository. From another repository, pin the action to a release tag or commit:
+      #   uses: Prashant-thakur77/fork-in-the-bill/.github/actions/verify-run@<tag>
+      - id: verify
+        uses: ./.github/actions/verify-run
+        with:
+          run-dir: ${{ inputs.run_dir || 'runs/*/' }}
+      - run: echo "Merkle root ${{ steps.verify.outputs.merkle-root }}"
