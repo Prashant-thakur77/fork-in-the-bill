@@ -1,29 +1,55 @@
 # Fork in the Bill
 
-A pre-registered Flagsmith experiment on a coding agent's model routing: does handing the agent's grunt work to a small model cut the dollars spent per solved task?
+**Toggle Wars · Track 01, Test Something Real.** One real A/B test, run on Flagsmith Experimentation: does handing a coding agent's grunt work to a small model cut the dollars spent per solved bug?
+
+**Result.** With the worker lane on Haiku (`lanes_v1`), the agent spent <!--n:exp1.arms.lanes_v1.cost_per_solve:usd4-->$0.0837<!--/n--> per solved task against <!--n:exp1.arms.control.cost_per_solve:usd4-->$0.1753<!--/n--> for all-Sonnet `control` (<!--n:exp1.delta.cost_per_solve_pct:pct1-->−52.2%<!--/n-->), on <!--n:exp1.arms.control.n_analysed:int-->76<!--/n--> control and <!--n:exp1.arms.lanes_v1.n_analysed:int-->69<!--/n--> lanes_v1 real SWE-bench-Live bug fixes. It solved <!--n:exp1.arms.lanes_v1.solve_rate:prob1-->40.6%<!--/n--> of its tasks against <!--n:exp1.arms.control.solve_rate:prob1-->44.7%<!--/n-->: a difference of <!--n:exp1.delta.solve_rate_pp:pp1-->−4.2 pp<!--/n--> with an interval from <!--n:exp1.delta.solve_rate_ci.0:pp1-->−19.8 pp<!--/n--> to <!--n:exp1.delta.solve_rate_ci.1:pp1-->+11.8 pp<!--/n-->, so a large drop is ruled out and a small one is not, and on post-cutoff tasks alone the solve-rate check did not clear its bar ([by tier](#by-tier-secondary-not-part-of-the-decision)). The rule registered before the run said ship <!--n:exp1.decision.ship:str-->lanes_v1<!--/n-->, and Flagsmith's End Experiment rolled it out on the same flag.
+
+![Flagsmith's results page for experiment 1: lanes_v1 confirmed as the winner on task_cost and rolled out to everyone](docs/img/flagsmith-results.png)
+
+**What Flagsmith does here**
+
+- **Assigns every task.** Each task is one Flagsmith identity, and the experiment's bucketing picks its arm. The runner never chooses ([`harness/policy.py`](harness/policy.py)).
+- **Carries the treatment.** The whole routing policy (the model for each lane and the caps) is the JSON value of the multivariate flag `agent_routing`. The two arms differ in one field.
+- **Measures and decides.** Flagsmith receives a `task_cost` and a `task_solved` event per task and computes the lift and the chance to beat control. The registered decision rule reads that verdict.
+- **Ships the winner.** End Experiment made `lanes_v1` the flag's value for everyone, with no deploy, and a fresh batch then ran on it.
+
+**Check it yourself** (no keys or accounts; about a minute after the clone)
+
+```sh
+git clone https://github.com/Prashant-thakur77/fork-in-the-bill && cd fork-in-the-bill && uv sync --no-dev
+uv run python -m integrity.verify_ledger runs/exp1                            # hash chain and Merkle root of the run log
+uv run python -m integrity.verify_assignment --run runs/exp1 --out /dev/null  # every arm re-derived with Flagsmith's own engine
+uv run python -m analysis.check_consistency                                   # every number in this README matches the analysis output
+```
+
+[Paper (PDF)](docs/paper.pdf) · [slide deck (PDF)](docs/deck.pdf) · [live site and board](https://forkbill.prashantthakur.dev) · [full results](analysis/results.md) · [releases](https://github.com/Prashant-thakur77/fork-in-the-bill/releases) · [references](docs/references.md)
 
 [![ci](https://github.com/Prashant-thakur77/fork-in-the-bill/actions/workflows/ci.yml/badge.svg)](https://github.com/Prashant-thakur77/fork-in-the-bill/actions/workflows/ci.yml)
-[![licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
-[![live site](https://img.shields.io/badge/live-forkbill.prashantthakur.dev-black.svg)](https://forkbill.prashantthakur.dev)
 [![release](https://img.shields.io/github/v/release/Prashant-thakur77/fork-in-the-bill.svg)](https://github.com/Prashant-thakur77/fork-in-the-bill/releases)
-[![npm: forkbill](https://img.shields.io/npm/v/forkbill.svg?label=npm%3A%20forkbill)](https://www.npmjs.com/package/forkbill)
-[![npm: forkbill-mcp](https://img.shields.io/npm/v/forkbill-mcp.svg?label=npm%3A%20forkbill-mcp)](https://www.npmjs.com/package/forkbill-mcp)
+[![licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 
-**Read it:** [paper (PDF)](docs/paper.pdf) · [slide deck (PDF)](docs/deck.pdf) · [live site](https://forkbill.prashantthakur.dev) · [full results](analysis/results.md) · [references](docs/references.md)
+> Status: experiment 1 is complete, decided and rolled out on the same flag. Experiment 2, a follow-up on the same flag, is registered and running; the [live board](https://forkbill.prashantthakur.dev/live) shows its running totals, and its section below fills in from `analysis/out/numbers.json` when it ends.
 
-**Use it:** `npm i forkbill` (TypeScript kit) · `npx -y forkbill-mcp` (MCP server) · [Python kit](kit/forkbill) · [how to put your own agent's routing behind a Flagsmith experiment](#use-the-kit-on-your-own-agent)
+## For judges
 
-![The Fork in the Bill site: the routing junction and the live arm totals](docs/img/site-home.png)
-
-Result in one line: with the delegate lane on Haiku (`lanes_v1`), the agent spent <!--n:exp1.arms.lanes_v1.cost_per_solve:usd4-->$0.0837<!--/n--> per solved task against <!--n:exp1.arms.control.cost_per_solve:usd4-->$0.1753<!--/n--> for all-Sonnet `control` (<!--n:exp1.delta.cost_per_solve_pct:pct1-->−52.2%<!--/n-->), measured on <!--n:exp1.arms.control.n_analysed:int-->76<!--/n--> control and <!--n:exp1.arms.lanes_v1.n_analysed:int-->69<!--/n--> lanes_v1 real SWE-bench-Live tasks. Shipped by the pre-registered rule: <!--n:exp1.decision.ship:str-->lanes_v1<!--/n-->.
-
-> Status: experiment 1 is complete, decided and rolled out on the same flag. Experiment 2 runs next; its section fills in from `analysis/out/numbers.json` when it ends.
+| Looking for | Where to look |
+|---|---|
+| **Use of Flagsmith**: do the flags and the experiment do real work? | [How Flagsmith is used](#how-flagsmith-is-used); the exposure point in [`harness/policy.py`](harness/policy.py); the experiment body [`flagsmith/experiment-1.json`](flagsmith/experiment-1.json); dashboard screenshots in this README |
+| **Impact**: a real problem, and would a team use it? | [The problem](#the-problem); [use the kit on your own agent](#use-the-kit-on-your-own-agent) (`npm i forkbill`, `npx -y forkbill-mcp`, Python kit, self-hosted path) |
+| **Creativity** | The routing policy as a flag value; cost per solved task as the readout; a [registration](#hypothesis-and-pre-registration) hashed before the run; [every assignment re-derived offline](#offline-assignment-re-derivation) with Flagsmith's own engine |
+| A clear hypothesis | [Hypothesis and pre-registration](#hypothesis-and-pre-registration), [`prereg/experiment-1.md`](prereg/experiment-1.md) |
+| Versions behind a flag | [`flagsmith/policies/control.json`](flagsmith/policies/control.json) and [`lanes_v1.json`](flagsmith/policies/lanes_v1.json), served by `agent_routing` |
+| A metric from real events | [Metrics and events](#metrics-and-events), [`harness/events.py`](harness/events.py) |
+| Results you can explain | [Results](#results), [power and what was chosen after seeing data](#power-and-what-was-chosen-after-seeing-data), [limits](#limits) |
+| One experiment done well | Experiment 1 is the entry. Experiment 2 is a follow-up on the same flag. The kit, the MCP server and the other Flagsmith features are listed under [beyond the experiment](#beyond-the-experiment) |
 
 ## Contents
 
 - [The problem](#the-problem)
 - [Hypothesis and pre-registration](#hypothesis-and-pre-registration)
+- [For judges](#for-judges)
 - [How Flagsmith is used](#how-flagsmith-is-used)
+- [What we found in Flagsmith along the way](#what-we-found-in-flagsmith-along-the-way)
 - [Results](#results)
 - [Integrity and how to verify](#integrity-and-how-to-verify)
 - [Architecture](#architecture)
@@ -149,11 +175,16 @@ After the decision, the experiment is ended in Flagsmith with the winning variat
 
 ### Exact CLI v2 commands
 
+<details>
+<summary>The commands, in the order they were run</summary>
+
 Setup goes through the [Flagsmith CLI v2](https://docs.flagsmith.com/) only. The scripts wrap these calls and stop with Flagsmith's own error on any failure:
 
 ```sh
 flagsmith login                                   # or a master API key in FLAGSMITH_API_KEY
 flagsmith init --project <project-id> --environment <environment-key>
+
+</details>
 
 # flagsmith/setup.sh
 flagsmith feature create agent_routing --value "$(cat flagsmith/policies/control.json)" --enabled \
@@ -177,36 +208,9 @@ flagsmith environment document --no-input
 flagsmith api api/v1/environments/<env>/experiments/<id>/complete/ -X POST -F rollout_decision=<variation>
 ```
 
-### Flags as code and the drift check
-
-[`infra/flagsmith/`](infra/flagsmith/README.md) describes both flags, the `lanes_v1` option, the environment defaults and the experiment's segment override as Terraform. It is only ever planned, never applied: an apply mid-run would publish new feature-state versions on the flag the experiment is splitting ([D23](DECISIONS.md#d23-flags-as-code-are-read-only-during-an-experiment)). `make flags-drift` runs a read-only `terraform plan` against the live project and exits 0 only when nothing changed; with `LEDGER=runs/exp1/ledger.jsonl` the result and the plan's hash go into the run ledger.
-
 ### Offline assignment re-derivation
 
 Flagsmith assigns a variant by hashing the identity, so the arm each task should have run is fixed by the environment document. [`integrity/verify_assignment.py`](integrity/verify_assignment.py) evaluates every identity in a run's `tasks.jsonl` against the saved start-of-run document with Flagsmith's own `flag-engine`, the code path the SDK's local evaluation uses, and fails if any recorded arm differs. CI runs it for every committed run.
-
-### Webhooks to the live board
-
-Flagsmith's environment and audit-log webhooks post to the board's Cloudflare Worker at `/flagsmith/webhook`, signed with HMAC-SHA256 and checked before anything is stored ([`board/worker/src/flags.ts`](board/worker/src/flags.ts), [`docs/interfaces.md`](docs/interfaces.md#flag-history-flagsmith-webhooks)). The board shows each flag change on a timeline, with weights and value hashes only: no author, no identity and no raw policy is kept.
-
-![The live board during experiment 1](docs/img/site-live.png)
-
-### Feature health
-
-[`runner/health.py`](runner/health.py) reports the health of `agent_routing` to Flagsmith's Feature health webhook. It reads only the infra-error rate over recent tasks and total spend against the budget cap. It never reads solve rates or per-arm costs, so health reports can't become a way to look at the experiment early.
-
-### Evaluation modes in the kit
-
-The kit ([`kit/forkbill/client.py`](kit/forkbill/client.py), [`kit/ts`](kit/ts/README.md)) runs the same experiment in four modes, checked on self-hosted Flagsmith 2.295.2 ([`selfhost/README.md`](selfhost/README.md)):
-
-| Mode | Flags come from | Exposure recorded |
-|---|---|---|
-| `remote` | core API, one identity request per task | yes |
-| `local` | environment document, evaluated in process (Python SDK 6.5.0 or later) | yes |
-| `edge` | Edge Proxy 2.24.0 identity endpoint | no: the proxy drops the variant and experiment metadata |
-| `edge-local` | the Edge Proxy's copy of the environment document, evaluated in process | yes |
-
-An OpenFeature adapter ([`kit/forkbill/openfeature.py`](kit/forkbill/openfeature.py)) drives the same loop through the official Flagsmith OpenFeature provider.
 
 ### Summary
 
@@ -219,13 +223,60 @@ An OpenFeature adapter ([`kit/forkbill/openfeature.py`](kit/forkbill/openfeature
 | Results pull, saved raw | [`analysis/pull_results.py`](analysis/pull_results.py) |
 | Environment snapshots into the ledger | [`integrity/snapshot_env.py`](integrity/snapshot_env.py) |
 | Offline re-derivation of every arm | [`integrity/verify_assignment.py`](integrity/verify_assignment.py) |
-| Flags as code, drift check | [`infra/flagsmith/`](infra/flagsmith/README.md) |
-| Flag-change webhooks | [`board/worker/src/flags.ts`](board/worker/src/flags.ts) |
-| Feature health | [`runner/health.py`](runner/health.py) |
+| Flags as code, drift check (beyond the experiment) | [`infra/flagsmith/`](infra/flagsmith/README.md) |
+| Flag-change webhook receiver (beyond the experiment) | [`board/worker/src/flags.ts`](board/worker/src/flags.ts) |
+| Feature health reporter (beyond the experiment) | [`runner/health.py`](runner/health.py) |
 | Remote, local, Edge Proxy and OpenFeature clients | [`kit/forkbill/`](kit/forkbill/__init__.py), [`kit/ts/`](kit/ts/README.md) |
 | The same loop as MCP tools for any agent | [`kit/mcp/`](kit/mcp/README.md) |
 | Self-hosted Flagsmith with Experimentation | [`selfhost/`](selfhost/README.md) |
 | Smoke test of the whole path | [`flagsmith/smoke_test.sh`](flagsmith/smoke_test.sh) |
+
+### Beyond the experiment
+
+These are not needed to run or to check the experiment. They are here because a team adopting the method would want them.
+
+<details>
+<summary>Flags as code, flag-change webhooks, feature health, and evaluation modes (remote, local, Edge Proxy, OpenFeature)</summary>
+
+#### Flags as code and the drift check
+
+[`infra/flagsmith/`](infra/flagsmith/README.md) describes both flags, the `lanes_v1` option, the environment defaults and the experiment's segment override as Terraform. It is only ever planned, never applied: an apply mid-run would publish new feature-state versions on the flag the experiment is splitting ([D23](DECISIONS.md#d23-flags-as-code-are-read-only-during-an-experiment)). `make flags-drift` runs a read-only `terraform plan` against the live project and exits 0 only when nothing changed; with `LEDGER=runs/exp1/ledger.jsonl` the result and the plan's hash go into the run ledger.
+
+#### Webhooks to the live board
+
+The board's Cloudflare Worker has a receiver for Flagsmith's environment webhooks at `/flagsmith/webhook`: payloads are signed with HMAC-SHA256 and checked before anything is stored ([`board/worker/src/flags.ts`](board/worker/src/flags.ts), [`docs/interfaces.md`](docs/interfaces.md#flag-history-flagsmith-webhooks)). The board can show each flag change on a timeline, with weights and value hashes only: no author, no identity and no raw policy is kept. The receiver is built and tested, but the webhook was not connected on the production environment while the experiments ran, because adding one would change the environment in the middle of a run. The timeline is therefore empty until it is connected after experiment 2 ends.
+
+#### Feature health
+
+[`runner/health.py`](runner/health.py) can report the health of `agent_routing` to a Flagsmith Feature health webhook. Like the flag-change webhook, it is built and tested and was not connected during the runs. It reads only the infra-error rate over recent tasks and total spend against the budget cap. It never reads solve rates or per-arm costs, so health reports can't become a way to look at the experiment early.
+
+#### Evaluation modes in the kit
+
+The kit ([`kit/forkbill/client.py`](kit/forkbill/client.py), [`kit/ts`](kit/ts/README.md)) runs the same experiment in four modes, checked on self-hosted Flagsmith 2.295.2 ([`selfhost/README.md`](selfhost/README.md)):
+
+| Mode | Flags come from | Exposure recorded |
+|---|---|---|
+| `remote` | core API, one identity request per task | yes |
+| `local` | environment document, evaluated in process (Python SDK 6.5.0 or later) | yes |
+| `edge` | Edge Proxy 2.24.0 identity endpoint | no: the proxy drops the variant and experiment metadata |
+| `edge-local` | the Edge Proxy's copy of the environment document, evaluated in process | yes |
+
+An OpenFeature adapter ([`kit/forkbill/openfeature.py`](kit/forkbill/openfeature.py)) drives the same loop through the official Flagsmith OpenFeature provider.
+
+</details>
+
+## What we found in Flagsmith along the way
+
+Running a real experiment end to end turned up behaviour worth knowing before you plan one. Each point has the file where it is recorded or reproduced.
+
+- **No verdict below 50 identities per variant.** Flagsmith shows no inference for a metric until each variant has 50 identities, and checks the sample ratio only from 100 in total. Experiment 1's pool was first sized under that floor and had to grow by amendment ([D22](DECISIONS.md#d22-experiment-1-grows-by-amendment-to-clear-flagsmiths-50-per-variant-floor)). Size the pool for the floor first.
+- **A one-item event buffer can drop the exposure.** In the Python SDK 6.7 with `max_buffer_items=1`, tracking a second event before the first is sent drops the oldest one. The runner flushes after the exposure and after every event ([D9](DECISIONS.md#d9-flush-after-every-exposure-and-event)).
+- **The Edge Proxy's identity endpoint drops the experiment.** Edge Proxy 2.24.0 answers an identity request without the variant key or the experiment metadata, so an exposure can't be recorded in plain proxy mode. Evaluating the proxy's copy of the environment document in process works ([`selfhost/README.md`](selfhost/README.md)).
+- **The verdict is a normal approximation on relative lift.** The metric aggregations we used are `mean` and `occurrence`; the headline ratio, cost per solved task, is computed in [`analysis/analyse.py`](analysis/analyse.py) from the same events ([D12](DECISIONS.md#d12-how-flagsmith-computes-the-verdict-and-how-our-replication-differs)).
+- **Experiments are driven through `flagsmith api`.** CLI v2 has commands for features, flags and the environment document; creating, starting, refreshing and ending an experiment go through its `api` command ([`flagsmith/create_experiment.sh`](flagsmith/create_experiment.sh)).
+- **End Experiment rolls a variant out by weight.** Ending with a variant as the decision sets that variant to 100% on the environment default and removes the experiment's override; the flag's base value stays as it was. Before experiment 2 the winner was made the flag's own value ([D25](DECISIONS.md#d25-ending-experiment-1-and-making-the-winner-the-flags-own-value)).
+- **Every publish gives feature states new ids.** With v2 feature versioning, a Terraform apply during a run would publish new versions on the flag being split, so flags as code are plan-only while an experiment runs ([D23](DECISIONS.md#d23-flags-as-code-are-read-only-during-an-experiment)).
+- **The OpenFeature exposure hook covers split traffic only.** The kit's adapter records the exposure itself so the control arm is counted ([`kit/forkbill/openfeature.py`](kit/forkbill/openfeature.py)).
 
 ## Results
 
@@ -327,6 +378,12 @@ sha256sum -c prereg/HASHES.txt
 # All of the above for every committed run
 make verify
 ```
+
+Three things a careful reader will ask about:
+
+- **The ledger has one more `task_done` record than the results table has tasks.** `swelive:gui-cs__Terminal.Gui-4860` ran twice in `lanes_v1`, because the worker was interrupted and its lease was re-queued as an infra retry; both attempts were unsolved. The analysis keeps the last attempt. Both attempts sent events to Flagsmith, which departs from the registration's "events are sent only for a task's final attempt"; the effect on the arm's mean cost in Flagsmith is about a hundredth of a cent, visible in the agreement check in [`analysis/results.md`](analysis/results.md).
+- **One snapshot file has no ledger record.** The snapshot count above is of files in `runs/exp1/env/`. `030-end.json` was written when a ledger parsing bug stopped the worker and the snapshotter (ledger record 317 describes the incident and the fix); its hash is the same as every other snapshot's.
+- **Could someone else have sent events?** The environment's client-side key is public by design and is in the snapshots, because the offline re-derivation needs it ([D28](DECISIONS.md#d28-environment-snapshots-keep-the-client-side-environment-key)). Only identities in our ledger enter our analysis, and Flagsmith's count and mean for each arm are compared with the ledger's in the agreement check, so outside traffic would show up as a mismatch.
 
 `verify_ledger` prints the Merkle root; compare it with the one above. The Merkle rule (raw 32-byte leaves, odd node paired with itself) is in [`docs/interfaces.md`](docs/interfaces.md#ledger) and [`integrity/merkle.py`](integrity/merkle.py).
 
@@ -579,6 +636,9 @@ The full list of 28 sources, each checked against its own page and with a note o
 
 ## Repo map
 
+<details>
+<summary>Every top-level directory and what it holds</summary>
+
 | Path | Contents |
 |---|---|
 | [`prereg/`](prereg/experiment-1.md) | Registrations, amendment, pilot report, hashes |
@@ -599,6 +659,8 @@ The full list of 28 sources, each checked against its own page and with a note o
 | [`infra/`](infra/README.md) | Terraform for the EC2 runner and for the Flagsmith flags |
 | [`tests/`](tests/unit/test_ledger.py) | Unit and integration tests |
 | [`.github/workflows/`](.github/workflows/ci.yml) | CI and the manual kit demo |
+
+</details>
 
 ## Licence
 
