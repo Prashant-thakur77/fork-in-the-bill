@@ -2113,7 +2113,7 @@
     ],
     "seed": 20260201
   },
-  "generated_at": "2026-11-27T17:19:55+00:00",
+  "generated_at": "2026-11-27T17:26:16+00:00",
   "integrity": {
     "assignment": {
       "checked": 146,
@@ -2416,7 +2416,7 @@
     "unit_tests_python": 221,
     "unit_tests_ts": 166
   },
-  "source_commit": "e4c43c140cc243c50cc18aa8dcc400984c674dcd",
+  "source_commit": "74955e410a6e030c7e20cf3c42434221c666b652",
   "spend": {
     "by_experiment": {
       "dryrun-control": 0.145731,
