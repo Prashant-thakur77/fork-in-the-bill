@@ -82,6 +82,8 @@ The amendment adds the next 80 pre-cutoff tasks (created 2026-03-01 to 2026-06-3
 
 Flagsmith decides which arm every task runs, records the exposure, receives the outcome events and computes the verdict the decision rule reads. The runner never picks an arm.
 
+![The three flags in the Flagsmith dashboard: agent_routing, the smoke-test flag and the routing_kill switch](docs/img/flagsmith-flags.png)
+
 
 ### Flags, variants and keys
 
@@ -123,6 +125,12 @@ Flagsmith has no ratio metric, so dollars per solved task is computed in [`analy
 ### The experiment
 
 [`flagsmith/experiment-1.json`](flagsmith/experiment-1.json) is the request body: all four metrics, 100% rollout, 50% to `lanes_v1` and the rest to `control`. Flagsmith implements the split as a system segment override (`experiment-822-rollout`) on the flag, and the flag is locked while the experiment runs. The results page reports lift, a 95% interval, chance to beat control and a sample-ratio check; [D12](DECISIONS.md#d12-how-flagsmith-computes-the-verdict-and-how-our-replication-differs) records how Flagsmith computes them, read from its open-source `api/experimentation/stats.py`. [`analysis/pull_results.py`](analysis/pull_results.py) refreshes and saves the raw results response under [`analysis/flagsmith/`](analysis/flagsmith/).
+
+![Flagsmith's results page for experiment 1: lanes_v1 confirmed as the winner on task_cost, rolled out to everyone](docs/img/flagsmith-results.png)
+
+The screenshot was taken after experiment 2's variant `lanes_v2` had been added to the flag, which is why it appears there with no data. Flagsmith's lift is computed on its own posterior, so it can differ from our bootstrap figure in the last decimal ([D12](DECISIONS.md#d12-how-flagsmith-computes-the-verdict-and-how-our-replication-differs)).
+
+![The experiments list: experiment 1 completed, experiment 2 running on the same flag](docs/img/flagsmith-experiments.png)
 
 
 ### Kill switch
