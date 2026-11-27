@@ -108,6 +108,10 @@ The board seed (`board/web/src/seed.json`) and the captions file (`video/caption
 
 Never stored: `changed_by`, `author`, identity identifiers, the audit `log` text and raw flag values (they hold policies). A value is kept as the sha256 of the string itself, or of `JSON.stringify(value)` for non-strings. A repeated delivery is stored once. `GET /flags/history?feature=agent_routing[&limit=N]` returns `{"changes": [...]}`, oldest first (at most 100), and `/stream?feature=agent_routing` sends the same body as a `flags` event on connect and after each new change.
 
+## Feature health
+
+`python -m runner.health runs/<exp>` posts `{"feature": "agent_routing", "environment": "Production", "status": "healthy|unhealthy", "reason": {"text_blocks": [{"title", "text"}]}}` to the Flagsmith Feature health webhook in `FLAGSMITH_HEALTH_WEBHOOK_URL` (the URL token is the secret and is never printed). It reads only whether each task ended in `infra_error` and total spend: unhealthy when the `infra_error` rate over the last N tasks is above the threshold, or when spent plus reserved reaches the warning fraction of `BUDGET_USD_TOTAL`. It posts only when the status changes (last sent status in `runs/<exp>/health_state.json`); without the URL it prints the payload as a dry run.
+
 ## Budget
 
 `BUDGET_USD_TOTAL` is the hard global cap. It is a Redis key `budget:spent_usd`, incremented with INCRBYFLOAT before each call's committed cost is recorded. Before each model call the worker reserves the call's worst-case cost (max input estimate plus max_tokens output at list price) with a Lua script that refuses the reservation if `spent + reserved + worst_case > cap`. When the call returns, the reservation is settled at actual cost. With no Redis (unit tests, dry runs), a file-locked JSON counter in `runs/budget.json` does the same job.

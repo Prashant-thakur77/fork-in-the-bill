@@ -34,4 +34,5 @@ work/
 *.log
 .DS_Store
 runs/budget*.json
+runs/*/health_state.json
 infra/tfplan
