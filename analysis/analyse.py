@@ -740,7 +740,9 @@ def build_numbers(
     parquet = out / "parquet"
     available = {p.name for p in parquet.iterdir() if (p / "tasks.parquet").exists()} if parquet.exists() else set()
 
-    power = load_power(out / REGISTERED_POWER["exp1"][1], REGISTERED_POWER["exp1"][0])
+    # power.py writes next to the committed numbers; read from there when --out points elsewhere
+    power_dir = out if (out / REGISTERED_POWER["exp1"][1]).exists() else root / "analysis" / "out"
+    power = load_power(power_dir / REGISTERED_POWER["exp1"][1], REGISTERED_POWER["exp1"][0])
     numbers: dict[str, Any] = {
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "source_commit": source_commit(root),
@@ -778,7 +780,7 @@ def build_numbers(
             seed,
             flagsmith_dir,
             prereg,
-            load_power(out / power_file, n_reg),
+            load_power(power_dir / power_file, n_reg),
             ridge,
             ps_len,
         )
