@@ -408,3 +408,16 @@
     gap: 0;
   }
 }
+
+/* the LED panel sits in front of the hangers; the two cars keep to their lanes */
+.jobs-led {
+  z-index: 2;
+}
+.menu-road-car {
+  top: 27%;
+  margin-top: -25px;
+}
+.menu-road-car + .menu-road-car {
+  top: 71%;
+  margin-top: -25px;
+}

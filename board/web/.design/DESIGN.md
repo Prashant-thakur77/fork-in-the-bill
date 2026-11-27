@@ -251,3 +251,26 @@ Three pages and one play piece, all in the same kit. 22 pages now; exits renumbe
 - **Proof format.** The browser code follows `integrity/merkle.py`: a proof is the sibling hashes from the leaf level up, with no entry where a node is paired with itself, and verifying needs the tree's size. A test verifies every exported proof in `analysis/out/proofs/` and builds the same proofs itself. The page says when the proof it built is the one the repository's own tool exports.
 - **`/research`, the four later analyses.** Each sits inside its card as a row of LED readings with plain labels and one sentence of what it means, then the analysis' own chart: the always-valid p-values (under "Do not stop on a good reading"), the specification curve (under "Write the plan down first"), the cost and solve-rate frontier as a table with the note that it is descriptive across batches (under "Report cost with accuracy"), and the inclusion proofs (under "One root over every finished task"). Each is marked as added after experiment 1 and secondary.
 - **`/scale`.** Counts come from the `scale` block of `numbers.json` (definitions in `docs/interfaces.md`); the batch sign has both attempts and graded tasks; the tests and tokens figures say how they split. A new section, "What the measured gap adds up to", holds the projection per 1,000 solved bugs on a dashed plate labelled "Arithmetic on measured figures, not a measurement", beside the list-price ratio from the pricing block.
+
+## Round 5: fewer pages, a fuller home page
+- **Pages folded.** 22 pages became 14. Eight pages that overlapped another were folded into it as a second part; nothing was deleted. A part opens with a green sign carrying a yellow "Part 2" tab, the folded page's own title, purpose line and pictogram, under an asphalt rule; a short "On this page" line of pills sits above the page sign. The old addresses redirect with a 301 to the part's anchor (`public/_redirects`, `MOVED` in `routes.ts`).
+
+  | Page | Holds |
+  |---|---|
+  | `/results` | the results, then the rollout on the same flag (`#end-experiment`) |
+  | `/method` | the method, then how the agent works (`#how-it-works`) |
+  | `/flagsmith` | why Flagsmith is the core, then every feature used (`#features`) |
+  | `/verify` | the ledger check and the single-task proof, then the receipt and the commands (`#run-receipt`) |
+  | `/research` | the research cards, then the paper and the deck (`#paper`) |
+  | `/timeline` | the timeline, then every decision (`#decisions`) |
+  | `/use-it` | the six steps, then the kit in detail (`#kit`) |
+  | `/faq` | the questions, then the glossary (`#glossary`) |
+
+- **Menu.** Twelve entries in four groups (The experiment, The case, Evidence, Use it); the updates page is reached from the ticket. Links are now the large type (24 to 36 px, weight 900); a group is a small yellow plate under its drawing. The sheet stands on a road at its foot: lane dashes at constant speed, two cars, a small sign with the number of exits. Header links: Live board, Results, Method, Flagsmith.
+- **Home.** Five sections were added, each with its own drawing and figures from `numbers.json`:
+  1. *Most of the bill was grunt work*: two receipts printing from their slots, one per arm, with the planner line, the worker line highlighted, the total and a dot-matrix bar of the worker's share.
+  2. *One flag does four jobs*: four signs hung from one gantry behind the FLAGSMITH LED (assigns, records, judges, rolls out), each with a pictogram, one figure and a link to its evidence.
+  3. *Per thousand solved bugs*: two LED price signs on asphalt and the difference, under a dashed label "Arithmetic on measured figures, not a measurement".
+  4. *Four ways the result could have been wrong*: the later checks as four plates with the analysis' own charts as thumbnails.
+  5. *Put your own agent on the same road*: a terminal with the three install lines.
+  The numbers strip gained a second row. Order: hero, bill, four jobs, journey, split lab, decision, result, per thousand, checks, numbers, how this is different, use it, live strip, updates window, exit sign.
