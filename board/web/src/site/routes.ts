@@ -126,6 +126,15 @@ export const ROUTES: Route[] = [
     column: "build",
     exit: "11",
   },
+  {
+    path: "/faq",
+    label: "Questions",
+    title: "Questions and honest answers",
+    description: "Power, the margin chosen after the pilot, tasks the models may have seen, why Flagsmith, and what the study cost to run.",
+    group: "more",
+    column: "evidence",
+    exit: "12",
+  },
 ];
 
 export const NOT_FOUND: Route = {

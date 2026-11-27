@@ -100,7 +100,7 @@ export function SplitLab() {
     <div className="splitlab">
       <div className="sl-head">
         <span className="sl-badge">Illustration</span>
-        <h3 className="sl-h">Move the split yourself</h3>
+        <h2 className="sl-h">Move the split yourself</h2>
         <p>
           Flagsmith does not toss a coin per task. It hashes the task's identity to a number from 0 to 100, and the split decides which lane each number
           takes. Drag the divider, or focus it and use the arrow keys.

@@ -18,6 +18,7 @@ import Kit from "../pages/Kit";
 import Timeline from "../pages/Timeline";
 import Decisions from "../pages/Decisions";
 import Glossary from "../pages/Glossary";
+import Faq from "../pages/Faq";
 import NotFound from "../pages/NotFound";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -35,6 +36,7 @@ export const PAGES: Record<string, ComponentType> = {
   "/timeline": Timeline,
   "/decisions": Decisions,
   "/glossary": Glossary,
+  "/faq": Faq,
   "/404": NotFound,
 };
 

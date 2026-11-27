@@ -108,7 +108,7 @@ export function Journey({ steps, id, compact = false }: { steps: JourneyStep[]; 
           ScrollTrigger.create({
             trigger: root.current,
             start: wide ? "top top" : "top 75%",
-            end: wide ? `+=${N * 55}%` : "bottom 25%",
+            end: wide ? `+=${N * 30}%` : "bottom 25%",
             pin: wide,
             scrub: 0.6,
             animation: tl,

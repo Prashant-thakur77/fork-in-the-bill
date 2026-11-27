@@ -4,6 +4,8 @@ import { RepoCode, Section } from "../site/ui";
 import { DecisionText } from "../site/DecisionText";
 import { ghFile, repo, usd } from "../site/data";
 import { HarnessDiagram } from "../art/HarnessDiagram";
+import { PolicyDiff, PriceBoard, PRICE_RATIO } from "../art/PriceBoard";
+import { ShareGuess } from "../art/ShareGuess";
 
 const C = repo.policies.control;
 const V = repo.policies.lanes_v1;
@@ -11,6 +13,7 @@ const H = repo.harness;
 const prices = repo.pricing?.models ?? {};
 
 const TOC = [
+  { id: "why", label: "The problem" },
   { id: "lanes", label: "Two lanes" },
   { id: "delegation", label: "Delegation" },
   { id: "caps", label: "Costs and caps" },
@@ -30,6 +33,20 @@ export default function HowItWorks() {
         </>
       }
     >
+      <Section id="why" title="The frontier model reads the logs at frontier prices" kicker="Why split the agent at all.">
+        <div className="prose">
+          <p>
+            A coding agent spends much of its tokens on grunt work: searching the repo, reading long files, running tests and reading what they print. When one
+            frontier model does everything, that work is billed at the frontier rate.
+            {PRICE_RATIO !== null && C && V ? ` At list price, a million input tokens cost ${PRICE_RATIO} times as much on ${C.mainShort} as on ${V.delegateShort}.` : ""}
+          </p>
+        </div>
+        <div className="toll-plaza">
+          <PriceBoard />
+          <ShareGuess />
+        </div>
+      </Section>
+
       <Section id="lanes" title="Two lanes inside one container" kicker="The planner decides and writes; the worker searches, builds and runs tests.">
         <HarnessDiagram planner={C?.mainShort ?? "planner"} worker={`${C?.delegateShort ?? ""} or ${V?.delegateShort ?? ""}`} />
         <div className="prose">
@@ -111,6 +128,8 @@ export default function HowItWorks() {
       </Section>
 
       <Section id="same" title="What both arms share" kicker="A clean A/B test changes one thing.">
+        <PolicyDiff />
+        <p className="prose small">The whole flag value for each arm, side by side. One line differs: the worker's model. The harness refuses a variant that differs anywhere else.</p>
         <DecisionText id="D2" />
         <DecisionText id="D3" />
       </Section>

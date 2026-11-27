@@ -1,0 +1,341 @@
+/* Home: the answer plate, the play sections, the result so far; and the pieces that moved to inner pages. */
+
+/* ---------- hero: the answer to the headline ---------- */
+.answer {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(150px, 0.72fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 14px 16px;
+  max-width: 520px;
+  margin-top: 10px;
+  padding: 26px 16px 14px;
+  border-radius: var(--r-sign);
+  background: var(--sign);
+  color: var(--sheet);
+  box-shadow:
+    inset 0 0 0 4px var(--sign),
+    inset 0 0 0 6px var(--sheet);
+  text-decoration: none;
+}
+.answer-tab {
+  position: absolute;
+  left: 18px;
+  top: -12px;
+  padding: 3px 10px 2px;
+  border-radius: 5px;
+  background: var(--paint-yellow);
+  color: var(--text);
+  font-size: var(--t-label);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.answer-led {
+  display: block;
+  padding: 7px 8px;
+  border-radius: 6px;
+  background: var(--housing);
+  box-shadow: inset 0 0 0 2px #262a28;
+}
+.answer-text {
+  font-size: 15px;
+  line-height: 1.4;
+}
+.answer-text b {
+  display: block;
+  font-size: var(--t-lead);
+  font-weight: 800;
+  line-height: 1.25;
+}
+.answer:hover {
+  background: var(--sign-deep);
+}
+.home-hero .hero-copy .cta-row {
+  margin-top: 4px;
+}
+
+/* ---------- the play sections stand on their own now ---------- */
+.home .hsec.lab-sec,
+.home .hsec.decide-sec {
+  display: block;
+  padding-block: clamp(20px, 3vw, 44px);
+}
+.home .lab-sec .splitlab,
+.home .decide-sec .rollout {
+  margin-top: 0;
+}
+.home .hsec.journey-sec {
+  padding-bottom: clamp(20px, 3vw, 40px);
+}
+.sl-h,
+.rollout-h {
+  font-size: var(--t-h2s, clamp(30px, 3.6vw, 56px));
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+
+/* the outcome tag once experiment 1 is decided: green for what happened, an outlined note for what did not */
+.rollout-tag {
+  justify-self: start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 2px solid var(--quiet);
+  color: var(--quiet);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.rollout-tag.is-real {
+  border-color: var(--sign);
+  background: var(--sign);
+  color: var(--sheet);
+}
+.rollout-tag.is-other {
+  border-style: dashed;
+  border-color: var(--text);
+  color: var(--text);
+}
+
+/* ---------- the result so far ---------- */
+.home .hsec.result-sec {
+  display: block;
+  border-top: 2px solid var(--line);
+}
+.result-head {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+  max-width: 880px;
+}
+.result-head > h2 {
+  font-weight: 900;
+  font-size: var(--t-h2s, clamp(30px, 3.6vw, 56px));
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+.result-head > p:not(.eyebrow-sign) {
+  font-size: var(--t-lead);
+  max-width: 62ch;
+}
+.result-sec .res-pair {
+  margin-top: clamp(24px, 3vw, 40px);
+}
+.result-foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(16px, 3vw, 44px);
+  align-items: start;
+}
+.result-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.result-checks li {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--r-small);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.result-checks .rule-n {
+  width: 30px;
+  height: 30px;
+  font-size: 15px;
+}
+.rc-text {
+  font-size: 16px;
+  line-height: 1.35;
+}
+.rc-fig {
+  font-weight: 800;
+  font-size: 20px;
+}
+.result-checks li.is-met .rule-state {
+  background: var(--sign);
+  color: var(--sheet);
+  box-shadow: none;
+}
+.result-checks li.is-not-met .rule-state {
+  background: var(--red-text);
+  color: var(--sheet);
+  box-shadow: none;
+}
+.result-next {
+  display: grid;
+  gap: 10px;
+}
+.result-next .cta-row {
+  margin-top: 8px;
+}
+.result-next .next-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.result-next .next-v {
+  grid-column: 1;
+  grid-row: 2;
+}
+.result-next .next-go {
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+/* ---------- moved to /how-it-works: the toll plaza ---------- */
+.toll-plaza {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  margin-top: 20px;
+}
+.toll-plaza .share {
+  margin-top: 0;
+}
+
+/* ---------- questions page ---------- */
+.faq-jump {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: clamp(20px, 3vw, 36px) 0 0;
+}
+.faq-jump a {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 14px 44px 14px 16px;
+  border-radius: var(--r-small);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--line);
+  text-decoration: none;
+  min-height: 44px;
+}
+.faq-jump a:hover {
+  box-shadow: inset 0 0 0 2px var(--text);
+}
+.faq-jump span {
+  font-size: var(--t-label);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--quiet);
+}
+.faq-jump b {
+  font-weight: 900;
+  font-size: var(--t-lead);
+}
+.faq-jump i {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin-top: -13px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  background: var(--paint-yellow);
+  font-style: normal;
+  font-weight: 900;
+  font-size: 14px;
+  transform: rotate(45deg);
+}
+.faq-group {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.42fr) minmax(0, 1fr);
+  gap: clamp(16px, 4vw, 64px);
+  padding-block: clamp(32px, 5vw, 64px);
+  border-top: 2px solid var(--line);
+  margin-top: clamp(24px, 4vw, 48px);
+  scroll-margin-top: calc(var(--header-h) + 12px);
+}
+.faq-group + .faq-group {
+  margin-top: 0;
+}
+.faq-group-head {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  justify-items: start;
+  position: sticky;
+  top: calc(var(--header-h) + 20px);
+  align-self: start;
+}
+.faq-group-head h2 {
+  font-weight: 900;
+  font-size: var(--t-h2s);
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+.faq-group-head p {
+  color: var(--quiet);
+}
+.faq-km {
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: var(--paint-yellow);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+.faq-page .faq {
+  display: grid;
+  gap: 8px;
+}
+.faq-page .faq-item {
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+.faq-page .faq-a {
+  display: grid;
+  gap: 12px;
+}
+.faq-more {
+  margin: clamp(20px, 3vw, 40px) 0 clamp(40px, 6vw, 80px);
+  color: var(--quiet);
+}
+
+@media (max-width: 1000px) {
+  .result-foot {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .toll-plaza {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .faq-group {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .faq-group-head {
+    position: static;
+  }
+  .faq-jump {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .answer {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 24px;
+  }
+  .answer-led {
+    max-width: 240px;
+  }
+  .result-checks li {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+  }
+  .result-checks .rc-fig {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .result-checks .rule-state {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+}

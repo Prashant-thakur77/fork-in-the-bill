@@ -10,6 +10,7 @@ import "./site/round2.css";
 import "./site/play.css";
 import "./site/live.css";
 import "./site/results.css";
+import "./site/home.css";
 import { Site } from "./site/Shell";
 
 const root = document.getElementById("root")!;

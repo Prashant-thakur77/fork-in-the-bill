@@ -46,7 +46,7 @@ describe("prerender", () => {
       expect(html.match(/<h1[\s>]/g)?.length, r.path).toBe(1);
       expect(html).toContain('id="main"');
       expect(html).toContain("site-footer");
-      expect(html).toMatch(/aria-current="page"|Wrong exit|Two lanes/);
+      expect(html).toMatch(/aria-current="page"|Wrong exit|Can a small model/);
     });
   }
 

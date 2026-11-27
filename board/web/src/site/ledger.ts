@@ -173,7 +173,7 @@ export async function recordHash(prevHash: string, payload: Json): Promise<strin
 /** Leaves are raw 32-byte digests, a parent is sha256(left + right), an odd last node is paired with itself. */
 export async function merkleRoot(hexLeaves: string[]): Promise<string> {
   if (!hexLeaves.length) return hex(await sha256(new Uint8Array()));
-  let level = hexLeaves.map(unhex);
+  let level: Uint8Array[] = hexLeaves.map(unhex);
   while (level.length > 1) {
     if (level.length % 2 === 1) level.push(level[level.length - 1]!);
     const next: Uint8Array[] = [];

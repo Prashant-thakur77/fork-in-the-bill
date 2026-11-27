@@ -5,8 +5,7 @@ import { LivePanel } from "../site/LivePanel";
 import { repo, ghFile, type ExperimentNumbers } from "../site/data";
 import { batchOf, gapBetween, utcStamp } from "../site/batches";
 import { format } from "../data/format";
-import { armInfo } from "../data/arms";
-import { Led } from "../led/Led";
+import { ResultPair } from "../site/ResultPair";
 
 // Every figure here is read from analysis/out/numbers.json at build time. Nothing is typed in.
 // Until the file holds a decision, the page shows its empty state. Experiment 2 shows running
@@ -93,68 +92,6 @@ function listOf(blocks: typeof repo.prereg.decisionRule): string[] {
   return b && b.type === "list" ? b.items : [];
 }
 
-/** The two lanes side by side: the headline pair, each as a sign with its LED reading. */
-function Pair({ exp, treatment, n }: { exp: string; treatment: string; n: ExperimentNumbers }) {
-  const lanes = ["control", treatment];
-  return (
-    <div className="res-pair">
-      <div className="res-signs" data-reveal="hang">
-        {lanes.map((key) => {
-          const a = n.arms[key]!;
-          const info = armInfo(key, exp);
-          const mean = format(a.cost_mean, "usd4");
-          return (
-            <article className="sign res-sign" key={key} aria-label={`${key} lane, ${exp}`}>
-              <div className="sign-tab">{key}</div>
-              <div className="sign-face">
-                <h3 className="sign-legend">{info.legend}</h3>
-                <div className="led-housing">
-                  <span className="led-caption">Mean cost per task</span>
-                  <Led text={mean} cols={50} label={`${mean} mean cost per task`} />
-                </div>
-                <p className="res-ci">95% interval {range(a.cost_mean_ci, "usd4")}</p>
-                <dl className="sign-stats">
-                  <div>
-                    <dt>Solved</dt>
-                    <dd>
-                      {a.solves} of {a.n_analysed}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Solve rate</dt>
-                    <dd>{format(a.solve_rate, "prob1")}</dd>
-                  </div>
-                  <div>
-                    <dt>Per solved task</dt>
-                    <dd>{format(a.cost_per_solve, "usd4")}</dd>
-                  </div>
-                </dl>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-      <dl className="res-delta">
-        <div>
-          <dt>Mean cost per task</dt>
-          <dd>{format(n.delta.cost_mean_pct, "pct1")}</dd>
-          <dd className="res-range">{range(n.delta.cost_mean_pct_ci, "pct1")}</dd>
-        </div>
-        <div>
-          <dt>Cost per solved task</dt>
-          <dd>{format(n.delta.cost_per_solve_pct, "pct1")}</dd>
-          <dd className="res-range">{range(n.delta.cost_per_solve_pct_ci, "pct1")}</dd>
-        </div>
-        <div>
-          <dt>Solve rate</dt>
-          <dd>{format(n.delta.solve_rate_pp, "pp1")}</dd>
-          <dd className="res-range">{range(n.delta.solve_rate_ci, "pp1")}</dd>
-        </div>
-      </dl>
-    </div>
-  );
-}
-
 const TRAIT_LABEL: Record<string, string> = { difficulty: "By difficulty", language: "By language", created_month: "By month the task was created" };
 const TRAIT_ORDER: Record<string, string[]> = { difficulty: ["low", "mid", "high"] };
 
@@ -196,7 +133,7 @@ function Exp1() {
     <>
       <Section id="exp1" title={ship === "control" ? "Experiment 1: control stays" : `Experiment 1: ${ship} ships`} kicker="Decided by the pre-registered rule. All three conditions had to hold.">
         <RuleList exp="exp1" items={listOf(repo.prereg.decisionRule)} />
-        {n && <Pair exp="exp1" treatment="lanes_v1" n={n} />}
+        {n && <ResultPair exp="exp1" treatment="lanes_v1" n={n} />}
         <Table
           caption="Experiment 1 results by arm"
           cols={["control", "lanes_v1", "change"]}
@@ -236,7 +173,7 @@ function Exp1() {
             </p>
             <p>
               The guardrail only rules out a drop larger than {format(n.prereg.m * 100, "pp1").replace("+", "")}, the margin fixed before the run. At this
-              sample size a drop of a few points cannot be told from zero. <Link to="/method#power">Why the margin is that wide</Link>.
+              sample size a drop of a few points cannot be told from zero. <Link to="/faq#margin">Why the margin is that wide</Link>.
             </p>
           </div>
         </Section>
@@ -300,7 +237,7 @@ function Exp2() {
     return (
       <Section id="exp2" title={ship === "control" ? "Experiment 2: lanes_v1 stays" : `Experiment 2: ${ship} ships`} kicker="The small model drafts the patch; the frontier model reviews it.">
         <RuleList exp="exp2" items={listOf(repo.prereg2.decisionRule)} />
-        <Pair exp="exp2" treatment="lanes_v2" n={n} />
+        <ResultPair exp="exp2" treatment="lanes_v2" n={n} />
         <Table
           caption="Experiment 2 results by arm"
           cols={["control", "lanes_v2", "change"]}
