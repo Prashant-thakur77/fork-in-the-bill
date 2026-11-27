@@ -201,7 +201,8 @@
   color: #c4c7c0;
   overflow-wrap: anywhere;
 }
-.sl-steps code {
+.sl-steps code,
+.doc-body .splitlab .sl-steps code {
   background: none;
   padding: 0;
   font: 600 16px var(--mono);

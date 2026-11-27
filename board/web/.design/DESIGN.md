@@ -136,3 +136,18 @@ Easings and durations are the board's: snap 160 ms `power4.out`, ui 320 ms, reve
 ## Art added
 Task-journey road (plan view: queue cards, Flagsmith gantry with LED, fork, lane tabs, toll gantry with event plates, results sign, rule diamonds, lane signal, rollout arrow, numbered yellow diamonds). Harness plan (dashed container, two lanes, delegate and findings ramps with amber plates, grading box with tick). Timeline road (vertical asphalt, yellow kilometre plates, lane-use signals per phase). Work-zone states for results-pending and 404. Share images: the page sign with its title on an amber LED panel.
 Art stops at dense content: decision text, tables and code sit on plain surfaces.
+
+## Play pieces
+Each one changes something real or teaches the experiment; every figure is read from the repo or the API, and anything illustrative carries an orange label.
+| Piece | Where | Action | What it teaches | Data |
+|---|---|---|---|---|
+| Guess the grunt-work share | home, problem | drag a range, reveal, guess again | how much of control's bill is worker-lane work, and how far it falls with the small model | `analysis/out/pilot.json` delegate_share |
+| Move the split yourself | home and /why-flagsmith, after the journey | drag the divider, arrow keys (Shift ±10, Home/End), tap the road; type or pick a task id | Flagsmith buckets by hashing the identity (md5, mod 9999, 0-100); moving the split moves only the tasks it crosses | real exp1 pool ids; stand-in key, labelled "Illustration" |
+| Play the decision | home and /why-flagsmith, after the split lab | pick an outcome, reopen | what each outcome ships: the closed lane's LED turns red CLOSED, the last cars clear, cones land, the plate hangs; the stakes line gives that lane's pilot cost and solves | `pilot.json`, labelled "Preview, not a result" |
+Reduced motion: no travel or tweens; states still change.
+
+## Vehicles
+`src/art/car.ts`: plan-view sedan, estate, hatch and van in four sheeting tones (sheet, concrete, steel, graphite), a flat offset shadow, panel lines, pale head lights, red tail lights and an amber toll tag (amber = money). Cars fade out as they pass under the gantry. On a lane closure, cars still on the shared trunk merge into the open lane, cars already in the closed lane clear it, then the cones are placed behind the last one.
+
+## Live data
+The site reads `/state?experiment=exp1` (a `?experiment=` query on the page reads another batch), because the board API keeps the latest totals of every batch that posts to it. Experiment 1 always draws both lanes; when nothing is running, a plate on the asphalt says so.
