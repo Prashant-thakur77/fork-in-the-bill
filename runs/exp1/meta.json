@@ -1,0 +1,8 @@
+{
+ "experiment": "exp1",
+ "pool_file": "tasks/pools/exp1.jsonl.gz",
+ "pool_sha256": "b3ff128e3e894f162c0abea18d9a519e5a7bde554d62fa3000e1183592ad785c",
+ "force_policy": null,
+ "started_at": "2026-11-26T23:02:48.309+00:00",
+ "flagsmith_experiment_id": "822"
+}

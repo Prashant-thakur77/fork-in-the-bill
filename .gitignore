@@ -36,3 +36,4 @@ work/
 runs/budget*.json
 runs/*/health_state.json
 infra/tfplan
+analysis/out/parquet/
