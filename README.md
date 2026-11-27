@@ -52,6 +52,7 @@ uv run python -m analysis.check_consistency                                   # 
 - [How Flagsmith is used](#how-flagsmith-is-used)
 - [What we found in Flagsmith along the way](#what-we-found-in-flagsmith-along-the-way)
 - [From the research to the code](#from-the-research-to-the-code)
+- [By the numbers](#by-the-numbers)
 - [Results](#results)
 - [Integrity and how to verify](#integrity-and-how-to-verify)
 - [Architecture](#architecture)
@@ -301,6 +302,12 @@ Each statistical and integrity method in this repository comes from a source in 
 | [RFC 6962](https://www.rfc-editor.org/info/rfc6962); [Crosby and Wallach, 2009](https://www.usenix.org/conference/usenixsecurity09/technical-sessions/presentation/efficient-data-structures-tamper-evident) | Prove that one entry is in a published log with a short audit path | [`integrity/merkle.py`](integrity/merkle.py), [`integrity/prove.py`](integrity/prove.py) | <!--n:integrity.proofs.exp1.verified:int-->146<!--/n--> of <!--n:integrity.proofs.exp1.leaves:int-->146<!--/n--> experiment 1 records verify against the published root, with at most <!--n:integrity.proofs.exp1.path_length_max:int-->8<!--/n--> hashes each. The tree rule is this project's, not RFC 6962's, so the root is unchanged |
 | [Gelman and Loken, 2013](https://sites.stat.columbia.edu/gelman/research/unpublished/p_hacking.pdf) | A result can depend on analysis choices even when nobody went fishing | [`analysis/multiverse.py`](analysis/multiverse.py) | Over <!--n:exp1.secondary.multiverse.n_specs:int-->72<!--/n--> specifications, cost per solved task is lower under `lanes_v1` in <!--n:exp1.secondary.multiverse.cost_direction:int-->72<!--/n--> and the guardrail holds in <!--n:exp1.secondary.multiverse.guardrail_pass:int-->48<!--/n-->. Every failure uses the <!--n:exp1.secondary.multiverse.guardrail_fail_task_sets:str-->fresh tier<!--/n--> alone, as in [by tier](#by-tier-secondary-not-part-of-the-decision) ([chart](analysis/charts/exp1-specification-curve.png)) |
 
+| Always-valid p-value as the run went | Cost and accuracy of every arm the project ran |
+|---|---|
+| ![Always-valid p-value for the cost difference and the solve-rate difference after each finished task](analysis/charts/exp1-always-valid.png) | ![Mean cost per task against solve rate for each arm, with the Pareto frontier marked](analysis/charts/frontier.png) |
+
+![Specification curve: the cost-per-solved-task change and the guardrail posterior under every combination of reasonable analysis choices](analysis/charts/exp1-specification-curve.png)
+
 To check one record against the published root yourself:
 
 ```sh
@@ -308,6 +315,28 @@ uv run python -m integrity.prove --run runs/exp1 --task swelive:gui-cs__Terminal
 ```
 
 That identity ran twice, so the command proves both of its records. The proof of every record is in [`analysis/out/proofs/`](analysis/out/proofs/exp1.json) for the site to check in the browser.
+
+## By the numbers
+
+Every figure here is counted from the committed runs and the repository by `make analyse` (key `scale` in [`numbers.json`](analysis/out/numbers.json)); the site's [by-the-numbers page](https://forkbill.prashantthakur.dev/scale) reads the same keys.
+
+| | |
+|---|---|
+| Task records across every run (pilot, dry runs, experiment 1, rollout) | <!--n:scale.tasks_run:int-->197<!--/n--> |
+| Task attempts, including infra retries | <!--n:scale.task_attempts:int-->201<!--/n--> |
+| Test results read by the grader | <!--n:scale.tests_executed:int-->994,644<!--/n--> |
+| Model calls, each priced | <!--n:scale.model_calls:int-->2,642<!--/n--> |
+| Tokens through the models | <!--n:scale.tokens:int-->16,965,945<!--/n--> |
+| Model spend | <!--n:spend.total_usd:usd2-->$11.87<!--/n--> |
+| Ledger records, hash-chained | <!--n:scale.ledger_records:int-->551<!--/n--> |
+| Events sent to Flagsmith | <!--n:scale.events_sent:int-->546<!--/n--> |
+| Flagsmith environment snapshots | <!--n:scale.env_snapshots:int-->61<!--/n--> |
+| Planner transcripts and graded patches published | <!--n:scale.transcripts:int-->163<!--/n--> |
+| Repositories and languages in experiment 1 | <!--n:scale.repos:int-->67<!--/n--> repositories, <!--n:scale.languages:int-->8<!--/n--> languages |
+| Unit tests in the repository (Python and TypeScript) | <!--n:scale.unit_tests:int-->400<!--/n--> |
+| Runnable examples, npm packages, tagged registrations | <!--n:scale.examples:int-->9<!--/n--> examples, <!--n:scale.npm_packages:int-->2<!--/n--> packages, <!--n:scale.prereg_tags:int-->3<!--/n--> registrations |
+
+What the saving means at scale, as arithmetic on the measured cost per solved task (a projection, not a measurement): per thousand solved bugs, <!--n:projection.per_1000_solved.control:usd2-->$175.28<!--/n--> with the worker lane on the frontier model against <!--n:projection.per_1000_solved.lanes_v1:usd2-->$83.75<!--/n--> with it on the small model, <!--n:projection.per_1000_solved.saved:usd2-->$91.53<!--/n--> saved. The list prices behind it are <!--n:pricing.frontier_input_per_mtok:usd2-->$2.00<!--/n--> against <!--n:pricing.small_input_per_mtok:usd2-->$0.10<!--/n--> per million input tokens, a ratio of <!--n:pricing.frontier_to_small_ratio:int-->20<!--/n-->.
 
 ## Results
 

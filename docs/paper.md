@@ -208,7 +208,7 @@ Shipped: <!--n:exp1.decision.ship:str-->lanes_v1<!--/n-->.
 
 Turns and wall time are informational. `lanes_v1` used slightly more planner turns on average (<!--n:exp1.arms.lanes_v1.turns_mean:f3-->5.145<!--/n--> against <!--n:exp1.arms.control.turns_mean:f3-->4.921<!--/n-->) and less wall time (<!--n:exp1.arms.lanes_v1.seconds_mean:int-->442<!--/n--> against <!--n:exp1.arms.control.seconds_mean:int-->623<!--/n--> seconds). Wall time includes image pulls, builds and grading, which dominate it.
 
-The registered CUPED adjustment, which uses a pilot-trained cost covariate, did not run: variance reduction <!--n:exp1.cuped.variance_reduction_pct:pct1-->+3.4%<!--/n-->, adjusted difference <!--n:exp1.cuped.delta_cost_mean:usd4-->−$0.0448<!--/n-->. It is labelled secondary and does not enter the decision.
+The registered CUPED adjustment, which uses a pilot-trained cost covariate, ran as a secondary analysis and changed little: variance reduction <!--n:exp1.cuped.variance_reduction_pct:pct1-->+3.4%<!--/n-->, adjusted difference <!--n:exp1.cuped.delta_cost_mean:usd4-->−$0.0448<!--/n-->. It is labelled secondary and does not enter the decision.
 
 By difficulty tertile, `lanes_v1` cost less in every tertile. Its solve rate was lower in the low and mid tertiles (<!--n:exp1.by_trait.difficulty.low.lanes_v1.solve_rate:prob1-->58.3%<!--/n--> against <!--n:exp1.by_trait.difficulty.low.control.solve_rate:prob1-->68.0%<!--/n-->, and <!--n:exp1.by_trait.difficulty.mid.lanes_v1.solve_rate:prob1-->40.9%<!--/n--> against <!--n:exp1.by_trait.difficulty.mid.control.solve_rate:prob1-->46.4%<!--/n-->) and higher in the high tertile (<!--n:exp1.by_trait.difficulty.high.lanes_v1.solve_rate:prob1-->21.7%<!--/n--> against <!--n:exp1.by_trait.difficulty.high.control.solve_rate:prob1-->17.4%<!--/n-->). Each cell holds a few dozen tasks or fewer, so these splits describe the sample and test nothing. The full tables are in the appendix.
 
@@ -248,9 +248,9 @@ After the decision, Flagsmith experiment 822 was ended with `lanes_v1` as the ro
 The batch ran <!--n:rollout.n:int-->13<!--/n--> valid tasks at a mean cost of <!--n:rollout.cost_mean:usd4-->$0.0369<!--/n--> per task and solved <!--n:rollout.solve_rate:prob1-->53.8%<!--/n--> of them. Every task got `lanes_v1` from the flag, which the offline re-derivation confirms. This batch is small and has no comparison arm, so it shows the rolled-out policy working as the flag's value at a cost in line with the experiment, not a second estimate of the effect.
 <!--results:end-->
 
-## 7 Experiment 2 (pending)
+## 7 Experiment 2 (running)
 
-Experiment 2 starts from the rolled-out state. Its control is the experiment 1 winner, now the flag's own value, and its treatment `lanes_v2` differs from it only in `prompt_variant` (`delegate_v1` becomes `draft_review_v1`, a draft-review role for the worker, which switches the planner's and the worker's prompts and gives the worker file-editing tools); the models and caps are unchanged (`flagsmith/policies/lanes_v2.json`, `flagsmith/experiment-2.json`). It will be registered, hashed and tagged before its first task, and is sized from the start to clear Flagsmith's 50-identity floor per variant (D22). It has not run yet.
+Experiment 2 starts from the rolled-out state. Its control is the experiment 1 winner, now the flag's own value, and its treatment `lanes_v2` differs from it only in `prompt_variant` (`delegate_v1` becomes `draft_review_v1`, a draft-review role for the worker, which switches the planner's and the worker's prompts and gives the worker file-editing tools); the models and caps are unchanged (`flagsmith/policies/lanes_v2.json`, `flagsmith/experiment-2.json`). It was registered, hashed and tagged (`prereg-exp2`) before its first task, its pool was sized to clear Flagsmith's 50-identity floor per variant (D22, D26), and it is running as Flagsmith experiment 1423. Its result will be added here when the run ends.
 
 ## 8 Threats to validity and limits
 

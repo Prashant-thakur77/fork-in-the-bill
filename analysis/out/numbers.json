@@ -2113,7 +2113,7 @@
     ],
     "seed": 20260201
   },
-  "generated_at": "2026-11-27T17:26:16+00:00",
+  "generated_at": "2026-11-27T17:28:40+00:00",
   "integrity": {
     "assignment": {
       "checked": 146,
@@ -2412,11 +2412,11 @@
       "output": 917337
     },
     "transcripts": 163,
-    "unit_tests": 387,
+    "unit_tests": 400,
     "unit_tests_python": 221,
-    "unit_tests_ts": 166
+    "unit_tests_ts": 179
   },
-  "source_commit": "74955e410a6e030c7e20cf3c42434221c666b652",
+  "source_commit": "e5119d49d2031de568b696903de9bcf0e0122c9d",
   "spend": {
     "by_experiment": {
       "dryrun-control": 0.145731,
