@@ -109,6 +109,9 @@ export function Led({ text, cols, align = "right", scan = false, label, classNam
   return (
     <span className={`led ${className ?? ""}`}>
       <canvas ref={canvasRef} aria-hidden="true" style={{ aspectRatio: `${cols} / ${GLYPH_ROWS + 2 * PAD}` }} />
+      <span className="led-fallback" aria-hidden="true">
+        {text}
+      </span>
       <span className="sr-only">{label ?? text}</span>
     </span>
   );

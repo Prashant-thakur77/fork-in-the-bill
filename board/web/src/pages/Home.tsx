@@ -286,7 +286,10 @@ export default function Home() {
             </Link>
           </div>
           <Link to="/why-flagsmith" className="why-link">
-            <span className="why-tab">Why Flagsmith</span> It picks every arm and measures every result. Here is how. <span aria-hidden="true">→</span>
+            <span className="why-tab">Why Flagsmith</span>
+            <span>
+              It picks every arm and measures every result. Here is how<span aria-hidden="true"> →</span>
+            </span>
           </Link>
         </div>
         <HeroJunction />

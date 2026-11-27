@@ -13,6 +13,7 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <script>
+      document.documentElement.classList.add("js");
       // Lets the hero hold its first frame until the load animation starts; cleared by script or
       // after 2.5 s if the bundle never runs, so content is never hidden for long.
       if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {

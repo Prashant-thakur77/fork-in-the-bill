@@ -951,7 +951,7 @@ a:not([class]):hover {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .hero-junction .hero-art-note {
-  margin-top: 34px;
+  margin-top: 44px;
 }
 .hero-copy .lead {
   max-width: 34ch;
@@ -2103,4 +2103,23 @@ a:not([class]):hover {
   .site-header {
     transition: none;
   }
+}
+
+/* LED text without JavaScript: the canvas stays dark, so print the reading over it */
+.led {
+  position: relative;
+}
+.led-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 600 clamp(14px, 2.2vw, 28px) / 1 var(--mono);
+  letter-spacing: 0.06em;
+  color: var(--led);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.js .led-fallback {
+  display: none;
 }
