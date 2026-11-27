@@ -306,3 +306,36 @@ Table: By the month the task was created. Months before July are the pre-cutoff 
 | `2026-07` | <!--n:exp1.by_trait.created_month.2026-07.control.n:int-->54<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.control.solve_rate:prob1-->50.0%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.control.cost_mean:usd4-->$0.0782<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.lanes_v1.n:int-->40<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.lanes_v1.solve_rate:prob1-->37.5%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.lanes_v1.cost_mean:usd4-->$0.0346<!--/n--> |
 
 <!--results:end-->
+
+## References
+
+Sources for the methods used here. `docs/references.md` in the repository says which part of the study each one relates to.
+
+1. Chen, L., Zaharia, M., & Zou, J. (2023). FrugalGPT: How to Use Large Language Models While Reducing Cost and Improving Performance. arXiv:2305.05176; accepted by Transactions on Machine Learning Research. https://arxiv.org/abs/2305.05176
+2. Ong, I., Almahairi, A., Wu, V., Chiang, W.-L., Wu, T., Gonzalez, J. E., Kadous, M. W., & Stoica, I. (2024). RouteLLM: Learning to Route LLMs with Preference Data. arXiv:2406.18665; ICLR 2025 (poster). https://arxiv.org/abs/2406.18665
+3. Aggarwal, P., Madaan, A., Anand, A., et al. (2023). AutoMix: Automatically Mixing Language Models. arXiv:2310.12963; NeurIPS 2024. https://arxiv.org/abs/2310.12963
+4. Ding, D., Mallick, A., Wang, C., Sim, R., Mukherjee, S., Ruhle, V., Lakshmanan, L. V. S., & Awadallah, A. H. (2024). Hybrid LLM: Cost-Efficient and Quality-Aware Query Routing. arXiv:2404.14618; ICLR 2024. https://arxiv.org/abs/2404.14618
+5. Jimenez, C. E., Yang, J., Wettig, A., Yao, S., Pei, K., Press, O., & Narasimhan, K. (2023). SWE-bench: Can Language Models Resolve Real-World GitHub Issues? arXiv:2310.06770; ICLR 2024. https://arxiv.org/abs/2310.06770
+6. Zhang, L., He, S., Zhang, C., et al. (2025). SWE-bench Goes Live! arXiv:2505.23419; NeurIPS 2025 Datasets and Benchmarks Track. https://arxiv.org/abs/2505.23419
+7. Li, K., Li, R., Zhang, L., et al. (2026). RepoLaunch: Automating Build and Management of Code Repositories across Languages and Platforms. arXiv:2603.05026 (arXiv comment: NeurIPS 2026 main track, poster). https://arxiv.org/abs/2603.05026
+8. Liang, S., Garg, S., & Moghaddam, R. Z. (2025). The SWE-Bench Illusion: When State-of-the-Art LLMs Remember Instead of Reason. arXiv:2506.12286. https://arxiv.org/abs/2506.12286
+9. Kapoor, S., Stroebl, B., Siegel, Z. S., Nadgir, N., & Narayanan, A. (2024). AI Agents That Matter. arXiv:2407.01502; accepted by Transactions on Machine Learning Research. https://arxiv.org/abs/2407.01502
+10. Xu, B., Peng, Z., Lei, B., Mukherjee, S., Liu, Y., & Xu, D. (2023). ReWOO: Decoupling Reasoning from Observations for Efficient Augmented Language Models. arXiv:2305.18323. https://arxiv.org/abs/2305.18323
+11. Anthropic (2024). Building effective agents. Anthropic Engineering, published 19 December 2024. https://www.anthropic.com/research/building-effective-agents
+12. Kohavi, R., Tang, D., & Xu, Y. (2020). Trustworthy Online Controlled Experiments: A Practical Guide to A/B Testing. Cambridge University Press. https://doi.org/10.1017/9781108653985
+13. Fabijan, A., Gupchup, J., Gupta, S., Omhover, J., Qin, W., Vermeer, L., & Dmitriev, P. (2019). Diagnosing Sample Ratio Mismatch in Online Controlled Experiments: A Taxonomy and Rules of Thumb for Practitioners. Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining (KDD '19), 2156-2164. https://doi.org/10.1145/3292500.3330722
+14. Johari, R., Koomen, P., Pekelis, L., & Walsh, D. (2017). Peeking at A/B Tests: Why it matters, and what to do about it. Proceedings of the 23rd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD '17), 1517-1525. https://doi.org/10.1145/3097983.3097992
+15. Deng, A., Xu, Y., Kohavi, R., & Walker, T. (2013). Improving the Sensitivity of Online Controlled Experiments by Utilizing Pre-Experiment Data. Proceedings of the Sixth ACM International Conference on Web Search and Data Mining (WSDM 2013), 123-132. https://doi.org/10.1145/2433396.2433413
+16. Nosek, B. A., Ebersole, C. R., DeHaven, A. C., & Mellor, D. T. (2018). The preregistration revolution. Proceedings of the National Academy of Sciences, 115(11), 2600-2606. https://doi.org/10.1073/pnas.1708274114
+17. Gelman, A., & Loken, E. (2013). The garden of forking paths: Why multiple comparisons can be a problem, even when there is no "fishing expedition" or "p-hacking" and the research hypothesis was posited ahead of time. Unpublished manuscript, dated 14 November 2013. https://sites.stat.columbia.edu/gelman/research/unpublished/p_hacking.pdf
+18. U.S. Food and Drug Administration (2016). Non-Inferiority Clinical Trials to Establish Effectiveness: Guidance for Industry. Center for Drug Evaluation and Research and Center for Biologics Evaluation and Research, November 2016. https://www.fda.gov/regulatory-information/search-fda-guidance-documents/non-inferiority-clinical-trials
+19. Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., & Rubin, D. B. (2013). Bayesian Data Analysis (3rd ed.). Chapman & Hall/CRC. https://doi.org/10.1201/b16018
+20. Deng, A., Lu, J., & Chen, S. (2016). Continuous Monitoring of A/B Tests without Pain: Optional Stopping in Bayesian Testing. arXiv:1602.05549. https://arxiv.org/abs/1602.05549
+21. Efron, B., & Tibshirani, R. J. (1994). An Introduction to the Bootstrap. Chapman & Hall. https://www.routledge.com/An-Introduction-to-the-Bootstrap/Efron-Tibshirani/p/book/9780412042317
+22. Merkle, R. C. (1988). A Digital Signature Based on a Conventional Encryption Function. Advances in Cryptology - CRYPTO '87, Lecture Notes in Computer Science, 369-378. Springer. https://doi.org/10.1007/3-540-48184-2_32
+23. Haber, S., & Stornetta, W. S. (1991). How to time-stamp a digital document. Journal of Cryptology, 3(2), 99-111. https://doi.org/10.1007/BF00196791
+24. Crosby, S. A., & Wallach, D. S. (2009). Efficient Data Structures for Tamper-Evident Logging. 18th USENIX Security Symposium (USENIX Security 09). https://www.usenix.org/conference/usenixsecurity09/technical-sessions/presentation/efficient-data-structures-tamper-evident
+25. Laurie, B., Langley, A., & Kasper, E. (2013). Certificate Transparency. RFC 6962 (Experimental), IETF; obsoleted by RFC 9162. https://www.rfc-editor.org/info/rfc6962
+26. Tang, D., Agarwal, A., O'Brien, D., & Meyer, M. (2010). Overlapping Experiment Infrastructure: More, Better, Faster Experimentation. Proceedings of the 16th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD '10), 17-26. https://doi.org/10.1145/1835804.1835810
+27. Flagsmith (n.d.). Experimentation (Beta). Flagsmith Docs, accessed 27 November 2026. https://docs.flagsmith.com/experimentation
+28. Flagsmith (n.d.). Rollout by Percentage. Flagsmith Docs, accessed 27 November 2026. https://docs.flagsmith.com/managing-flags/rollout/rollout-by-percentage

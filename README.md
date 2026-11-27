@@ -5,8 +5,13 @@ A pre-registered Flagsmith experiment on a coding agent's model routing: does ha
 [![ci](https://github.com/Prashant-thakur77/fork-in-the-bill/actions/workflows/ci.yml/badge.svg)](https://github.com/Prashant-thakur77/fork-in-the-bill/actions/workflows/ci.yml)
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![live site](https://img.shields.io/badge/live-forkbill.prashantthakur.dev-black.svg)](https://forkbill.prashantthakur.dev)
+[![release](https://img.shields.io/github/v/release/Prashant-thakur77/fork-in-the-bill.svg)](https://github.com/Prashant-thakur77/fork-in-the-bill/releases)
+[![npm: forkbill](https://img.shields.io/npm/v/forkbill.svg?label=npm%3A%20forkbill)](https://www.npmjs.com/package/forkbill)
+[![npm: forkbill-mcp](https://img.shields.io/npm/v/forkbill-mcp.svg?label=npm%3A%20forkbill-mcp)](https://www.npmjs.com/package/forkbill-mcp)
 
-**Read it:** [paper (PDF)](docs/paper.pdf) · [slide deck (PDF)](docs/deck.pdf) · [live site](https://forkbill.prashantthakur.dev) · [full results](analysis/results.md)
+**Read it:** [paper (PDF)](docs/paper.pdf) · [slide deck (PDF)](docs/deck.pdf) · [live site](https://forkbill.prashantthakur.dev) · [full results](analysis/results.md) · [references](docs/references.md)
+
+**Use it:** `npm i forkbill` (TypeScript kit) · `npx -y forkbill-mcp` (MCP server) · [Python kit](kit/forkbill) · [how to put your own agent's routing behind a Flagsmith experiment](#use-the-kit-on-your-own-agent)
 
 ![The Fork in the Bill site: the routing junction and the live arm totals](docs/img/site-home.png)
 
@@ -24,6 +29,7 @@ Result in one line: with the delegate lane on Haiku (`lanes_v1`), the agent spen
 - [Architecture](#architecture)
 - [Setup](#setup)
 - [Use the kit on your own agent](#use-the-kit-on-your-own-agent)
+- [Background and references](#background-and-references)
 - [Limits](#limits)
 - [Repo map](#repo-map)
 - [Licence](#licence)
@@ -551,6 +557,15 @@ For self-hosted Flagsmith add `FLAGSMITH_SDK_API_URL` and `FLAGSMITH_EVENTS_API_
 | `price_usage` | Turns tokens per lane into dollars with the pricing table |
 
 The server never picks an arm. When Flagsmith cannot serve a valid policy, `get_routing_policy` returns Flagsmith's error and no models, unless the caller passed its own `fallback_policy`. It also exposes the pricing table, its configuration (without the key) and the policy format as resources, and a `route_behind_experiment` prompt that gives an agent the whole loop. The bucketing code is shared: the kit's [`bucket.ts`](kit/ts/src/bucket.ts) is what the site's "move the split" lab runs, and the tests compare it with [`integrity/verify_assignment.py`](integrity/verify_assignment.py) and with every arm recorded in `runs/exp1`.
+
+## Background and references
+
+The routing question comes from work on LLM cascades and routers, which send a query to a cheaper model when that model is likely to be good enough ([FrugalGPT](https://arxiv.org/abs/2305.05176), [RouteLLM](https://arxiv.org/abs/2406.18665)), and from the case for reporting an agent's cost next to its accuracy ([Kapoor et al., 2024](https://arxiv.org/abs/2407.01502)).
+Tasks are drawn from [SWE-bench-Live](https://arxiv.org/abs/2505.23419), a benchmark of real GitHub issues in the [SWE-bench](https://arxiv.org/abs/2310.06770) format that is refreshed to limit contamination.
+The design follows the usual practice for online controlled experiments ([Kohavi, Tang and Xu, 2020](https://doi.org/10.1017/9781108653985)): a guardrail metric, a sample-ratio check ([Fabijan et al., 2019](https://doi.org/10.1145/3292500.3330722)), no stopping on a look at the data ([Johari et al., 2017](https://doi.org/10.1145/3097983.3097992)) and CUPED as a secondary analysis ([Deng et al., 2013](https://doi.org/10.1145/2433396.2433413)).
+The hypothesis, metrics and decision rule were registered before the first task ran ([Nosek et al., 2018](https://doi.org/10.1073/pnas.1708274114)).
+The run ledger's hash chain and Merkle root are the constructions used for tamper-evident logs ([Haber and Stornetta, 1991](https://doi.org/10.1007/BF00196791); [Crosby and Wallach, 2009](https://www.usenix.org/conference/usenixsecurity09/technical-sessions/presentation/efficient-data-structures-tamper-evident)).
+The full list of 28 sources, each checked against its own page and with a note on what it relates to, is in [docs/references.md](docs/references.md).
 
 ## Limits
 
