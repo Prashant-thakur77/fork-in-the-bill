@@ -75,6 +75,19 @@ resource "aws_vpc_security_group_ingress_rule" "ssh_extra" {
   tags = local.tags
 }
 
+# The runner pulls the validation report from the validator directly, so a run does not
+# depend on the operator's connection. Only members of this group can use the rule.
+resource "aws_vpc_security_group_ingress_rule" "ssh_internal" {
+  security_group_id            = aws_security_group.runner.id
+  description                  = "SSH between the runner and the validator"
+  referenced_security_group_id = aws_security_group.runner.id
+  ip_protocol                  = "tcp"
+  from_port                    = 22
+  to_port                      = 22
+
+  tags = local.tags
+}
+
 resource "aws_vpc_security_group_egress_rule" "all_ipv4" {
   security_group_id = aws_security_group.runner.id
   description       = "Outbound for package installs, registries, model and Flagsmith APIs"
