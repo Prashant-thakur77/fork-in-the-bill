@@ -61,6 +61,7 @@ class PoolSizes:
     exp2: int = 100
     exp1: int | None = 140  # None: every fresh instance
     exp1b: int = 0  # pre-cutoff extension of exp1, carved after exp2 (amendment 1)
+    exp2b: int = 0  # extension of exp2: the rest of the pre-cutoff tier, then older tasks
 
 
 @dataclass(frozen=True)
@@ -154,6 +155,9 @@ def select_pools(
     rollout = pre_order[sizes.pilot : sizes.pilot + sizes.rollout]
     exp2 = pre_order[sizes.pilot + sizes.rollout :][: sizes.exp2]
     exp1b = pre_order[sizes.pilot + sizes.rollout + sizes.exp2 :][: sizes.exp1b]
+    older = [i for i in kept if _date(i) < pre_from]
+    pre_rest = pre_order[sizes.pilot + sizes.rollout + sizes.exp2 + sizes.exp1b :]
+    exp2b = [*pre_rest, *_seeded_order(older, seed, "older")][: sizes.exp2b]
     exp1 = _seeded_order(fresh, seed, "fresh")
     if sizes.exp1 is not None:
         exp1 = exp1[: sizes.exp1]
@@ -166,6 +170,8 @@ def select_pools(
     }
     if sizes.exp1b:
         pools["exp1b"] = exp1b
+    if sizes.exp2b:
+        pools["exp2b"] = exp2b
     if reserve:
         pools["reserve"] = _seeded_order(reserve, seed, "reserve")
     return Selection(
@@ -213,6 +219,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--rollout", type=int, default=PoolSizes.rollout, help="rollout pool size")
     p.add_argument("--exp2", type=int, default=PoolSizes.exp2, help="exp2 cap (takes the rest)")
     p.add_argument("--exp1b", type=int, default=0, help="pre-cutoff extension of exp1, carved after exp2")
+    p.add_argument("--exp2b", type=int, default=0, help="exp2 extension: pre-cutoff rest, then older")
     p.add_argument("--exp1", type=int, default=PoolSizes.exp1, help="exp1 cap (0: no cap)")
     p.add_argument("--min-gold-files", type=int, default=Stratum.min_gold_files)
     p.add_argument("--max-gold-files", type=int, default=Stratum.max_gold_files)
@@ -264,7 +271,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         reserve, reserve_skipped = load_rebench(pf.path, REBENCH_SPLIT)
 
     exp1_cap = args.exp1 if args.exp1 else None
-    sizes = PoolSizes(pilot=args.pilot, rollout=args.rollout, exp2=args.exp2, exp1=exp1_cap, exp1b=args.exp1b)
+    sizes = PoolSizes(
+        pilot=args.pilot, rollout=args.rollout, exp2=args.exp2, exp1=exp1_cap, exp1b=args.exp1b, exp2b=args.exp2b
+    )
     stratum = None
     if not args.no_stratum:
         stratum = Stratum(
@@ -315,6 +324,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "exp2": args.exp2,
                 "exp1": exp1_cap,
                 **({"exp1b": args.exp1b} if args.exp1b else {}),
+                **({"exp2b": args.exp2b} if args.exp2b else {}),
             },
             "reserve": not args.no_reserve,
             "stratum": stratum.to_json() if stratum else None,

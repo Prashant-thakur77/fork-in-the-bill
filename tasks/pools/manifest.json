@@ -19,7 +19,8 @@
       "rollout": 20,
       "exp2": 100,
       "exp1": null,
-      "exp1b": 80
+      "exp1b": 80,
+      "exp2b": 110
     },
     "reserve": true,
     "stratum": {
@@ -267,6 +268,33 @@
       "jsonl_sha256": "650e71bda64a9dd10a7023edf6888215bdda315525d2e47b9fc712129461ad1c",
       "txt": "/tmp/claude-1000/-home-prashant-projects-toggle/96ee01ff-c663-4c55-a263-fa0152534b27/scratchpad/sel/exp1b.txt",
       "txt_sha256": "21e12a1e842d163b73410a98bc6d125a37146a83f818d65e7ca471e812f8c952"
+    },
+    "exp2b": {
+      "count": 110,
+      "by_language": {
+        "c": 11,
+        "cpp": 18,
+        "cs": 12,
+        "go": 17,
+        "java": 17,
+        "js": 8,
+        "rust": 7,
+        "ts": 20
+      },
+      "by_month": {
+        "2025-05": 1,
+        "2025-06": 4,
+        "2025-07": 29,
+        "2025-08": 18,
+        "2026-03": 24,
+        "2026-04": 23,
+        "2026-05": 1,
+        "2026-06": 10
+      },
+      "jsonl": "/tmp/claude-1000/-home-prashant-projects-toggle/96ee01ff-c663-4c55-a263-fa0152534b27/scratchpad/pools/exp2b.jsonl.gz",
+      "jsonl_sha256": "1fdd798926e15e78bdf60aedf3fc4a02c0cac84c6dbe25f73d191eb4d16135b4",
+      "txt": "/tmp/claude-1000/-home-prashant-projects-toggle/96ee01ff-c663-4c55-a263-fa0152534b27/scratchpad/pools/exp2b.txt",
+      "txt_sha256": "3a664ea7761735cc0bf87af2b23411d138061c08308cf95df32a2df3cbfd8d1f"
     }
   },
   "validation_applied_at": "2026-11-26T21:37:29Z",
@@ -276,6 +304,11 @@
       "pool": "exp1b",
       "generated_at": "2026-11-26T23:12:15Z",
       "note": "exp1 amendment 1: next 80 pre-cutoff tasks in the same seeded order, carved after exp2; existing pools unchanged"
+    },
+    {
+      "pool": "exp2b",
+      "generated_at": "2026-11-27T12:08:21Z",
+      "note": "experiment 2 pool extension: the 58 pre-cutoff tasks left after exp1b in the same seeded order, then 52 older tasks (before 2026-03-01) in a separately seeded order; existing pools unchanged"
     }
   ]
 }

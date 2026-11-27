@@ -267,6 +267,17 @@ def test_exp1b_extension_leaves_other_pools_unchanged() -> None:
     assert ext.pools["exp1b"] and not taken & {i.instance_id for i in ext.pools["exp1b"]}
 
 
+def test_exp2b_extension_leaves_other_pools_unchanged() -> None:
+    insts = corpus()
+    sizes = {"pilot": 2, "rollout": 2, "exp2": 3, "exp1": None, "exp1b": 2}
+    base = select_pools(insts, seed=7, sizes=PoolSizes(**sizes))
+    ext = select_pools(insts, seed=7, sizes=PoolSizes(**sizes, exp2b=50))
+    for name in ("pilot", "rollout", "exp2", "exp1", "exp1b"):
+        assert [i.instance_id for i in ext.pools[name]] == [i.instance_id for i in base.pools[name]]
+    taken = {i.instance_id for n, p in ext.pools.items() if n not in ("exp2b", "reserve") for i in p}
+    assert ext.pools["exp2b"] and not taken & {i.instance_id for i in ext.pools["exp2b"]}
+
+
 def test_pool_lengths_read_gzip_and_lists(tmp_path: Path) -> None:
 
     from analysis.analyse import load_pool_lengths
