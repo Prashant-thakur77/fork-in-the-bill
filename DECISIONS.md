@@ -135,3 +135,7 @@ Flagsmith reports no inference for a metric until each variant has 50 identities
 ## D23. Flags as code are read-only during an experiment
 
 `infra/flagsmith/` describes the flags, the lanes_v1 variant, the environment defaults and the experiment's segment override as Terraform, but it is only ever planned, never applied. An apply in the middle of a run would publish new feature-state versions on the flag the experiment is splitting, and could reset parts the provider cannot express (the variant key and the per-segment weights) that the CLI scripts set. So the scripts in `flagsmith/` stay the only writers, and `make flags-drift` runs a read-only plan that must report no changes. Each check can be appended to the run's ledger as a `config` record with the plan's hash, so the ledger shows that the flag configuration matched the committed code during the run.
+
+## D24. The live board shows running totals per arm
+
+The board at https://forkbill.prashantthakur.dev went live at 05:55Z on 2026-11-27, with exp1 89 tasks in. From then on it shows each arm's tasks, solves and spend as the run goes, so the operator sees interim figures too. This can't move the result: the decision rule, the margin, the pools and the stopping rule (every task in both pools done, excluded or invalid) are fixed in the registration, and there is no early stop. The verdict section stays empty until the analysis script runs at the end.
