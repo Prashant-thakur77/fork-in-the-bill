@@ -244,6 +244,139 @@
   font-size: 14px;
 }
 
+.tl-evidence summary {
+  list-style: none;
+  gap: 8px;
+}
+.tl-evidence summary::-webkit-details-marker {
+  display: none;
+}
+.tl-evidence summary::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2.5px solid currentColor;
+  border-bottom: 2.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 220ms var(--ease-out);
+}
+.tl-evidence[open] summary::after {
+  transform: rotate(45deg);
+}
+.tl-evidence summary:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* buttons on green signs keep their own colours */
+.ph-sign a.btn-sheet {
+  color: var(--text);
+}
+
+/* the Flagsmith gantry stands over the trunk; cars arrive from under it */
+.fs-gantry::after {
+  content: "";
+  position: absolute;
+  left: -30%;
+  right: -30%;
+  top: 46%;
+  bottom: -60px;
+  background: var(--ground);
+  z-index: -2;
+}
+.fs-gantry-beam {
+  z-index: -1;
+}
+
+/* phone journey: room at the end of the road for the lane counts */
+@media (max-width: 899px) {
+  .j-scroll .j-svg {
+    min-width: 900px;
+    padding-right: 24px;
+  }
+}
+
+/* rollout preview */
+.rollout {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(20px, 4vw, 56px);
+  align-items: center;
+  padding: clamp(18px, 3vw, 32px);
+  border-radius: var(--r-sign);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.rollout-head {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+.rollout-badge {
+  background: var(--orange);
+  color: var(--text);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.rollout-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rb-btn {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: var(--r-small);
+  font: inherit;
+  font-weight: 800;
+  background: transparent;
+  color: var(--text);
+  box-shadow: inset 0 0 0 2px var(--text);
+  cursor: pointer;
+  transition: background-color 160ms, color 160ms, transform 160ms;
+}
+.rb-btn:hover {
+  background: var(--inset);
+}
+.rb-btn:active {
+  transform: scale(0.97);
+}
+.rb-btn.is-on {
+  background: var(--text);
+  color: var(--ground);
+}
+.rollout-junction .sign-face {
+  padding: 12px 14px;
+}
+.rollout-junction .sign-legend {
+  font-size: clamp(15px, 1.4vw, 20px);
+}
+.rollout-junction .closed-plate {
+  font-size: clamp(12px, 1.1vw, 16px);
+  top: auto;
+  bottom: -12px;
+  left: auto;
+  right: 10px;
+}
+.rollout-junction .road {
+  margin-top: -12px;
+  max-height: 260px;
+}
+.rollout-junction .sign-tab {
+  font-size: 13px;
+}
+@media (max-width: 900px) {
+  .rollout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* menu sheet labels */
 .mm-group,
 .mm-title {

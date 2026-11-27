@@ -123,7 +123,7 @@ Easings and durations are the board's: snap 160 ms `power4.out`, ui 320 ms, reve
 | Closing | the Next-exit sign swings in | — | arrow nudges toward the exit while visible | — | — |
 | Lane rail | — | a yellow dashed lane line in the left margin paints with scroll (desktop) | — | — | — |
 
-**Signature moment** stays the rollout lane closure on the board. The site's second showpiece is the pinned task journey (desktop); mobile fallback is the unpinned scrub; reduced motion shows the finished still with every step lit and every caption listed.
+**Signature moment** stays the rollout lane closure on the board. Until the run ends it is playable as a labelled preview after the journey (home and /why-flagsmith): the visitor picks "If lanes_v1 ships" or "If control stays" and the other lane closes with the board's own timeline (signal snaps to red X, cones placed 90 ms apart, "Lane closed" plate lands, traffic merges); an orange "Preview, not a result" badge sits beside it; reduced motion shows the closed state without travel. The site's second showpiece is the pinned task journey (desktop); mobile fallback is the unpinned scrub; reduced motion shows the finished still with every step lit and every caption listed.
 
 **Page transition: lane change.** An asphalt panel with a slanted dashed lane line sweeps in from the left (260 ms power2.in), the page swaps underneath and scrolls to top, focus moves to `main`, then the panel leaves to the right (340 ms power3.out) while the lane line shifts over. Reduced motion: instant swap.
 

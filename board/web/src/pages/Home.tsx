@@ -5,6 +5,7 @@ import { Led } from "../led/Led";
 import { textColumns } from "../led/font";
 import { Road } from "../components/Road";
 import { Journey } from "../art/Journey";
+import { RolloutPreview } from "../art/RolloutPreview";
 import { Link } from "../site/router";
 import { Code, Kinetic, Md, useReveals } from "../site/ui";
 import { ghFile, pct, repo } from "../site/data";
@@ -432,6 +433,7 @@ export default function Home() {
           <p>Scroll to follow two tasks from the queue to the decision.</p>
         </div>
         <Journey steps={JOURNEY_STEPS} id="home-journey" />
+        <RolloutPreview />
         <p className="journey-more">
           <Link to="/why-flagsmith" className="text-link">
             Why the experiment cannot exist without Flagsmith <span aria-hidden="true">→</span>

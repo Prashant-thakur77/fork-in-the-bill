@@ -325,7 +325,7 @@ export function useReveals(scope: RefObject<HTMLElement | null>, deps: unknown[]
           gsap.from(el, { rotate: -2.5, y: -16, opacity: 0, transformOrigin: "50% 0%", duration: 1.1, ease: "elastic.out(1, 0.6)", scrollTrigger: st(el) });
         });
         gsap.utils.toArray<HTMLElement>('[data-reveal="print"]').forEach((el) => {
-          gsap.from(el, { clipPath: "inset(0 0 100% 0)", duration: 1.4, ease: "steps(18)", scrollTrigger: st(el) });
+          gsap.from(el, { clipPath: "inset(0 0 100% 0)", duration: 1.0, ease: "steps(16)", scrollTrigger: st(el, "top 96%") });
         });
         gsap.utils.toArray<HTMLElement>('[data-reveal="stamp"]').forEach((el) => {
           gsap.from(el, { scale: 1.3, opacity: 0, rotate: -6, duration: 0.42, ease: "back.out(2)", scrollTrigger: st(el, "top 80%") });
