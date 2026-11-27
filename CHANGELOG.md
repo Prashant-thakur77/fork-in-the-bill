@@ -4,8 +4,16 @@ Notable changes to this project, newest first. Versions are git tags. Result fig
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-27
+
 ### Added
 
+- npm packages published: `forkbill` 0.1.0 (the TypeScript kit) and `forkbill-mcp` 0.1.0 (the MCP server).
+- `examples/`: nine runnable examples, each run against a self-hosted Flagsmith with its real output committed (quickstarts in Python and TypeScript, a full experiment, an MCP session, OpenFeature, the kill switch, offline verification, the CI check and a comparison of evaluation modes).
+- The planner transcript and graded patch of every task attempt in experiment 1 and the rollout (`runs/<exp>/transcripts/`), four of them rendered in `examples/transcripts/` by `tools/render_transcript.py`.
+- `docs/references.md`, a checked list of the sources for the methods used, linked from the README and the paper.
+- Site: the decided result on the home page with the fresh-tier caveat, a live board for the running experiment with a batch switcher, pages for experiment 2, the rollout, the paper, questions, a use-it guide and an in-browser ledger check, a full-screen menu, an updates sign-up, and Flagsmith dashboard screenshots.
+- README: the result, Flagsmith's role and the verification commands on the first screen, a table for judges, and a section on what the experiment showed about running Flagsmith experiments.
 - TypeScript kit: the bucketing code, offline re-derivation of assignments, a strict failure mode and a shared event sender.
 - `forkbill-mcp`, an MCP server with tests. The TypeScript kit package is renamed `forkbill`, and both build in one npm workspace under `kit/`.
 - Release workflow (`.github/workflows/release.yml`). On a `v*` tag it re-runs the consistency gate, the registration hash check and the ledger and assignment verification, re-derives `numbers.json` from the run logs and compares it with the committed file, builds the PDFs and the Parquet export, writes `SHA256SUMS`, attests build provenance for every asset and publishes the release. A manual dry run builds everything and publishes nothing.
@@ -22,6 +30,14 @@ Notable changes to this project, newest first. Versions are git tags. Result fig
 
 - `make setup` now installs the optional extras, so `make check` passes straight after it. Without them the type checker could not resolve the OpenFeature imports.
 - `docs/interfaces.md` lists the run directory as the runner writes it: snapshots are in `env/`, and `meta.json` has `force_policy`.
+- The secret scan allows the public client-side key inside committed environment snapshots, and nothing else there (`.gitleaks.toml`, D28).
+- The self-hosted bootstrap generates any missing secret when its settings file already exists, and the demo counts stored events from the events table.
+- The analysis finds the power tables when it writes to another directory.
+- The README's End Experiment command uses the form the API accepts.
+
+### Removed
+
+- The manual kit demo workflow, which the examples replace.
 
 ## [0.2.0] - 2026-11-27
 
@@ -71,6 +87,7 @@ Notable changes to this project, newest first. Versions are git tags. Result fig
 - The graded patch includes files the agent creates and is measured from the container's starting state.
 - Flagsmith results are parsed in the shape the API returns.
 
-[Unreleased]: https://github.com/Prashant-thakur77/fork-in-the-bill/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Prashant-thakur77/fork-in-the-bill/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Prashant-thakur77/fork-in-the-bill/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Prashant-thakur77/fork-in-the-bill/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Prashant-thakur77/fork-in-the-bill/releases/tag/v0.1.0

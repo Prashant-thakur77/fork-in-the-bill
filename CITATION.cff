@@ -9,7 +9,7 @@ abstract: >-
   analysis that derives every published number, and the tools to verify all of it.
 authors:
   - name: "Fork in the Bill team (CoffeeAndToggle)"
-version: "0.2.0"
+version: "0.3.0"
 date-released: "2026-11-27"
 license: MIT
 repository-code: "https://github.com/Prashant-thakur77/fork-in-the-bill"
