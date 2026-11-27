@@ -2,6 +2,20 @@ import { dedupeKey, parseFlagWebhook, type StoredFlagChange } from "./flags";
 import { verifyFlagsmithSignature, verifySignature } from "./hmac";
 import { parseSnapshot } from "./payload";
 import type { Store, StoredSnapshot } from "./store";
+import {
+  attemptKey,
+  cleanEmail,
+  cleanSource,
+  JOIN_COPY,
+  joinPage,
+  parseJoinBody,
+  WAITLIST_ATTEMPT_TTL_SECONDS,
+  WAITLIST_MAX_ATTEMPTS,
+  WAITLIST_MAX_BODY_BYTES,
+  WAITLIST_MIN_PUBLIC_COUNT,
+  WAITLIST_WINDOW_SECONDS,
+  type JoinState,
+} from "./waitlist";
 
 export interface AppOptions {
   store: Store;
@@ -9,6 +23,8 @@ export interface AppOptions {
   /** FLAGSMITH_WEBHOOK_SECRET; the webhook route fails closed without it. */
   flagsmithSecret?: string;
   allowedOrigins: string[];
+  /** Salt for the hashed address key used to rate-limit sign-ups; falls back to `secret`. */
+  waitlistSalt?: string;
   now?: () => number; // unix seconds
   pollMs?: number;
   heartbeatMs?: number;
@@ -52,8 +68,8 @@ function corsHeaders(request: Request, allowed: string[]): Record<string, string
   if (!origin || !(allowed.includes(origin) || allowed.includes("*"))) return {};
   return {
     "Access-Control-Allow-Origin": allowed.includes("*") ? "*" : origin,
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Last-Event-ID",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Accept, Last-Event-ID",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };
@@ -138,6 +154,42 @@ export function createApp(opts: AppOptions) {
     const stored = await store.addFlagChange(change.value, await dedupeKey(change.value), nowS);
     // A duplicate is answered 200 so Flagsmith does not keep retrying a delivery we already hold.
     return json({ ok: true, stored }, 200);
+  }
+
+  /**
+   * Adds one address to the updates list. Same-origin only: the request must carry an Origin the
+   * site is served from. Answers JSON to a script and a small page to a plain form post.
+   */
+  async function joinWaitlist(request: Request, cors: Record<string, string>): Promise<Response> {
+    const wantsJson = (request.headers.get("Content-Type") ?? "").includes("application/json") || (request.headers.get("Accept") ?? "").includes("application/json");
+    const answer = (state: JoinState, extra: Record<string, string> = {}): Response => {
+      const c = JOIN_COPY[state];
+      if (wantsJson) return json({ ok: state === "joined" || state === "already", state, message: `${c.title} ${c.text}` }, c.status, { ...cors, ...extra });
+      return new Response(joinPage(state), { status: c.status, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", ...extra } });
+    };
+    const origin = request.headers.get("Origin");
+    if (!origin || !opts.allowedOrigins.includes(origin)) return json({ error: "origin not allowed" }, 403);
+
+    const rawBody = await readCapped(request, WAITLIST_MAX_BODY_BYTES);
+    if (rawBody === null) return json({ error: "body too large" }, 413, cors);
+    const body = parseJoinBody(request.headers.get("Content-Type") ?? "", rawBody);
+    if (!body) return json({ error: "send JSON or a form" }, 415, cors);
+
+    const nowS = now();
+    try {
+      const ip = request.headers.get("CF-Connecting-IP") ?? "unknown";
+      const key = await attemptKey(opts.waitlistSalt || opts.secret, ip, nowS);
+      const attempts = await store.waitlistAttempt(key, nowS, nowS - WAITLIST_WINDOW_SECONDS, nowS - WAITLIST_ATTEMPT_TTL_SECONDS);
+      if (attempts > WAITLIST_MAX_ATTEMPTS) return answer("slow", { "Retry-After": String(WAITLIST_WINDOW_SECONDS) });
+      // A filled trap field means a script: answer as if it worked and store nothing.
+      if (typeof body.trap === "string" && body.trap.trim() !== "") return answer("joined");
+      const email = cleanEmail(body.email);
+      if (!email) return answer("invalid");
+      const added = await store.joinWaitlist(email, cleanSource(body.source), nowS);
+      return answer(added ? "joined" : "already");
+    } catch {
+      return answer("error");
+    }
   }
 
   function stream(request: Request, cors: Record<string, string>, experiment?: string, feature?: string): Response {
@@ -237,6 +289,16 @@ export function createApp(opts: AppOptions) {
         if (request.method !== "POST") return json({ error: "method not allowed" }, 405, { Allow: "POST" });
         return flagWebhook(request);
       }
+      if (url.pathname === "/waitlist") {
+        if (request.method === "POST") return joinWaitlist(request, cors);
+        // The form lives on the updates page; nothing is ever listed here.
+        if (request.method === "GET" || request.method === "HEAD") return new Response(null, { status: 303, headers: { Location: "/updates" } });
+        return json({ error: "method not allowed" }, 405, { Allow: "GET, POST" });
+      }
+      if (url.pathname === "/waitlist/count" && request.method === "GET") {
+        const n = await store.waitlistCount();
+        return json({ count: n >= WAITLIST_MIN_PUBLIC_COUNT ? n : null }, 200, cors);
+      }
       if (url.pathname === "/flags/history" && request.method === "GET") {
         const limitParam = Number(url.searchParams.get("limit") ?? "");
         const limit = Number.isInteger(limitParam) && limitParam > 0 ? limitParam : undefined;
@@ -255,7 +317,7 @@ export function createApp(opts: AppOptions) {
         return res;
       }
       if (url.pathname === "/" && request.method === "GET") {
-        return json({ ok: true, endpoints: ["POST /ingest", "POST /flagsmith/webhook", "GET /state", "GET /flags/history", "GET /stream"] }, 200, cors);
+        return json({ ok: true, endpoints: ["POST /ingest", "POST /flagsmith/webhook", "GET /state", "GET /flags/history", "GET /stream", "POST /waitlist", "GET /waitlist/count"] }, 200, cors);
       }
       return json({ error: "not found" }, 404, cors);
     },

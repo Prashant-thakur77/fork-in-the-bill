@@ -18,6 +18,15 @@ export interface Store {
   addFlagChange(change: FlagChange, dedupe: string, nowSeconds: number): Promise<boolean>;
   /** The most recent flag changes, oldest first, optionally for one feature. */
   flagHistory(opts?: { feature?: string; limit?: number }): Promise<StoredFlagChange[]>;
+  /** Adds an address to the updates list; returns false if it was already there. */
+  joinWaitlist(email: string, source: string, nowSeconds: number): Promise<boolean>;
+  /** How many addresses are on the updates list. Addresses themselves are never read back. */
+  waitlistCount(): Promise<number>;
+  /**
+   * Records one sign-up attempt for a hashed address key and returns how many that key has made
+   * since `sinceSeconds`, this one included. Records older than `pruneBeforeSeconds` are deleted.
+   */
+  waitlistAttempt(key: string, nowSeconds: number, sinceSeconds: number, pruneBeforeSeconds: number): Promise<number>;
 }
 
 export const HISTORY_LIMIT = 100;
@@ -167,6 +176,28 @@ export class D1Store implements Store {
     const { results } = await stmt.all<FlagRow>();
     return results.map(rowToChange).reverse();
   }
+
+  async joinWaitlist(email: string, source: string, nowSeconds: number): Promise<boolean> {
+    const insert = await this.db
+      .prepare("INSERT INTO waitlist (email, created_at, source) VALUES (?, ?, ?) ON CONFLICT (email) DO NOTHING")
+      .bind(email, nowSeconds, source)
+      .run();
+    return (insert.meta.changes ?? 0) === 1;
+  }
+
+  async waitlistCount(): Promise<number> {
+    const row = await this.db.prepare("SELECT COUNT(*) AS n FROM waitlist").first<{ n: number }>();
+    return row?.n ?? 0;
+  }
+
+  async waitlistAttempt(key: string, nowSeconds: number, sinceSeconds: number, pruneBeforeSeconds: number): Promise<number> {
+    const results = await this.db.batch<{ n: number }>([
+      this.db.prepare("DELETE FROM waitlist_attempts WHERE at < ?").bind(pruneBeforeSeconds),
+      this.db.prepare("INSERT INTO waitlist_attempts (ip_hash, at) VALUES (?, ?)").bind(key, nowSeconds),
+      this.db.prepare("SELECT COUNT(*) AS n FROM waitlist_attempts WHERE ip_hash = ? AND at >= ?").bind(key, sinceSeconds),
+    ]);
+    return results[2]?.results[0]?.n ?? 1;
+  }
 }
 
 /** In-memory store with the same semantics, used by the tests. */
@@ -176,6 +207,9 @@ export class MemoryStore implements Store {
   private v = 0;
   private flags: StoredFlagChange[] = [];
   private dedupes = new Set<string>();
+  /** The updates list, exposed to tests only so they can check what was stored. */
+  readonly waitlist: { email: string; created_at: number; source: string }[] = [];
+  readonly attempts: { key: string; at: number }[] = [];
 
   async claimSignature(signature: string, ts: number, nowSeconds: number): Promise<boolean> {
     for (const [s, t] of this.seen) if (t < nowSeconds - KEEP_SIGNATURES_SECONDS) this.seen.delete(s);
@@ -217,5 +251,21 @@ export class MemoryStore implements Store {
       .filter((c) => !opts.feature || c.feature === opts.feature)
       .sort((a, b) => a.at - b.at || a.id - b.id);
     return rows.slice(-clampLimit(opts.limit));
+  }
+
+  async joinWaitlist(email: string, source: string, nowSeconds: number): Promise<boolean> {
+    if (this.waitlist.some((r) => r.email === email)) return false;
+    this.waitlist.push({ email, created_at: nowSeconds, source });
+    return true;
+  }
+
+  async waitlistCount(): Promise<number> {
+    return this.waitlist.length;
+  }
+
+  async waitlistAttempt(key: string, nowSeconds: number, sinceSeconds: number, pruneBeforeSeconds: number): Promise<number> {
+    for (let i = this.attempts.length - 1; i >= 0; i--) if (this.attempts[i]!.at < pruneBeforeSeconds) this.attempts.splice(i, 1);
+    this.attempts.push({ key, at: nowSeconds });
+    return this.attempts.filter((a) => a.key === key && a.at >= sinceSeconds).length;
   }
 }
