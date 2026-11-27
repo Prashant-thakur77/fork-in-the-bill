@@ -182,7 +182,7 @@ def test_render_then_check_passes(balanced: tuple[Path, dict[str, Any]], tmp_pat
     assert (root / "analysis" / "results.md").exists()
     problems, skipped = check(root, root / "analysis" / "out" / "numbers.json")
     assert problems == [], [str(p) for p in problems]
-    assert skipped == ["video/captions.json"]
+    assert skipped == ["docs/paper.md", "docs/build/deck.html", "video/captions.json"]
 
 
 def test_check_fails_on_tampered_readme(balanced: tuple[Path, dict[str, Any]], tmp_path: Path) -> None:

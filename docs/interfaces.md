@@ -39,7 +39,7 @@ These are sent per task by `harness/events.py`, using the same identifier as the
 
 ## numbers.json
 
-`analysis/out/numbers.json` is the only source for figures in README.md, analysis/results.md, the board seed and the video captions. Shape:
+`analysis/out/numbers.json` is the only source for figures in README.md, analysis/results.md, docs/paper.md, the deck source docs/build/deck.html, the board seed and the video captions. Shape:
 
 ```json
 {
@@ -76,7 +76,7 @@ ARM = {"n_exposed", "n_excluded", "n_analysed", "cost_mean", "cost_mean_ci", "co
 
 ### Number markers
 
-In README.md and analysis/results.md, every figure taken from numbers.json is wrapped as `<!--n:exp1.arms.control.cost_mean:usd2-->$1.23<!--/n-->`. `analysis/render_docs.py` fills the markers, and `analysis/check_consistency.py` re-renders them and fails if any marker is stale. It also fails if a results section contains a bare number with no marker. Formats: `usd2`, `usd4`, `pct1`, `pp1`, `int`, `f3`, `prob1` (probability rendered as a percent), `hash12`.
+In README.md, analysis/results.md, docs/paper.md and docs/build/deck.html, every figure taken from numbers.json is wrapped as `<!--n:exp1.arms.control.cost_mean:usd2-->$1.23<!--/n-->`. `analysis/render_docs.py` fills the markers, and `analysis/check_consistency.py` re-renders them and fails if any marker is stale. It also fails if a results section contains a bare number with no marker. Formats: `usd2`, `usd4`, `pct1`, `pp1`, `int`, `f3`, `prob1` (probability rendered as a percent), `hash12`.
 
 The board seed (`board/web/src/seed.json`) and the captions file (`video/captions.json`) store `{"key": "exp1.delta.cost_mean_pct", "fmt": "pct1", "text": "..."}` entries, which are checked the same way.
 
