@@ -438,7 +438,7 @@ p.small {
   stroke: var(--paint-yellow);
 }
 .tl-signal.is-wait svg {
-  stroke: #ff4a3d;
+  stroke: #3a403c;
 }
 .tl-evidence {
   font-size: 15px;

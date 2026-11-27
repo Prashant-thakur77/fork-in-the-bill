@@ -309,7 +309,8 @@ export default function Home() {
           )}
         </div>
         <div className="hsec-art">
-          <div className="rate-board" role="table" aria-label="List prices, US dollars per million tokens">
+          <div className="rate-board">
+            <div role="table" aria-label="List prices, US dollars per million tokens">
             <div className="rb-head" role="row">
               <span role="columnheader">Toll, per million tokens</span>
               <span role="columnheader">Input</span>
@@ -332,6 +333,7 @@ export default function Home() {
                 </div>
               );
             })}
+            </div>
             <p className="rb-foot">
               Source: <a href={ghFile("harness/pricing.json")}>harness/pricing.json</a>
             </p>

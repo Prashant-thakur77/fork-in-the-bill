@@ -289,7 +289,7 @@ export function Header() {
           </div>
         </nav>
         <div className="header-end">
-          <a className="gh-link" href={repo.site.repo} rel="noopener">
+          <a className="gh-link" href={repo.site.repo} rel="noopener" aria-label="GitHub repository">
             <GitHubIcon />
             <span>GitHub</span>
           </a>

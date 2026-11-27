@@ -119,7 +119,8 @@ export function Footer() {
         <div className="finale-road" aria-hidden="true">
           <div className="lane-dashes" />
         </div>
-        <p className="finale-word" aria-label="Fork in the Bill">
+        <p className="finale-word">
+          <span className="sr-only">Fork in the Bill</span>
           {WORD.split(" ").map((w, wi) => (
             <span className="fw-word" key={wi} aria-hidden="true">
               {[...w].map((c, ci) => (

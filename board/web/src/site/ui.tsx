@@ -275,6 +275,7 @@ export function OnThisPage({ items }: { items: { id: string; label: string }[] }
       (entries) => {
         const vis = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
         if (vis[0]) setActive(vis[0].target.id);
+        else if (els[0] && els[0].getBoundingClientRect().top > window.innerHeight * 0.35) setActive(els[0].id);
       },
       { rootMargin: "-20% 0px -65% 0px" },
     );

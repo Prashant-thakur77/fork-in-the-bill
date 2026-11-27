@@ -64,7 +64,7 @@ export function HarnessDiagram({ planner, worker }: { planner: string; worker: s
           <path d={`M70 ${WORK_Y} L1000 ${WORK_Y}`} className="hd-dash hd-draw" pathLength={1} />
           <path d={`M1010 ${PLAN_Y} C1050 ${PLAN_Y} 1060 250 1100 250`} className="hd-exit hd-draw" pathLength={1} />
           {/* lane names */}
-          <text x="70" y={PLAN_Y - 48} className="hd-lane">
+          <text x="70" y={PLAN_Y + 64} className="hd-lane">
             Planner lane · {planner}
           </text>
           <text x="70" y={WORK_Y + 66} className="hd-lane">

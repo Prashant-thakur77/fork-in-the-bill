@@ -19,7 +19,7 @@ function Signal({ kind }: { kind: ReturnType<typeof signalOf> }) {
   return (
     <span className={`tl-signal is-${kind}`} aria-hidden="true">
       <svg viewBox="0 0 40 40">
-        {kind === "done" || kind === "live" ? <path d="M20 6 V30 M10 21 L20 32 L30 21" /> : kind === "work" ? <path d="M10 30 L30 10 M16 10 H30 V24" /> : <path d="M10 10 L30 30 M30 10 L10 30" />}
+        {kind === "work" ? <path d="M10 30 L30 10 M16 10 H30 V24" /> : <path d="M20 6 V30 M10 21 L20 32 L30 21" />}
       </svg>
     </span>
   );
@@ -50,8 +50,7 @@ export default function Timeline() {
                   <div className="tl-sign-top">
                     <Signal kind={kind} />
                     <span className="tl-status">
-                      {SIGNAL_LABEL[kind]}
-                      {kind === "wait" && p.status !== "not started" ? ` · ${p.status}` : ""}
+                      {kind === "wait" && p.status !== "not started" ? `Waiting · ${p.status}` : SIGNAL_LABEL[kind]}
                     </span>
                   </div>
                   <h3>
