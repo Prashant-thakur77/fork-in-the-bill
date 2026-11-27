@@ -166,7 +166,24 @@ export function langOf(file: string): string {
 }
 
 export function Code({ code, lang = "sh", caption, href, label }: { code: string; lang?: string; caption?: ReactNode; href?: string; label?: string }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"" | "ok" | "select">("");
+  const pre = useRef<HTMLPreElement>(null);
+  const flash = (s: "ok" | "select") => {
+    setCopied(s);
+    window.setTimeout(() => setCopied(""), s === "ok" ? 1400 : 3200);
+  };
+  // When the clipboard is not allowed, select the code so the visitor can copy it by hand.
+  const selectCode = () => {
+    const el = pre.current;
+    const sel = window.getSelection();
+    if (el && sel) {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    flash("select");
+  };
   return (
     <figure className="code">
       <div className="code-bar">
@@ -181,17 +198,15 @@ export function Code({ code, lang = "sh", caption, href, label }: { code: string
             type="button"
             className="code-copy"
             onClick={() => {
-              void navigator.clipboard?.writeText(code).then(() => {
-                setCopied(true);
-                window.setTimeout(() => setCopied(false), 1400);
-              });
+              if (!navigator.clipboard) return selectCode();
+              navigator.clipboard.writeText(code).then(() => flash("ok"), selectCode);
             }}
           >
-            {copied ? "Copied" : "Copy"}
+            <span aria-live="polite">{copied === "ok" ? "Copied" : copied === "select" ? "Selected: press Ctrl+C" : "Copy"}</span>
           </button>
         </span>
       </div>
-      <pre tabIndex={0}>
+      <pre tabIndex={0} ref={pre}>
         <code>{highlight(code, lang)}</code>
       </pre>
     </figure>

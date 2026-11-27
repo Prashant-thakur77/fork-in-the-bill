@@ -15,7 +15,7 @@ function Meter({ arm }: { arm: Arm }) {
 export function LivePanel({ cta = true }: { cta?: boolean }) {
   const live = useLiveState();
   const snap = live.kind === "ok" ? live.snapshot : null;
-  const keys = snap ? orderArms(Object.keys(snap.arms)).slice(0, 2) : ["control", "lanes_v1"];
+  const keys = orderArms(snap && snap.experiment !== "exp1" ? Object.keys(snap.arms) : [...new Set([...Object.keys(snap?.arms ?? {}), "control", "lanes_v1"])]).slice(0, 2);
 
   let note = "Connecting to the board…";
   if (live.kind === "none") note = "This build has no board API configured, so there are no live numbers here.";

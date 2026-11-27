@@ -30,7 +30,7 @@ function place(ids: string[], W: number): Placed[] {
   const lastX: number[] = [];
   return sorted.map((t) => {
     const x = xAt(W, t.v);
-    let row = lastX.findIndex((lx) => x - lx >= 30);
+    let row = lastX.findIndex((lx) => x - lx >= 46);
     if (row < 0) row = lastX.push(-Infinity) - 1;
     lastX[row] = x;
     return { ...t, row };
@@ -53,7 +53,7 @@ export function SplitLab() {
   const cars = useMemo(() => place(ids, W), [ids, W]);
   const ROAD_H = (Math.max(...cars.map((c) => c.row), 0) + 1) * ROW_H + 20;
   const H = TOP + ROAD_H + 46;
-  const plateMin = W < 1000 ? 120 : 150;
+  const plateMin = W < 1000 ? 150 : 190;
   const [split, setSplit] = useState(registered);
   const [probe, setProbe] = useState(ids[0] ?? "");
   const svg = useRef<SVGSVGElement>(null);
@@ -129,12 +129,12 @@ export function SplitLab() {
             <rect x={sx + 6} y={8} width={Math.max(0, W - 20 - sx - 6)} height={36} rx={6} className="sl-plate" />
             {sx - 26 > plateMin && (
               <text x={34} y={32} className="sl-plate-t">
-                lanes_v1 · {nV}
+                {`lanes_v1: ${nV} tasks`}
               </text>
             )}
             {W - 20 - sx > plateMin && (
               <text x={W - 34} y={32} className="sl-plate-t" textAnchor="end">
-                control · {cars.length - nV}
+                {`control: ${cars.length - nV} tasks`}
               </text>
             )}
           </g>
@@ -224,6 +224,7 @@ export function SplitLab() {
             </li>
           </ol>
         )}
+        {probeV === null && <p className="sl-empty">Type a task id, or pick one above, to see its hash and its lane.</p>}
       </div>
       <p className="sl-src">
         Real task ids from the exp1 pool (<a href={ghFile("tasks/pools/exp1.txt")}>tasks/pools/exp1.txt</a>) and Flagsmith's bucketing maths, the same as{" "}

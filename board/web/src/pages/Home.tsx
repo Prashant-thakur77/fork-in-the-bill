@@ -87,8 +87,8 @@ function prefersReducedMotionSafe(): boolean {
 }
 
 const HERO_LANES = [
-  { key: "control", x: 250, cars: 3, closed: false },
-  { key: "lanes_v1", x: 750, cars: 3, closed: false },
+  { key: "control", x: 250, cars: 4, closed: false },
+  { key: "lanes_v1", x: 750, cars: 4, closed: false },
 ];
 
 function HeroJunction() {
@@ -260,7 +260,8 @@ export default function Home() {
           .from(".hero-junction .beam", { scaleX: 0, transformOrigin: "left center", duration: 0.7, ease: "power3.inOut" }, 0.25)
           .from(".hero-junction .sign", { rotate: -3, y: -20, opacity: 0, transformOrigin: "50% 0%", duration: 1.1, ease: "elastic.out(1, 0.6)", stagger: 0.14 }, 0.6)
           .from(".hero-junction .signal", { scale: 0.6, opacity: 0, duration: 0.16, ease: "power4.out", stagger: 0.08 }, 1.15)
-          .from(".hero-junction .road .lane-centre, .hero-junction .road .road-dash", { strokeDashoffset: 400, duration: 1.2, ease: "power2.out" }, 0.5)
+          .fromTo(".hero-junction .hero-road", { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.9, ease: "power3.out", clearProps: "clipPath" }, 0.55)
+          .from(".hero-junction .road .lane-centre, .hero-junction .road .road-dash", { strokeDashoffset: 400, duration: 1.2, ease: "power2.out" }, 0.9)
           .from(".fs-gantry", { y: 16, opacity: 0, duration: 0.5 }, 0.9);
 
         // Two lanes: the lane lines draw down the page.

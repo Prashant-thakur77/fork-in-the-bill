@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { resolveApi } from "../data/useBoard";
+import { boardExperiment, resolveApi } from "../data/useBoard";
 import type { Snapshot } from "../data/types";
 
 // One shared read of the board API's /state for the pages that show a live line (the landing
@@ -22,7 +22,7 @@ function set(s: LiveState) {
 
 async function poll(base: string) {
   try {
-    const res = await fetch(`${base}/state`, { cache: "no-store" });
+    const res = await fetch(`${base}/state?experiment=${boardExperiment()}`, { cache: "no-store" });
     if (res.status === 404 || res.status === 204) return set({ kind: "ok", snapshot: null, checkedAt: Date.now() });
     if (!res.ok) throw new Error(String(res.status));
     const body = (await res.json()) as unknown;

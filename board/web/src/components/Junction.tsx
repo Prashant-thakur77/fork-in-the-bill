@@ -102,7 +102,9 @@ function Sign({ armKey, arm, board, phase, closed }: { armKey: string; arm?: Arm
 export function Junction({ board }: { board: Board }) {
   const phase = phaseOf(board);
   const s = board.snapshot;
-  const keys = orderArms(s ? Object.keys(s.arms) : DEFAULT_ARMS).slice(0, 2);
+  // Experiment 1 always has both lanes on the road, even before one of them reports a task.
+  const known = s ? Object.keys(s.arms) : [];
+  const keys = orderArms(!s || s.experiment === "exp1" ? [...new Set([...known, ...DEFAULT_ARMS])] : known).slice(0, 2);
   const winner = s?.experiment === "exp1" || !s ? board.decisions["exp1.decision.ship"] : undefined;
   const isClosed = (k: string) => phase === "rolled_out" && !!winner && k !== winner;
   const signal = (k: string): SignalKind =>

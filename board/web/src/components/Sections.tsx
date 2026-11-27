@@ -1,6 +1,10 @@
 import type { Board } from "../data/types";
 import { FlagHistory } from "./FlagHistory";
 import type { Phase } from "./Junction";
+import { repo } from "../site/data";
+
+// The registration hash is known from the repo at build time; the run's own figures fill in later.
+const PREREG_SHA = repo.hashes.find((h) => h.file === "prereg/experiment-1.md")?.sha256;
 
 type Tri = "pending" | "met" | "not met";
 
@@ -57,7 +61,7 @@ function Rule({ board }: { board: Board }) {
       </ol>
       <p className="prereg">
         Pre-registration sha256{" "}
-        <code>{f["exp1.prereg.sha256"] ? `${f["exp1.prereg.sha256"]}…` : "posts with the pre-registration tag"}</code>
+        <code className="hash-full">{PREREG_SHA ?? (f["exp1.prereg.sha256"] ? `${f["exp1.prereg.sha256"]}…` : "posts with the pre-registration tag")}</code>
       </p>
     </section>
   );
@@ -221,7 +225,7 @@ function Proof({ board }: { board: Board }) {
           <span>Fork in the Bill</span>
           <span>Run receipt · exp1</span>
         </div>
-        {line("Pre-reg sha256", f["exp1.prereg.sha256"], "…")}
+        {PREREG_SHA ? line("Pre-reg sha256", PREREG_SHA) : line("Pre-reg sha256", f["exp1.prereg.sha256"], "…")}
         {line("Merkle root", f["integrity.merkle_root"], "…")}
         {line("Task records", f["integrity.task_done_records"])}
         {line("Config snapshots", f["integrity.env_snapshots"])}

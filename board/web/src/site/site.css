@@ -64,7 +64,8 @@ a:not([class]):hover {
 
 /* the intro class only holds the hero's first frame until the load timeline starts */
 .js-intro .home-hero .hl > span,
-.js-intro .hero-junction .sign {
+.js-intro .hero-junction .sign,
+.js-intro .hero-junction .hero-road {
   visibility: hidden;
 }
 

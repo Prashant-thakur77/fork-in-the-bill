@@ -9,6 +9,7 @@ import type { Board } from "../data/types";
 import { Junction, phaseOf, type Phase } from "../components/Junction";
 import { Sections } from "../components/Sections";
 import { DUR, EASE } from "../motion";
+import { repo } from "../site/data";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -19,7 +20,7 @@ function statusText(board: Board, phase: Phase): string {
     case "awaiting":
       return `${exp} · AWAITING RUN`;
     case "running":
-      return `${exp} · RUNNING · 50/50`;
+      return exp === "EXP1" && repo.split !== null ? `${exp} · RUNNING · ${100 - repo.split}/${repo.split}` : `${exp} · RUNNING`;
     case "ended":
       return `${exp} · ENDED`;
     case "rolled_out":

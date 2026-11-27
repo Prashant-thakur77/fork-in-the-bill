@@ -16,7 +16,7 @@ const CONES_END = 300; // path length by which a closed lane's taper is behind a
 const FADE_FROM = 120; // cars fade out between these y values as they pass under the gantry
 const FADE_TO = 44;
 const SPEED = 125; // viewBox units per second
-const MIN_GAP = 112; // spacing between spawned cars, in path units
+const MIN_GAP = 98; // spacing between spawned cars, in path units
 const MAX_CARS = 5;
 
 export function lanePath(x: number): string {

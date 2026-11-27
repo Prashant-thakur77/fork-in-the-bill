@@ -32,6 +32,19 @@ export async function resolveApi(): Promise<string> {
   return (import.meta.env.VITE_BOARD_API ?? "").replace(/\/$/, "");
 }
 
+/**
+ * The experiment the site reads. The board API keeps the latest totals of every batch that posts
+ * to it (dry runs, the rollout batch, experiment 2), so the site asks for experiment 1 by name.
+ * A `?experiment=` query on the page reads another batch instead.
+ */
+export function boardExperiment(): string {
+  if (typeof window !== "undefined") {
+    const q = new URLSearchParams(window.location.search).get("experiment");
+    if (q && /^[a-z0-9_-]{1,32}$/.test(q)) return q;
+  }
+  return "exp1";
+}
+
 function isSnapshot(v: unknown): v is Snapshot {
   return !!v && typeof v === "object" && "arms" in v && "status" in v;
 }
@@ -81,8 +94,9 @@ function useLive(enabled: boolean) {
       setApi(base);
       setConnection("connecting");
       const feature = `feature=${EXPERIMENT_FLAG}`;
+      const exp = `experiment=${boardExperiment()}`;
       await Promise.all([
-        fetch(`${base}/state`, { cache: "no-store" })
+        fetch(`${base}/state?${exp}`, { cache: "no-store" })
           .then((res) => res.json())
           .then((body: unknown) => {
             if (!cancelled && isSnapshot(body)) setSnapshot(body);
@@ -101,7 +115,7 @@ function useLive(enabled: boolean) {
           }),
       ]);
       if (cancelled) return;
-      es = new EventSource(`${base}/stream?${feature}`);
+      es = new EventSource(`${base}/stream?${feature}&${exp}`);
       es.addEventListener("open", () => setConnection("open"));
       es.addEventListener("error", () => setConnection("retrying"));
       es.addEventListener("snapshot", (ev) => {
