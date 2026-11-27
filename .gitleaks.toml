@@ -34,3 +34,16 @@ regexes = [
 description = "numbers.json key paths"
 targetRules = ["generic-api-key"]
 regexes = ['''^(exp\d|pilot|rollout|spend|integrity)(\.[A-Za-z0-9_]+)+$''']
+
+# Environment snapshots (runs/<exp>/env/*.json) are Flagsmith environment documents. Their
+# `api_key` field is the environment's client-side key: Flagsmith treats it as public (it ships
+# in every browser that evaluates flags), and it is an input to the bucketing hash, so
+# integrity/verify_assignment.py needs it to re-derive each arm. Server-side keys start with
+# `ser.` and never match this pattern.
+[[allowlists]]
+description = "Client-side environment key inside committed environment snapshots"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''^runs/[^/]+/env/[^/]+\.json$''']
+regexTarget = "match"
+regexes = ['''^api_key":"[A-Za-z0-9]{20,24}"$''']

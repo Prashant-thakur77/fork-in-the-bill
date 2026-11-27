@@ -153,3 +153,9 @@ The 100-task `exp2` pool would have given about 30 valid tasks per arm, below th
 ## D27. A three-task dry run of `lanes_v2` before registration
 
 The draft-review path had never run end to end, so `lanes_v2` ran on 3 pilot tasks outside any experiment (`runs/dryrun-lanes_v2`) before experiment 2 was registered. All three ran to grading and none was solved. The registration was written with that known; the tasks are in no experiment pool and enter no analysis.
+
+## D28. Environment snapshots keep the client-side environment key
+
+Each snapshot under `runs/<exp>/env/` is the Flagsmith environment document, and it contains the environment's client-side key in `api_key`. Flagsmith treats that key as public: it is the one a browser uses to evaluate flags. It is also an input to the bucketing hash, so `integrity/verify_assignment.py` cannot re-derive an arm without it. It therefore stays in the published snapshots, and `.gitleaks.toml` allows exactly that field in exactly those files. Server-side keys (prefix `ser.`), the admin API key and every other credential stay in `.env` and CI secrets only.
+
+Anyone holding a client-side key can send identities and events to the environment, as with any public web app. If that happened during a run, Flagsmith's exposure counts and means would stop matching our own ledger; the agreement check in `analysis/results.md` (our mean cost against Flagsmith's, per arm) is there to show it.
