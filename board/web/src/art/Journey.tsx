@@ -4,6 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
 import { useGSAP } from "@gsap/react";
 import { rasterize } from "../led/font";
+import { useLiveState } from "../site/live";
 
 gsap.registerPlugin(ScrollTrigger, MotionPathPlugin, useGSAP);
 
@@ -60,15 +61,28 @@ function Car({ className, at }: { className: string; at: string }) {
   );
 }
 
+const STEP_X = [70, 374, 620, 806, 1010, 1060, 1150];
+
 export function Journey({ steps, id, compact = false }: { steps: JourneyStep[]; id: string; compact?: boolean }) {
   const root = useRef<HTMLDivElement>(null);
   const N = steps.length;
+  const live = useLiveState();
+  const arms = live.kind === "ok" ? live.snapshot?.arms : undefined;
+  const lastStep = useRef(-1);
 
   useGSAP(
     () => {
       const q = gsap.utils.selector(root);
       const mm = gsap.matchMedia();
       const setStep = (s: number) => {
+        if (s === lastStep.current) return;
+        lastStep.current = s;
+        // On narrow screens the road scrolls sideways: keep the active station in view.
+        const sc = root.current?.querySelector<HTMLElement>(".j-scroll");
+        if (sc && sc.scrollWidth > sc.clientWidth + 4) {
+          const svgW = sc.scrollWidth;
+          sc.scrollTo({ left: Math.max(0, ((STEP_X[s] ?? 0) / 1200) * svgW - sc.clientWidth / 2), behavior: "smooth" });
+        }
         q("[data-step]").forEach((el) => el.classList.toggle("is-on", Number((el as HTMLElement).dataset.step) <= s));
         q(".j-caps > li").forEach((el, i) => el.classList.toggle("is-current", i === s));
         root.current?.setAttribute("data-at", String(s));
@@ -117,6 +131,9 @@ export function Journey({ steps, id, compact = false }: { steps: JourneyStep[]; 
   return (
     <div className={`journey ${compact ? "is-compact" : ""}`} ref={root} id={id} data-at="0">
       <div className="j-stage">
+        <p className="j-hint" aria-hidden="true">
+          Swipe the road sideways <span>→</span>
+        </p>
         <div className="j-scroll" tabIndex={0} role="region" aria-label="Diagram of a task's journey, scrolls sideways on small screens">
           <svg viewBox="0 0 1200 460" className="j-svg" role="img" aria-labelledby={`${id}-title`}>
             <title id={`${id}-title`}>
@@ -157,7 +174,7 @@ export function Journey({ steps, id, compact = false }: { steps: JourneyStep[]; 
               <rect x="300" y="160" width="148" height="10" className="j-steel" />
               <rect x="292" y="104" width="164" height="54" rx="6" className="j-housing" />
               <LedText text="FLAGSMITH" x={374} y={117} pitch={2.9} />
-              <text x="374" y="98" textAnchor="middle" className="j-mono j-mono-sm">
+              <text x="374" y="330" textAnchor="middle" className="j-mono j-mono-sm">
                 hash(identity)
               </text>
             </g>
@@ -168,10 +185,20 @@ export function Journey({ steps, id, compact = false }: { steps: JourneyStep[]; 
               <text x="692" y="85" textAnchor="middle">
                 control
               </text>
+              {arms?.control && (
+                <text x="630" y="85" textAnchor="end" className="j-count">
+                  {arms.control.done} done
+                </text>
+              )}
               <rect x="640" y="370" width="120" height="34" rx="6" className="j-tab" />
               <text x="700" y="393" textAnchor="middle">
                 lanes_v1
               </text>
+              {arms?.lanes_v1 && (
+                <text x="630" y="393" textAnchor="end" className="j-count">
+                  {arms.lanes_v1.done} done
+                </text>
+              )}
             </g>
 
             {/* 4 toll gantry: events */}
@@ -218,8 +245,8 @@ export function Journey({ steps, id, compact = false }: { steps: JourneyStep[]; 
             </g>
 
             {/* step diamonds */}
-            {[70, 374, 620, 806, 1010, 1060, 1150].slice(0, N).map((x, i) => (
-              <Diamond key={i} n={i} x={x} y={i === 1 ? 70 : i === 3 ? 410 : i === 4 ? 410 : i === 5 ? 96 : i === 2 ? 230 : i === 6 ? 180 : 140} />
+            {STEP_X.slice(0, N).map((x, i) => (
+              <Diamond key={i} n={i} x={x} y={i === 1 ? 64 : i === 3 ? 410 : i === 4 ? 410 : i === 5 ? 96 : i === 2 ? 230 : i === 6 ? 180 : 140} />
             ))}
 
             <Car className="j-car-a" at={`translate(700 ${UP_Y})`} />

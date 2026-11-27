@@ -46,11 +46,11 @@ function ModeBadge({ board }: { board: Board }) {
   return <span className="badge badge-static">{board.final ? "Final numbers" : "Not started"}</span>;
 }
 
-function FlagsmithLink({ url }: { url: string }) {
+function FlagsmithLink({ url, started }: { url: string; started: boolean }) {
   if (!url) {
     return (
       <span className="fs-link is-pending" aria-disabled="true">
-        Flagsmith results <small>link posts at start</small>
+        Flagsmith results <small>{started ? "link not published yet" : "link posts at start"}</small>
       </span>
     );
   }
@@ -149,7 +149,7 @@ export default function Live() {
         </div>
         <div className="masthead-end">
           <ModeBadge board={board} />
-          <FlagsmithLink url={board.flagsmithUrl} />
+          <FlagsmithLink url={board.flagsmithUrl} started={phase !== "awaiting"} />
         </div>
       </div>
 

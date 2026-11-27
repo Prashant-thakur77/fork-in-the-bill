@@ -58,9 +58,12 @@ export default function Timeline() {
                     {p.phase}
                   </h3>
                   {p.evidence && (
-                    <p className="tl-evidence">
-                      <Md text={p.evidence} />
-                    </p>
+                    <details className="tl-evidence">
+                      <summary>Gate evidence</summary>
+                      <p>
+                        <Md text={p.evidence} />
+                      </p>
+                    </details>
                   )}
                 </div>
               </li>

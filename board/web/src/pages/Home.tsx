@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Led } from "../led/Led";
@@ -9,6 +9,10 @@ import { Link } from "../site/router";
 import { Code, Kinetic, Md, useReveals } from "../site/ui";
 import { ghFile, pct, repo } from "../site/data";
 import { LivePanel } from "../site/LivePanel";
+import { useLiveState } from "../site/live";
+import { money } from "../data/format";
+import { useTween } from "../data/useTween";
+import { prefersReducedMotion } from "../motion";
 import { JOURNEY_STEPS } from "../site/journeySteps";
 import { PY_QUICKSTART } from "../site/quickstart";
 
@@ -25,6 +29,7 @@ const amendHash = repo.hashes.find((h) => /amendment/.test(h.file));
 const ruleList = repo.prereg.decisionRule.find((b) => b.type === "list");
 const ruleItems = ruleList && ruleList.type === "list" ? ruleList.items : [];
 const split = repo.split;
+const PRICE_COLS = Math.max(30, ...[big, small].filter(Boolean).flatMap((m) => [m!.input, m!.output]).map((v) => textColumns(`$${v.toFixed(2)}`) + 4));
 
 function shortModel(id: string | undefined): string {
   return (/claude-([a-z]+)/.exec(id ?? "")?.[1] ?? "").toUpperCase();
@@ -32,28 +37,50 @@ function shortModel(id: string | undefined): string {
 
 /* ---------- hero: the junction, with steady traffic split by the Flagsmith gantry ---------- */
 
-function HeroSign({ tab, legend, sub, worker, stats }: { tab: string; legend: string; sub: string; worker: string; stats: [string, string][] }) {
+function HeroSign({ armKey, legend, sub, worker, priceIn }: { armKey: string; legend: string; sub: string; worker: string; priceIn: string }) {
+  const live = useLiveState();
+  const arm = live.kind === "ok" ? live.snapshot?.arms[armKey] : undefined;
+  const spent = useTween(arm?.usd ?? 0);
+  // Like a real message sign, the panel alternates: the worker's model, then this lane's live spend.
+  const [phase, setPhase] = useState<"model" | "spend">("model");
+  const hasArm = !!arm;
+  useEffect(() => {
+    if (!hasArm || prefersReducedMotion()) return;
+    const id = window.setInterval(() => setPhase((p) => (p === "model" ? "spend" : "model")), 4200);
+    return () => window.clearInterval(id);
+  }, [hasArm]);
+  const showSpend = hasArm && (phase === "spend" || prefersReducedMotionSafe());
+  const text = showSpend ? money(spent) : worker;
   return (
-    <article className="sign" aria-label={`${tab} lane`}>
-      <div className="sign-tab">{tab}</div>
+    <article className="sign" aria-label={`${armKey} lane`}>
+      <div className="sign-tab">{armKey}</div>
       <div className="sign-face">
         <h2 className="sign-legend">{legend}</h2>
         <p className="sign-sub">{sub}</p>
         <div className="led-housing">
-          <span className="led-caption">Worker lane model</span>
-          <Led text={worker} cols={Math.max(42, textColumns(worker) + 4)} align="center" label={`Worker lane runs on ${worker.toLowerCase()}`} />
+          <span className="led-caption">
+            {showSpend ? "Spent, live" : "Worker model"}
+            {hasArm && <i className="led-live" aria-hidden="true" />}
+          </span>
+          <Led text={text} cols={46} align="center" scan={!showSpend} label={showSpend ? `${money(arm.usd)} spent so far` : `Worker lane runs on ${worker.toLowerCase()}`} />
         </div>
         <dl className="sign-stats">
-          {stats.map(([k, v]) => (
-            <div key={k}>
-              <dt>{k}</dt>
-              <dd>{v}</dd>
-            </div>
-          ))}
+          <div>
+            <dt>Worker input, $/MTok</dt>
+            <dd>{priceIn}</dd>
+          </div>
+          <div>
+            <dt>Done, live</dt>
+            <dd>{arm ? arm.done.toLocaleString("en-US") : "—"}</dd>
+          </div>
         </dl>
       </div>
     </article>
   );
+}
+
+function prefersReducedMotionSafe(): boolean {
+  return typeof window !== "undefined" && prefersReducedMotion();
 }
 
 const HERO_LANES = [
@@ -74,26 +101,8 @@ function HeroJunction() {
           </svg>
         </div>
         <div className="signs">
-          <HeroSign
-            tab="control"
-            legend="Frontier everywhere"
-            sub="One model plans, patches and does the grunt work."
-            worker={shortModel(C?.delegate.model)}
-            stats={[
-              ["Planner", C?.mainShort ?? "—"],
-              ["Worker input, per MTok", priceIn(big)],
-            ]}
-          />
-          <HeroSign
-            tab="lanes_v1"
-            legend="Small delegate"
-            sub="Same planner. A small model does the grunt work."
-            worker={shortModel(V?.delegate.model)}
-            stats={[
-              ["Planner", V?.mainShort ?? "—"],
-              ["Worker input, per MTok", priceIn(small)],
-            ]}
-          />
+          <HeroSign armKey="control" legend="Frontier everywhere" sub="One model plans, patches and does the grunt work." worker={shortModel(C?.delegate.model)} priceIn={priceIn(big)} />
+          <HeroSign armKey="lanes_v1" legend="Small delegate" sub="Same planner. A small model does the grunt work." worker={shortModel(V?.delegate.model)} priceIn={priceIn(small)} />
         </div>
         <div className="signals" aria-hidden="true">
           {[0, 1].map((i) => (
@@ -105,15 +114,17 @@ function HeroJunction() {
           ))}
         </div>
       </div>
-      <Road lanes={HERO_LANES} />
-      <div className="fs-gantry">
-        <span className="fs-gantry-beam" aria-hidden="true" />
-        <div className="fs-gantry-panel">
-          <Led text="FLAGSMITH" cols={62} align="center" label="Flagsmith" />
+      <div className="hero-road">
+        <Road lanes={HERO_LANES} />
+        <div className="fs-gantry">
+          <span className="fs-gantry-beam" aria-hidden="true" />
+          <div className="fs-gantry-panel">
+            <Led text="FLAGSMITH" cols={62} align="center" label="Flagsmith" />
+          </div>
+          <span className="fs-gantry-cap">{split !== null ? `splits ${100 - split} / ${split}` : "splits the traffic"}</span>
         </div>
-        <span className="fs-gantry-cap">{split !== null ? `splits ${100 - split} / ${split}` : "splits the traffic"}</span>
       </div>
-      <p className="hero-art-note">Illustration. Each car is a task; each lane is an arm.</p>
+      <p className="hero-art-note">The road is an illustration: each car is a task, each lane an arm. The signs read live from the run.</p>
     </div>
   );
 }
@@ -267,16 +278,16 @@ export default function Home() {
         <div className="hero-copy">
           <h1 id="home-title" className="hero-title">
             <span className="line hl">
-              <span>Two lanes.</span>
+              <span>Can a small model</span>
             </span>
             <span className="line hl">
-              <span>One bill.</span>
+              <span>do the grunt work?</span>
             </span>
           </h1>
           <p className="lead">
             A pre-registered A/B test of a coding agent's model routing, run as a Flagsmith experiment on real bug fixes and paid for in real dollars.
           </p>
-          <p className="question">Can a small model do the agent's grunt work, cut the cost per task, and still solve as many bugs?</p>
+          <p className="question">Two lanes, one bill: does the cheaper lane cut the cost per task without solving fewer bugs?</p>
           <div className="cta-row">
             <Link to="/live" className="btn btn-dark">
               Watch the live board <span aria-hidden="true">→</span>
@@ -299,7 +310,7 @@ export default function Home() {
       <section className="hsec problem" aria-labelledby="problem-h">
         <div className="hsec-copy">
           <p className="eyebrow-sign">The problem</p>
-          <Kinetic id="problem-h" text="The frontier model reads the logs at frontier prices." />
+          <Kinetic id="problem-h" text="The frontier model reads the logs at frontier prices" />
           <p>
             A coding agent spends much of its tokens on grunt work: searching the repo, reading long files, running tests and reading what they print. When one
             frontier model does everything, that work is billed at the frontier rate.
@@ -328,10 +339,10 @@ export default function Home() {
                     {id === C?.main.model ? C?.mainShort : V?.delegateShort}
                   </span>
                   <span role="cell">
-                    <Led text={`$${p.input.toFixed(2)}`} cols={30} label={`$${p.input.toFixed(2)} input`} />
+                    <Led text={`$${p.input.toFixed(2)}`} cols={PRICE_COLS} label={`$${p.input.toFixed(2)} input`} />
                   </span>
                   <span role="cell">
-                    <Led text={`$${p.output.toFixed(2)}`} cols={30} label={`$${p.output.toFixed(2)} output`} />
+                    <Led text={`$${p.output.toFixed(2)}`} cols={PRICE_COLS} label={`$${p.output.toFixed(2)} output`} />
                   </span>
                 </div>
               );
@@ -376,7 +387,7 @@ export default function Home() {
         </div>
         <div className="hsec-copy">
           <p className="eyebrow-sign">The idea</p>
-          <Kinetic id="idea-h" text="Split the agent into two lanes." />
+          <Kinetic id="idea-h" text="Split the agent into two lanes" />
           <p>
             The planner lane reads code{repo.harness.viewMaxLines ? ` (up to ${repo.harness.viewMaxLines} lines at a time)` : ""}, writes the fix and decides
             when it is done. It has no shell. The worker lane runs the shell in the same container: searches, builds, test runs. It reports back as short JSON
@@ -417,7 +428,7 @@ export default function Home() {
       <section className="hsec journey-sec" aria-labelledby="journey-h">
         <div className="hsec-copy wide">
           <p className="eyebrow-sign">How Flagsmith runs it</p>
-          <Kinetic id="journey-h" text="One identity, one lane, one set of events." />
+          <Kinetic id="journey-h" text="How Flagsmith runs each task" />
           <p>Scroll to follow two tasks from the queue to the decision.</p>
         </div>
         <Journey steps={JOURNEY_STEPS} id="home-journey" />
@@ -432,14 +443,16 @@ export default function Home() {
       <section className="hsec rule-sec" aria-labelledby="rule-h">
         <div className="hsec-copy">
           <p className="eyebrow-sign">The rule</p>
-          <Kinetic id="rule-h" text="Written down before the first task." />
+          <Kinetic id="rule-h" text="The rule was fixed before the first task" />
           <p>
             <code>lanes_v1</code> ships only if all three hold. Otherwise control stays and the reason is published. The text below is quoted from the
             pre-registration.
           </p>
         </div>
         <div className="hsec-art">
-          <ol className="rule-list" data-reveal="row">
+          <div className="rule-gantry" aria-hidden="true" />
+          <div className="rule-sign" data-reveal="hang">
+          <ol className="rule-list">
             {ruleItems.map((t, i) => (
               <li className="rule-row is-quote" key={i}>
                 <span className="rule-n" aria-hidden="true">
@@ -451,6 +464,7 @@ export default function Home() {
               </li>
             ))}
           </ol>
+          </div>
           {preregHash && (
             <a className="reg-stamp" data-reveal="stamp" href={ghFile(preregHash.file)} rel="noopener">
               <span className="reg-k">Registered · sha256</span>
@@ -466,7 +480,7 @@ export default function Home() {
         <div className="live-sec-inner">
           <div className="hsec-copy">
             <p className="eyebrow-sign is-dark">Live now</p>
-            <Kinetic id="live-h" text="What each lane has spent so far." />
+            <Kinetic id="live-h" text="What each lane has spent so far" />
             <p>Read from the board's API as the run goes. The full board has the lanes, the signals and the flag history.</p>
           </div>
           <LivePanel />
@@ -477,19 +491,7 @@ export default function Home() {
       <section className="hsec proof-sec" aria-labelledby="proof-h">
         <div className="hsec-copy">
           <p className="eyebrow-sign">Proof</p>
-          <Kinetic id="proof-h" text="Nothing was edited after the fact." />
-          <ul className="check-list">
-            <li>
-              <b>Every finished task</b> is a record in a hash chain. Change one and every later hash breaks.
-            </li>
-            <li>
-              <b>The flag config</b> is saved through the run. One distinct hash means nobody touched it.
-            </li>
-            <li>
-              <b>Every arm</b> is recomputed offline with Flagsmith's own flag-engine{repo.versions.flagEngine ? ` ${repo.versions.flagEngine}` : ""} and must match
-              what the run recorded.
-            </li>
-          </ul>
+          <Kinetic id="proof-h" text="Anyone can check that nothing was edited" />
           <Link to="/proof" className="text-link">
             Check it yourself <span aria-hidden="true">→</span>
           </Link>
@@ -530,6 +532,18 @@ export default function Home() {
               </p>
             </div>
           </div>
+          <ul className="check-list">
+            <li>
+              <b>Every finished task</b> is a record in a hash chain. Change one and every later hash breaks.
+            </li>
+            <li>
+              <b>The flag config</b> is saved through the run. One distinct hash means nobody touched it.
+            </li>
+            <li>
+              <b>Every arm</b> is recomputed offline with Flagsmith's own flag-engine{repo.versions.flagEngine ? ` ${repo.versions.flagEngine}` : ""} and must match
+              what the run recorded.
+            </li>
+          </ul>
         </div>
       </section>
 
@@ -537,7 +551,7 @@ export default function Home() {
       <section className="hsec kit-sec" aria-labelledby="kit-h">
         <div className="hsec-copy">
           <p className="eyebrow-sign">Run it yourself</p>
-          <Kinetic id="kit-h" text="Put your own agent on the same road." />
+          <Kinetic id="kit-h" text="Put your own agent on the same road" />
           <p>
             The kit turns any agent loop into a two-lane loop driven by a Flagsmith experiment flag. It reads the policy once per task, records the exposure,
             prices every call and sends the same four events. Python and TypeScript, Flagsmith Cloud or self-hosted.
@@ -585,7 +599,7 @@ export default function Home() {
       <section className="hsec faq-sec" aria-labelledby="faq-h">
         <div className="hsec-copy">
           <p className="eyebrow-sign">Questions</p>
-          <Kinetic id="faq-h" text="Asked before anyone had to." />
+          <Kinetic id="faq-h" text="Questions people ask first" />
         </div>
         <div className="faq">
           {FAQ.map((f, i) => (

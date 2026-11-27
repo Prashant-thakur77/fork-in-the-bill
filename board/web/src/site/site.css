@@ -936,7 +936,10 @@ a:not([class]):hover {
 }
 @media (min-width: 1001px) {
   .home-hero {
-    grid-template-columns: minmax(300px, 1fr) minmax(0, 1.75fr);
+    grid-template-columns: minmax(300px, 1fr) minmax(0, 1.45fr);
+  }
+  .home-hero .hero-title {
+    font-size: clamp(44px, 3.9vw, 76px);
   }
 }
 @media (max-width: 760px) {

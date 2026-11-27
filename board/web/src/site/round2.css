@@ -1,0 +1,293 @@
+/* Second pass after critique: varied home layouts, hero order on phones, journey legibility. */
+
+/* hero */
+.hero-road {
+  position: relative;
+}
+.hero-junction .fs-gantry {
+  bottom: 3%;
+}
+.hero-junction .hero-art-note {
+  margin-top: 14px;
+  line-height: 1.45;
+}
+.led-caption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.led-live {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3bd67a;
+  box-shadow: 0 0 6px rgba(59, 214, 122, 0.8);
+  animation: blink 1.6s steps(2, jump-none) infinite;
+}
+@media (max-width: 1000px) {
+  /* phones and tablets: headline, pitch and buttons, then the junction, then the rest */
+  .home-hero .hero-copy {
+    display: contents;
+  }
+  .home-hero .hero-title {
+    order: 1;
+  }
+  .home-hero .lead {
+    order: 2;
+  }
+  .home-hero .cta-row {
+    order: 3;
+  }
+  .home-hero .hero-junction {
+    order: 4;
+    margin-top: 8px;
+  }
+  .home-hero .question {
+    order: 5;
+  }
+  .home-hero .why-link {
+    order: 6;
+  }
+}
+
+@media (max-width: 760px) {
+  .hero-junction .sign-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hero-junction .sign-stats dt {
+    font-size: 12px;
+  }
+}
+
+/* problem: copy above a full-width toll plaza band */
+.hsec.problem {
+  grid-template-columns: minmax(0, 1fr);
+}
+.problem .hsec-copy > h2 {
+  max-width: 20ch;
+}
+.problem .hsec-art {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+.problem .share {
+  margin-top: 0;
+}
+@media (max-width: 1000px) {
+  .problem .hsec-art {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* rule: one big guide sign hung from a gantry, centred, with the registration stamp */
+.hsec.rule-sec {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  text-align: center;
+}
+.rule-sec .hsec-copy {
+  align-items: center;
+}
+.rule-sec .hsec-copy > h2 {
+  max-width: 22ch;
+}
+.rule-sec .hsec-art {
+  width: min(100%, 1000px);
+  text-align: left;
+  display: grid;
+  justify-items: center;
+}
+.rule-gantry {
+  width: 100%;
+  height: 26px;
+  border-top: 9px solid var(--steel);
+  display: flex;
+  justify-content: space-around;
+}
+.rule-gantry::before,
+.rule-gantry::after {
+  content: "";
+  width: 6px;
+  height: 17px;
+  background: var(--steel);
+}
+.rule-sign {
+  width: 100%;
+  background: var(--sign);
+  color: var(--sheet);
+  border-radius: var(--r-sign);
+  padding: clamp(16px, 2.6vw, 32px);
+  box-shadow: inset 0 0 0 6px var(--sign), inset 0 0 0 9px var(--sheet);
+}
+.rule-sign .rule-row {
+  background: rgba(0, 0, 0, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(244, 245, 239, 0.35);
+  color: var(--sheet);
+}
+.rule-sign .rule-text code {
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--sheet);
+}
+
+/* proof: receipt in the middle, the checks in a row underneath */
+.hsec.proof-sec {
+  grid-template-columns: minmax(0, 1fr);
+}
+.proof-sec .hsec-copy {
+  align-items: center;
+  text-align: center;
+}
+.proof-sec .hsec-art {
+  display: grid;
+  justify-items: center;
+}
+.proof-sec .printer {
+  grid-column: auto;
+  width: min(100%, 560px);
+}
+.proof-sec .check-list {
+  max-width: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 30px;
+  text-align: left;
+}
+@media (max-width: 1000px) {
+  .proof-sec .check-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* faq: two columns of questions */
+.hsec.faq-sec {
+  grid-template-columns: minmax(0, 1fr);
+}
+.faq {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .faq {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* journey legibility */
+.journey.is-pinned {
+  justify-content: flex-start;
+  padding-top: calc(var(--header-h) + 24px);
+}
+.j-diamond rect,
+.j-rule,
+.j-tab {
+  stroke: var(--steel);
+}
+.j-diamond text {
+  fill: var(--text);
+}
+.j-label {
+  fill: var(--text);
+}
+.j-lanetab .j-count,
+.j-lanetab.is-on .j-count {
+  font: 600 15px var(--mono);
+  fill: var(--green-text);
+}
+.j-hint {
+  display: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--quiet);
+  margin-bottom: 6px;
+}
+.j-hint span {
+  display: inline-block;
+  animation: nudge 1.4s ease-in-out infinite;
+}
+@keyframes nudge {
+  50% {
+    transform: translateX(5px);
+  }
+}
+@media (max-width: 899px) {
+  .j-hint {
+    display: block;
+  }
+}
+
+/* timeline: plates above the lane line, evidence folded */
+.tl-road {
+  z-index: 0;
+}
+.tl-road::before,
+.tl-road::after {
+  z-index: -1;
+}
+.tl-km {
+  z-index: 2;
+}
+.tl-evidence {
+  margin-top: 6px;
+}
+.tl-evidence summary {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.tl-evidence p {
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+/* menu sheet labels */
+.mm-group,
+.mm-title {
+  color: #e4e6e0;
+  font-size: 15px;
+}
+
+/* page pictogram on each page sign */
+.ph-sign {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 32px;
+}
+.ph-sign > * {
+  grid-column: 1;
+}
+.ph-sign > .ph-tab {
+  justify-self: start;
+}
+.ph-picto {
+  grid-column: 2;
+  grid-row: 1 / span 4;
+  align-self: center;
+  width: clamp(110px, 13vw, 190px);
+  height: auto;
+  fill: none;
+  stroke: var(--sheet);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ph-picto .pf {
+  fill: var(--sheet);
+  stroke: none;
+}
+.ph-picto .pa {
+  stroke: var(--paint-yellow);
+}
+.ph-picto .paf {
+  fill: var(--paint-yellow);
+  stroke: none;
+}
+@media (max-width: 760px) {
+  .ph-picto {
+    display: none;
+  }
+}

@@ -5,6 +5,7 @@ import { useGSAP } from "@gsap/react";
 import { Link } from "./router";
 import { ghFile, type Block, type Snippet } from "./data";
 import { routeFor, type Route } from "./routes";
+import { Picto } from "./Picto";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -253,6 +254,7 @@ export function PageHead({ route, lead, children }: { route?: Route; path?: stri
         <span className="ph-tab">
           Exit <b>{r.exit}</b>
         </span>
+        <Picto path={r.path} />
         <Kinetic as="h1" text={r.title} className="ph-title" />
         <p className="ph-lead">{lead}</p>
         {children}
