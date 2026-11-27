@@ -393,6 +393,10 @@ Three things a careful reader will ask about:
 
 ## Architecture
 
+[![The live site: the decided result, with experiment 2's running totals on the signs](docs/img/site-home.png)](https://forkbill.prashantthakur.dev)
+
+The site at [forkbill.prashantthakur.dev](https://forkbill.prashantthakur.dev) is the same data as this repository: the [live board](https://forkbill.prashantthakur.dev/live) reads the runner's feed, the [results](https://forkbill.prashantthakur.dev/results) are filled from `numbers.json` at build, and [verify](https://forkbill.prashantthakur.dev/verify) checks a real ledger's hash chain in your browser.
+
 ```mermaid
 flowchart LR
   subgraph Tasks
