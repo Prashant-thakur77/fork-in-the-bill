@@ -441,7 +441,7 @@
     },
     "unassigned_exclusions": 0
   },
-  "generated_at": "2026-11-27T12:02:51+00:00",
+  "generated_at": "2026-11-27T12:52:20+00:00",
   "integrity": {
     "assignment": {
       "checked": 146,
@@ -478,6 +478,15 @@
         "ledger_ok": true,
         "merkle_root": "ae6dacc9f753feea842cca11c2bdc8307cbdf93e44340f430e1c3cb8461de1f1",
         "task_done_records": 2
+      },
+      "dryrun-lanes_v2": {
+        "assignment": null,
+        "env_snapshot_distinct_hashes": 0,
+        "env_snapshots": 0,
+        "ledger_errors": [],
+        "ledger_ok": true,
+        "merkle_root": "80aa2f740b3b878c945aa977c116b27c2e6f031e13ac91714544a28978d32464",
+        "task_done_records": 3
       },
       "dryrun2-control": {
         "assignment": null,
@@ -584,6 +593,29 @@
         "ledger_ok": true,
         "merkle_root": "d1f87905aa3ee71c3bd3b850223b252b7254bff41f0fe25766a43ad365f73639",
         "task_done_records": 10
+      },
+      "rollout": {
+        "assignment": {
+          "checked": 13,
+          "env_sha256": "123b897e285f5aeacb6170e87d1df7eb7a23dffb984c1152247c562c7199558b",
+          "expected_counts": {
+            "lanes_v1": 13
+          },
+          "flag_engine_version": "11.1.2",
+          "match_rate": 1.0,
+          "matched": 13,
+          "mismatched": 0,
+          "ok": true,
+          "recorded_counts": {
+            "lanes_v1": 13
+          }
+        },
+        "env_snapshot_distinct_hashes": 1,
+        "env_snapshots": 5,
+        "ledger_errors": [],
+        "ledger_ok": true,
+        "merkle_root": "735b016d232ffcd3fdd16158baccb7b8c2d764c599e60f69f6c15bcba2494384",
+        "task_done_records": 13
       }
     },
     "env_snapshot_distinct_hashes": 1,
@@ -592,11 +624,17 @@
     "merkle_root": "7ed364648c7513ef22280eaed97a2ab77e92d91b8f88f5bbfab08d747a989929",
     "task_done_records": 146
   },
-  "source_commit": "5dd9fe93e247a93360a332e8391b66318f16d616",
+  "rollout": {
+    "cost_mean": 0.0368690323076923,
+    "n": 13,
+    "solve_rate": 0.5384615384615384
+  },
+  "source_commit": "27d077f77e1e9b4120566fa4908000fd1c6e745e",
   "spend": {
     "by_experiment": {
       "dryrun-control": 0.145731,
       "dryrun-lanes_v1": 0.1090645,
+      "dryrun-lanes_v2": 0.12133816,
       "dryrun2-control": 0.025066,
       "dryrun3-control": 0.1175737,
       "dryrun3-lanes_v1": 0.1170176,
@@ -606,8 +644,9 @@
       "dryrun5-lanes_v1": 0.08563501,
       "exp1": 8.52280271,
       "pilot-control": 1.0289408,
-      "pilot-lanes_v1": 0.67199201
+      "pilot-lanes_v1": 0.67199201,
+      "rollout": 0.47929742
     },
-    "total_usd": 11.26689333
+    "total_usd": 11.86752891
   }
 }

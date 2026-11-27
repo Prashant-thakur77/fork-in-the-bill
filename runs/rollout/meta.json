@@ -1,0 +1,12 @@
+{
+ "experiment": "rollout",
+ "pool_file": [
+  "tasks/pools/rollout.jsonl.gz"
+ ],
+ "pool_sha256": {
+  "tasks/pools/rollout.jsonl.gz": "ffd0c2b998f392333e33b7f1f7b27932e183aca92fdb718fbd4f63e66035291d"
+ },
+ "force_policy": null,
+ "started_at": "2026-11-27T12:05:49.036+00:00",
+ "flagsmith_experiment_id": null
+}

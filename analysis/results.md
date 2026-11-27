@@ -7,7 +7,7 @@ Every figure in the block below comes from `analysis/out/numbers.json` and is fi
 
 Merkle root over <!--n:integrity.task_done_records:int-->146<!--/n--> `task_done` records: <!--n:integrity.merkle_root:hash12-->7ed364648c75<!--/n-->.
 
-Total model spend: <!--n:spend.total_usd:usd2-->$11.27<!--/n-->.
+Total model spend: <!--n:spend.total_usd:usd2-->$11.87<!--/n-->.
 
 ## Experiment `exp1`
 
@@ -60,6 +60,16 @@ Variance reduction from the pilot-trained cost covariate: <!--n:exp1.cuped.varia
 
 ### By trait
 
+#### `created_month`
+
+| level | `control` n | `control` solve rate | `control` mean cost | `lanes_v1` n | `lanes_v1` solve rate | `lanes_v1` mean cost |
+|---|---|---|---|---|---|---|
+| `2026-03` | <!--n:exp1.by_trait.created_month.2026-03.control.n:int-->9<!--/n--> | <!--n:exp1.by_trait.created_month.2026-03.control.solve_rate:prob1-->22.2%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-03.control.cost_mean:usd4-->$0.0810<!--/n--> | <!--n:exp1.by_trait.created_month.2026-03.lanes_v1.n:int-->12<!--/n--> | <!--n:exp1.by_trait.created_month.2026-03.lanes_v1.solve_rate:prob1-->50.0%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-03.lanes_v1.cost_mean:usd4-->$0.0273<!--/n--> |
+| `2026-04` | <!--n:exp1.by_trait.created_month.2026-04.control.n:int-->10<!--/n--> | <!--n:exp1.by_trait.created_month.2026-04.control.solve_rate:prob1-->40.0%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-04.control.cost_mean:usd4-->$0.0774<!--/n--> | <!--n:exp1.by_trait.created_month.2026-04.lanes_v1.n:int-->14<!--/n--> | <!--n:exp1.by_trait.created_month.2026-04.lanes_v1.solve_rate:prob1-->35.7%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-04.lanes_v1.cost_mean:usd4-->$0.0342<!--/n--> |
+| `2026-05` | <!--n:exp1.by_trait.created_month.2026-05.control.n:int-->1<!--/n--> | <!--n:exp1.by_trait.created_month.2026-05.control.solve_rate:prob1-->0.0%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-05.control.cost_mean:usd4-->$0.0775<!--/n--> | <!--n:exp1.by_trait.created_month.2026-05.lanes_v1.n:int-->0<!--/n--> | <!--n:exp1.by_trait.created_month.2026-05.lanes_v1.solve_rate:prob1-->n/a<!--/n--> | <!--n:exp1.by_trait.created_month.2026-05.lanes_v1.cost_mean:usd4-->n/a<!--/n--> |
+| `2026-06` | <!--n:exp1.by_trait.created_month.2026-06.control.n:int-->2<!--/n--> | <!--n:exp1.by_trait.created_month.2026-06.control.solve_rate:prob1-->50.0%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-06.control.cost_mean:usd4-->$0.0776<!--/n--> | <!--n:exp1.by_trait.created_month.2026-06.lanes_v1.n:int-->3<!--/n--> | <!--n:exp1.by_trait.created_month.2026-06.lanes_v1.solve_rate:prob1-->66.7%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-06.lanes_v1.cost_mean:usd4-->$0.0512<!--/n--> |
+| `2026-07` | <!--n:exp1.by_trait.created_month.2026-07.control.n:int-->54<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.control.solve_rate:prob1-->50.0%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.control.cost_mean:usd4-->$0.0782<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.lanes_v1.n:int-->40<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.lanes_v1.solve_rate:prob1-->37.5%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.lanes_v1.cost_mean:usd4-->$0.0346<!--/n--> |
+
 #### `difficulty`
 
 | level | `control` n | `control` solve rate | `control` mean cost | `lanes_v1` n | `lanes_v1` solve rate | `lanes_v1` mean cost |
@@ -80,14 +90,4 @@ Variance reduction from the pilot-trained cost covariate: <!--n:exp1.cuped.varia
 | `js` | <!--n:exp1.by_trait.language.js.control.n:int-->7<!--/n--> | <!--n:exp1.by_trait.language.js.control.solve_rate:prob1-->14.3%<!--/n--> | <!--n:exp1.by_trait.language.js.control.cost_mean:usd4-->$0.0677<!--/n--> | <!--n:exp1.by_trait.language.js.lanes_v1.n:int-->3<!--/n--> | <!--n:exp1.by_trait.language.js.lanes_v1.solve_rate:prob1-->33.3%<!--/n--> | <!--n:exp1.by_trait.language.js.lanes_v1.cost_mean:usd4-->$0.0280<!--/n--> |
 | `rust` | <!--n:exp1.by_trait.language.rust.control.n:int-->13<!--/n--> | <!--n:exp1.by_trait.language.rust.control.solve_rate:prob1-->23.1%<!--/n--> | <!--n:exp1.by_trait.language.rust.control.cost_mean:usd4-->$0.1122<!--/n--> | <!--n:exp1.by_trait.language.rust.lanes_v1.n:int-->8<!--/n--> | <!--n:exp1.by_trait.language.rust.lanes_v1.solve_rate:prob1-->25.0%<!--/n--> | <!--n:exp1.by_trait.language.rust.lanes_v1.cost_mean:usd4-->$0.0444<!--/n--> |
 | `ts` | <!--n:exp1.by_trait.language.ts.control.n:int-->1<!--/n--> | <!--n:exp1.by_trait.language.ts.control.solve_rate:prob1-->100.0%<!--/n--> | <!--n:exp1.by_trait.language.ts.control.cost_mean:usd4-->$0.0542<!--/n--> | <!--n:exp1.by_trait.language.ts.lanes_v1.n:int-->1<!--/n--> | <!--n:exp1.by_trait.language.ts.lanes_v1.solve_rate:prob1-->0.0%<!--/n--> | <!--n:exp1.by_trait.language.ts.lanes_v1.cost_mean:usd4-->$0.0303<!--/n--> |
-
-#### `created_month`
-
-| level | `control` n | `control` solve rate | `control` mean cost | `lanes_v1` n | `lanes_v1` solve rate | `lanes_v1` mean cost |
-|---|---|---|---|---|---|---|
-| `2026-03` | <!--n:exp1.by_trait.created_month.2026-03.control.n:int-->9<!--/n--> | <!--n:exp1.by_trait.created_month.2026-03.control.solve_rate:prob1-->22.2%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-03.control.cost_mean:usd4-->$0.0810<!--/n--> | <!--n:exp1.by_trait.created_month.2026-03.lanes_v1.n:int-->12<!--/n--> | <!--n:exp1.by_trait.created_month.2026-03.lanes_v1.solve_rate:prob1-->50.0%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-03.lanes_v1.cost_mean:usd4-->$0.0273<!--/n--> |
-| `2026-04` | <!--n:exp1.by_trait.created_month.2026-04.control.n:int-->10<!--/n--> | <!--n:exp1.by_trait.created_month.2026-04.control.solve_rate:prob1-->40.0%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-04.control.cost_mean:usd4-->$0.0774<!--/n--> | <!--n:exp1.by_trait.created_month.2026-04.lanes_v1.n:int-->14<!--/n--> | <!--n:exp1.by_trait.created_month.2026-04.lanes_v1.solve_rate:prob1-->35.7%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-04.lanes_v1.cost_mean:usd4-->$0.0342<!--/n--> |
-| `2026-05` | <!--n:exp1.by_trait.created_month.2026-05.control.n:int-->1<!--/n--> | <!--n:exp1.by_trait.created_month.2026-05.control.solve_rate:prob1-->0.0%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-05.control.cost_mean:usd4-->$0.0775<!--/n--> | <!--n:exp1.by_trait.created_month.2026-05.lanes_v1.n:int-->0<!--/n--> | <!--n:exp1.by_trait.created_month.2026-05.lanes_v1.solve_rate:prob1-->n/a<!--/n--> | <!--n:exp1.by_trait.created_month.2026-05.lanes_v1.cost_mean:usd4-->n/a<!--/n--> |
-| `2026-06` | <!--n:exp1.by_trait.created_month.2026-06.control.n:int-->2<!--/n--> | <!--n:exp1.by_trait.created_month.2026-06.control.solve_rate:prob1-->50.0%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-06.control.cost_mean:usd4-->$0.0776<!--/n--> | <!--n:exp1.by_trait.created_month.2026-06.lanes_v1.n:int-->3<!--/n--> | <!--n:exp1.by_trait.created_month.2026-06.lanes_v1.solve_rate:prob1-->66.7%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-06.lanes_v1.cost_mean:usd4-->$0.0512<!--/n--> |
-| `2026-07` | <!--n:exp1.by_trait.created_month.2026-07.control.n:int-->54<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.control.solve_rate:prob1-->50.0%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.control.cost_mean:usd4-->$0.0782<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.lanes_v1.n:int-->40<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.lanes_v1.solve_rate:prob1-->37.5%<!--/n--> | <!--n:exp1.by_trait.created_month.2026-07.lanes_v1.cost_mean:usd4-->$0.0346<!--/n--> |
 <!--results:end-->

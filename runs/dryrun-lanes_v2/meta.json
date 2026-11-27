@@ -1,0 +1,12 @@
+{
+ "experiment": "dryrun-lanes_v2",
+ "pool_file": [
+  "tasks/pools/pilot.jsonl.gz"
+ ],
+ "pool_sha256": {
+  "tasks/pools/pilot.jsonl.gz": "3013e46a0d6af8769e440429ac80b706ad914736d82f6f9e36b1ca56cfb8e433"
+ },
+ "force_policy": "lanes_v2",
+ "started_at": "2026-11-27T12:10:14.025+00:00",
+ "flagsmith_experiment_id": null
+}
