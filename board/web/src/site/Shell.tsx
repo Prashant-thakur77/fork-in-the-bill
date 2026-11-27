@@ -69,7 +69,7 @@ export const PAGES: Record<string, ComponentType> = {
   "/results": merged(Results, "The results", [{ C: Rollout, id: "end-experiment", label: "The rollout on the same flag" }]),
   "/experiment-2": Experiment2,
   "/method": merged(Method, "The method", [{ C: HowItWorks, id: "how-it-works", label: "How the agent works" }]),
-  "/flagsmith": merged(WhyFlagsmith, "Why Flagsmith is the core", [{ C: FlagsmithUses, id: "features", label: "Every feature used" }]),
+  "/flagsmith": merged(WhyFlagsmith, "Why it is the core", [{ C: FlagsmithUses, id: "features", label: "Every feature used" }]),
   "/different": Different,
   "/scale": Scale,
   "/verify": merged(Verify, "Check it in your browser", [{ C: Proof, id: "run-receipt", label: "The receipt and the commands" }]),

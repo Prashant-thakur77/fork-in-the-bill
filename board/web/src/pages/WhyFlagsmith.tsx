@@ -170,7 +170,7 @@ export default function WhyFlagsmith() {
         route={pageMeta("/why-flagsmith")}
         lead={
           <>
-            This is a Flagsmith experiment, not a script with a Flagsmith call in it. Flagsmith decides every arm, records every exposure, measures the outcome
+            Why it is the core: this is a Flagsmith experiment, not a script with a Flagsmith call in it. Flagsmith decides every arm, records every exposure, measures the outcome
             and carries the rollout. Take it away and none of the result can be checked.
           </>
         }

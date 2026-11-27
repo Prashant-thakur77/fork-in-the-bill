@@ -73,7 +73,7 @@ const DRAFTS: Draft[] = [
   {
     path: "/flagsmith",
     label: "Flagsmith",
-    title: "Flagsmith, the core",
+    title: "Flagsmith",
     description: "Flagsmith picks every arm, records every exposure, measures the result and rolls out the winner. Why the experiment cannot run without it, and every feature used, with the code.",
     group: "main",
     menu: "flagsmith",
@@ -185,8 +185,8 @@ const PART_DRAFTS: Draft[] = [
   },
   {
     path: "/why-flagsmith",
-    label: "Why Flagsmith",
-    title: "Why Flagsmith is the core",
+    label: "Flagsmith",
+    title: "Flagsmith",
     description: "Flagsmith picks every arm, records every exposure, measures the result and rolls out the winner. Without it the experiment cannot be checked.",
     group: "none",
     menu: "flagsmith",
