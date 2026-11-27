@@ -13,7 +13,8 @@ runs/<exp>/                 exp is one of: dryrun, pilot, exp1, rollout, exp2
   exclusions.jsonl          {identity, reason, attempts}
   env/                      <nnn>-<label>.json from `flagsmith environment document --json` (000-start.json, ...)
   meta.json                 {experiment, pool_file, pool_sha256, force_policy, flagsmith_experiment_id, started_at}
-runs/raw/                   transcripts and test logs (gitignored, published as a release asset)
+runs/raw/                   working copies of transcripts and test logs (gitignored)
+runs/<exp>/transcripts/     the raw planner transcript and graded patch of every task attempt, published for exp1 and rollout
 ```
 
 `runs/<exp>/*.jsonl` are committed after a run. `analysis/to_parquet.py` turns them into `analysis/out/parquet/<exp>/*.parquet`.
