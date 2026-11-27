@@ -139,3 +139,17 @@ Flagsmith reports no inference for a metric until each variant has 50 identities
 ## D24. The live board shows running totals per arm
 
 The board at https://forkbill.prashantthakur.dev went live at 05:55Z on 2026-11-27, with exp1 89 tasks in. From then on it shows each arm's tasks, solves and spend as the run goes, so the operator sees interim figures too. This can't move the result: the decision rule, the margin, the pools and the stopping rule (every task in both pools done, excluded or invalid) are fixed in the registration, and there is no early stop. The verdict section stays empty until the analysis script runs at the end.
+
+## D25. Ending experiment 1 and making the winner the flag's own value
+
+Experiment 822 was ended through the API at 12:05Z on 2026-11-27 with `rollout_decision=variant` and `rollout_variant` set to the `lanes_v1` option (`POST .../experiments/822/complete/`). Flagsmith applies that by setting the variant's weight to 100% on the environment default and removing the experiment's segment override, so the flag served the `lanes_v1` policy to every identity through a variant weight. The rollout batch ran in that state.
+
+Before experiment 2 was created, the environment value of `agent_routing` was set to the `lanes_v1` policy itself and both variant weights to 0 (`flagsmith flag update agent_routing --value ... --weight lanes_v1=0,lanes_v2=0`). Every identity got the same policy before and after; the change makes the rolled-out winner the flag's own value, which is what experiment 2's control arm is. No experiment was running at the time. `flagsmith/create_experiment.sh` now checks the template's control value against the environment value instead of the project default, because after a rollout the two differ.
+
+## D26. Experiment 2's pool reaches back before March 2026
+
+The 100-task `exp2` pool would have given about 30 valid tasks per arm, below the 50 identities per variant Flagsmith needs before it shows a verdict (D22). `exp2b` adds 110 tasks: the 58 pre-cutoff tasks left after `exp1b`, then 52 tasks created before 2026-03-01, drawn in a separately seeded order from the same stratum. Older tasks are more likely to have been seen in training. Assignment is random, so that affects both arms alike, and `created_month` is reported per arm. The pool was fixed in `prereg/experiment-2.md` before the first task ran.
+
+## D27. A three-task dry run of `lanes_v2` before registration
+
+The draft-review path had never run end to end, so `lanes_v2` ran on 3 pilot tasks outside any experiment (`runs/dryrun-lanes_v2`) before experiment 2 was registered. All three ran to grading and none was solved. The registration was written with that known; the tasks are in no experiment pool and enter no analysis.
