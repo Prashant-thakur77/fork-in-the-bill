@@ -588,9 +588,6 @@
   border-radius: var(--r-small);
   border: 2px dashed var(--line);
   color: var(--quiet);
-  text-decoration: line-through;
-  text-decoration-thickness: 2px;
-  text-decoration-color: var(--steel);
 }
 .sr-arrow {
   font-weight: 900;
@@ -929,4 +926,9 @@
   .pf-step code {
     font-size: 12px;
   }
+}
+
+/* links on asphalt bands read in sheet white, never in sign green */
+.live-sec .hsec-copy a:not(.btn) {
+  color: var(--sheet);
 }
