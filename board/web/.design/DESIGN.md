@@ -52,3 +52,87 @@ Masthead (wordmark, VMS status LED, mode badge: Live / Not started / Final numbe
 
 ## States
 Awaiting run: signals dark, LED `$---.--`, stats dashes, verdict/exp2/receipt read "pending". Running, ended (yellow X both lanes), rolled out (winner green arrow, loser red X + cones + plate). Replay: orange "Replay · fixture data" badge and an orange-outlined control bar (play, pause, scrub).
+
+---
+
+# The site around the board
+
+The board became one page (`/live`) of a multi-page site. Same taste, tokens, type and motion vocabulary; the junction world is extended, not replaced. Dials for the story pages: CRAZINESS 7, MOTION 7, DENSITY 5, ART 7, PLAY 4, CALM 7. Content pages run quieter (MOTION 4): signs hang in, headings rise, nothing moves while it is being read.
+
+## Pages and structure
+Each route is prerendered to its own HTML file at build (`scripts/prerender.mjs`), so every page reads without JavaScript and deep links survive a reload. The Worker serves `/x` from `x.html` and unknown paths from `404.html`. After load, a small router (`src/site/router.tsx`) swaps pages in place.
+
+| Path | Sign | Purpose | Art |
+|---|---|---|---|
+| `/` | Exit 0 | Story page: what, why, how, the rule, live teaser, proof, kit, FAQ | hero junction with traffic and the Flagsmith gantry; task-journey road |
+| `/live` | Exit 1 | The board, unchanged in behaviour | junction, LED meters, signals, flag history |
+| `/how-it-works` | Exit 2 | The two-lane harness, caps, grading | harness plan: two lanes in a container, ramps, grading box |
+| `/why-flagsmith` | Exit 3 | Why the experiment cannot exist without Flagsmith | task-journey road (full), open lane vs closed lane comparison |
+| `/method` | Exit 4 | Prereg, rule, margin, power, pools, amendment | hash plates, margin stamp |
+| `/results` | Exit 5 | Verdict, or the work-zone "run in progress" state | work-zone board, live panel on asphalt |
+| `/flagsmith` | Exit 6 | Every Flagsmith feature used, with code | code housings |
+| `/proof` | Exit 7 | Receipt and the commands to check it | receipt printer |
+| `/kit` | Exit 8 | Python and TypeScript quickstart, modes, self-hosting | step plates |
+| `/timeline` | Exit 9 | PROGRESS.md as a road with a sign per phase | vertical road, lane-use signal per phase, mileposts |
+| `/decisions` | Exit 10 | DECISIONS.md, indexed | index plates |
+| `/glossary` | Exit 11 | Plain definitions | letter plates |
+| 404 | ? | Wrong exit | work-zone board, barricade, LED "WRONG EXIT" |
+
+Navigation: five main items (Live board, How it works, Why Flagsmith, Method, Results) and "More" (a hung green panel listing the rest). Footer columns: The experiment, Evidence, Build your own, Source.
+
+Every page opens with the **page sign**: breadcrumbs, a steel gantry, a green guide sign with a yellow "Exit n" tab, the title (kinetic) and one plain sentence of purpose. Long pages add an "On this page" list (sticky on desktop, a box on mobile) with a yellow bar on the current section.
+
+## Content rule
+Every number on the site is read at build time from a repo file (`scripts/repo-data.mjs`: prereg, HASHES.txt, power.json, pilot.json, manifest.json, policies, pricing.json, uv.lock, numbers.json when present) or live from the board API. Code snippets are cut from the source files by anchor; a moved anchor fails the build. Results stay empty until `analysis/out/numbers.json` exists.
+
+## Added tokens (src/site/site.css)
+| Token | Value | Use |
+|---|---|---|
+| `--t-h1` | `clamp(40px, 5.6vw, 92px)` (40 / 81) | page-sign titles, 900, lh 0.95, -0.035em |
+| `--t-h2s` | `clamp(30px, 3.6vw, 56px)` (30 / 52) | story and doc section heads, 900, lh 1 |
+| `--t-h3` | `clamp(19px, 1.5vw, 23px)` (19 / 22) | sub-heads, 800 |
+| `--header-h` | 68px (60px under 760) | sticky header |
+| `--maxw` | 1320px | content pages |
+| z layers | header 40, menu 60, wipe 80 | |
+Fallback face "Overpass Fallback" (Arial with size-adjust 103%, ascent 86%, descent 36%) so text does not shift when Overpass loads; the latin Overpass file is preloaded.
+
+## Logo
+The mark is a guide-sign plate (green, white inset border) with a road that forks into two lanes, each ending in a sign arrowhead. It is the favicon, the header mark (34px) and the footer mark (88px). Drawn in code (`src/site/Logo.tsx`), so tokens recolour it.
+Motion set (from the world's action, split):
+- **Reveal** (header, on load, about 1.2 s): plate hung (clip from top, 450 ms expo.out), border draws (600 ms), trunk draws up (250 ms), both lanes draw (400 ms), arrowheads snap (160 ms power4.out, 40 ms stagger), then one amber task token runs up the trunk and takes a lane.
+- **Hover / focus**: a token runs again and takes the other lane each time: the 50/50 split.
+- **Idle** (footer only): the same run every 8 s while visible, paused off-screen.
+- **Reduced motion**: the still mark.
+Favicons (svg, 32, 180, 192, 512) and the share images are rendered from the same paths at build.
+
+## Motion score: home page
+Easings and durations are the board's: snap 160 ms `power4.out`, ui 320 ms, reveal 800 ms `expo.out`, show 1.6 s; signs swing in with `elastic.out(1, 0.6)` (the sign settling on its hangers). Vehicles and lane dashes are linear.
+| Region | Entrance | Scroll | Idle life | Response | Exit |
+|---|---|---|---|---|---|
+| Header | logo reveal | hides going down (240 ms ease-in), returns going up (320 ms ease-out); hairline once scrolled | — | yellow bar slides to the active link (420 ms) | — |
+| Hero | headline lines rise from masks (80 ms stagger), copy follows, gantry beam extends, signs swing in (140 ms stagger), signals snap, road paints | — | cars stream at constant speed and split at the Flagsmith gantry (illustration, labelled) | magnetic-free buttons press to 0.97 | traffic pauses off-screen |
+| Problem | heading words rise; LED prices scan in row by row | — | — | — | — |
+| Share bars | fill to the pilot's worker share (1.4 s power3.out), once | — | — | — | — |
+| Two lanes | lane cards hang in one by one; the policy diff sits still to be read | — | — | — | — |
+| Journey | heading rises | **pinned on desktop**: scroll drives two task tokens from the queue through the Flagsmith gantry into their lanes, events rise at the toll gantry, results sign lights, rule diamonds light, signals turn, rollout arrow; one caption at a time. On phones the diagram scrolls sideways and the scrub runs without a pin | — | — | — |
+| Rule | rows hang in; the "Registered · sha256" stamp lands with a press | — | — | — | — |
+| Live teaser | asphalt band; LED meters roll to the API's values (0.9 s) | — | live status refreshes every minute | — | — |
+| Proof | the receipt prints out of its slot (18 steps, 1.4 s) | — | — | — | — |
+| Kit | — | — | — | tab bar slides between Python and TypeScript (360 ms) | — |
+| FAQ | — | — | — | diamond icon turns to a green check state; answer slides 6 px | — |
+| Closing | the Next-exit sign swings in | — | arrow nudges toward the exit while visible | — | — |
+| Lane rail | — | a yellow dashed lane line in the left margin paints with scroll (desktop) | — | — | — |
+
+**Signature moment** stays the rollout lane closure on the board. The site's second showpiece is the pinned task journey (desktop); mobile fallback is the unpinned scrub; reduced motion shows the finished still with every step lit and every caption listed.
+
+**Page transition: lane change.** An asphalt panel with a slanted dashed lane line sweeps in from the left (260 ms power2.in), the page swaps underneath and scrolls to top, focus moves to `main`, then the panel leaves to the right (340 ms power3.out) while the lane line shifts over. Reduced motion: instant swap.
+
+**Menu (under 1180px).** Full-screen asphalt sheet with one painted lane line, growing as a circle from the menu button (500 ms expo.out); links rise from masks with exit numbers (35 ms stagger); closes in 260 ms. Focus is trapped, Esc closes and returns focus, the page behind stops scrolling.
+
+**Footer finale.** A steel gantry carries the green EXIT sign (big logo, idle token run, "Watch the live board", "Back to the start"); it swings in on its hangers. Below it, the road: a white edge line, lane dashes that run faster while the visitor scrolls and settle back to cruising, and the wordmark painted as road lettering (vertically stretched, white thermoplastic) whose letters rise from masks one by one. A yellow edge line closes the road. Then the link columns, the live run status from the API, the hackathon line and the build commit.
+
+**Reduced motion.** No travel, scrub, pin, wipe, token runs or swings. Content and live numbers still update; the journey shows its final state.
+
+## Art added
+Task-journey road (plan view: queue cards, Flagsmith gantry with LED, fork, lane tabs, toll gantry with event plates, results sign, rule diamonds, lane signal, rollout arrow, numbered yellow diamonds). Harness plan (dashed container, two lanes, delegate and findings ramps with amber plates, grading box with tick). Timeline road (vertical asphalt, yellow kilometre plates, lane-use signals per phase). Work-zone states for results-pending and 404. Share images: the page sign with its title on an amber LED panel.
+Art stops at dense content: decision text, tables and code sit on plain surfaces.

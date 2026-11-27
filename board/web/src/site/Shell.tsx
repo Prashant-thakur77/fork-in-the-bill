@@ -15,6 +15,9 @@ import Results from "../pages/Results";
 import FlagsmithUses from "../pages/FlagsmithUses";
 import Proof from "../pages/Proof";
 import Kit from "../pages/Kit";
+import Timeline from "../pages/Timeline";
+import Decisions from "../pages/Decisions";
+import Glossary from "../pages/Glossary";
 import NotFound from "../pages/NotFound";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -29,6 +32,9 @@ export const PAGES: Record<string, ComponentType> = {
   "/flagsmith": FlagsmithUses,
   "/proof": Proof,
   "/kit": Kit,
+  "/timeline": Timeline,
+  "/decisions": Decisions,
+  "/glossary": Glossary,
   "/404": NotFound,
 };
 
