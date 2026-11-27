@@ -6,6 +6,8 @@ A pre-registered Flagsmith experiment on a coding agent's model routing: does ha
 [![licence: MIT](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 [![live site](https://img.shields.io/badge/live-forkbill.prashantthakur.dev-black.svg)](https://forkbill.prashantthakur.dev)
 
+**Read it:** [paper (PDF)](docs/paper.pdf) · [slide deck (PDF)](docs/deck.pdf) · [live site](https://forkbill.prashantthakur.dev) · [full results](analysis/results.md)
+
 ![The Fork in the Bill site: the routing junction and the live arm totals](docs/img/site-home.png)
 
 Result in one line: with the delegate lane on Haiku (`lanes_v1`), the agent spent <!--n:exp1.arms.lanes_v1.cost_per_solve:usd4-->$0.0837<!--/n--> per solved task against <!--n:exp1.arms.control.cost_per_solve:usd4-->$0.1753<!--/n--> for all-Sonnet `control` (<!--n:exp1.delta.cost_per_solve_pct:pct1-->−52.2%<!--/n-->), measured on <!--n:exp1.arms.control.n_analysed:int-->76<!--/n--> control and <!--n:exp1.arms.lanes_v1.n_analysed:int-->69<!--/n--> lanes_v1 real SWE-bench-Live tasks. Shipped by the pre-registered rule: <!--n:exp1.decision.ship:str-->lanes_v1<!--/n-->.
