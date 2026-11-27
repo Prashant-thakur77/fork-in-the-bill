@@ -131,3 +131,7 @@ Validating a task means building it and running its tests with the gold patch. T
 ## D22. Experiment 1 grows by amendment to clear Flagsmith's 50-per-variant floor
 
 Flagsmith reports no inference for a metric until each variant has 50 identities (`RESULTS_MIN_IDENTITIES_PER_VARIANT` in the Flagsmith API source). The fresh pool would give about 43 per arm, so the decision rule's Flagsmith condition could never pass. `prereg/experiment-1-amendment-1.md` adds the next 80 pre-cutoff tasks from the same seeded order. It was written after three tasks had finished, and before any result per arm had been seen. The fresh tier is still reported on its own. Experiment 2 is sized from the start to clear the floor.
+
+## D23. Flags as code are read-only during an experiment
+
+`infra/flagsmith/` describes the flags, the lanes_v1 variant, the environment defaults and the experiment's segment override as Terraform, but it is only ever planned, never applied. An apply in the middle of a run would publish new feature-state versions on the flag the experiment is splitting, and could reset parts the provider cannot express (the variant key and the per-segment weights) that the CLI scripts set. So the scripts in `flagsmith/` stay the only writers, and `make flags-drift` runs a read-only plan that must report no changes. Each check can be appended to the run's ledger as a `config` record with the plan's hash, so the ledger shows that the flag configuration matched the committed code during the run.

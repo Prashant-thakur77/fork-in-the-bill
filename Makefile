@@ -9,7 +9,7 @@ REDIS_IMAGE := redis:8.12.0-alpine@sha256:5af80107c1eeecb484a2269b80a26d12bfa652
 ENV := set -a; [ -f .env ] && . ./.env; set +a;
 
 .PHONY: help setup check test lint services-up services-down pools validate flagsmith-setup smoke \
-        dryrun pilot power exp1 rollout exp2 analyse verify board-seed infra-up infra-down infra-ssh
+        dryrun pilot power exp1 rollout exp2 analyse verify board-seed infra-up infra-down infra-ssh flags-drift
 
 help: ## List targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-16s %s\n", $$1, $$2}'
@@ -82,6 +82,9 @@ verify: ## Re-check the hash-chained ledgers and print the Merkle roots
 
 board-seed: ## Write final numbers into the board's static seed
 	cd board/web && npm run seed -- ../../analysis/out/numbers.json
+
+flags-drift: ## Read-only plan of the live Flagsmith flags against infra/flagsmith (LEDGER=runs/<exp>/ledger.jsonl to record)
+	bash infra/flagsmith/drift.sh $(if $(LEDGER),--ledger $(LEDGER))
 
 infra-up: ## Create the EC2 runner (billable)
 	@test -f $(INFRA_DIR)/terraform.tfvars || { echo "copy infra/terraform.tfvars.example to infra/terraform.tfvars first"; exit 1; }

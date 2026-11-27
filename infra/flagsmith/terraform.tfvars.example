@@ -1,0 +1,3 @@
+# Copy to terraform.tfvars (gitignored). drift.sh fills both values itself when this file is absent.
+project_uuid    = "<project uuid from GET api/v1/projects/56673/>"
+environment_key = "<client-side environment key, as in flagsmith.json>"
