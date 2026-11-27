@@ -214,3 +214,48 @@ def test_extract_summary_handles_unknown_shapes() -> None:
     assert s.solve_rate_status == "unknown"
     s = extract_summary({"results": {"task_cost": {}}, "metric_name": "x"})
     assert s.cost_mean_by_variant == {}
+
+
+def test_by_tier_splits_on_created_month_and_keeps_counts() -> None:
+    import numpy as np
+
+    from analysis.analyse import ArmData, by_tier
+
+    def arm(variant: str, months: list[str], solved: list[int]) -> ArmData:
+        rows = [
+            {"trait_created_month": mo, "solved": bool(s), "usd": 0.1 if variant == "control" else 0.05}
+            for mo, s in zip(months, solved, strict=True)
+        ]
+        return ArmData(
+            variant=variant,
+            cost=np.array([r["usd"] for r in rows], dtype=np.float64),
+            solved=np.array(solved, dtype=np.float64),
+            rows=rows,
+        )
+
+    months = ["2026-07", "2026-08", "2026-04", "2026-06"]
+    out = by_tier(arm("control", months, [1, 0, 1, 1]), arm("lanes_v1", months, [1, 1, 0, 0]), m=0.2, seed=1)
+    assert out["fresh"]["control"]["n"] == 2 and out["pre_cutoff"]["lanes_v1"]["n"] == 2
+    assert out["fresh"]["delta"]["solve_rate_pp"] == 50.0
+    assert out["pre_cutoff"]["delta"]["solve_rate_pp"] == -100.0
+    assert round(out["fresh"]["delta"]["cost_mean_pct"], 6) == -50.0
+    assert 0.0 <= out["fresh"]["delta"]["p_solve_drop_within_m"] <= 1.0
+
+
+def test_load_power_reads_the_registered_row(tmp_path: Path) -> None:
+    from analysis.analyse import load_power
+
+    f = tmp_path / "power.json"
+    f.write_text(
+        json.dumps(
+            {
+                "n_per_arm": 55,
+                "mde_solve_pp": 23.0,
+                "mde_cost_pct": 27.0,
+                "grid": [{"n_per_arm": 70, "mde_solve_pp": 20.0, "mde_cost_pct": 25.0, "guardrail_pass_rate": 0.865}],
+            }
+        )
+    )
+    assert load_power(f, 70)["mde_solve_pp"] == 20.0
+    assert load_power(f)["n_per_arm"] == 55
+    assert load_power(tmp_path / "missing.json")["n_per_arm"] is None

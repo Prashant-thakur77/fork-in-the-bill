@@ -367,6 +367,68 @@ def by_trait(control: ArmData, treatment: ArmData) -> tuple[dict[str, Any], dict
 
 
 # --------------------------------------------------------------------------------------
+# First month of the fresh tier: tasks created on or after 2026-07-01 (prereg/experiment-1.md).
+FRESH_FROM_MONTH = "2026-07"
+
+
+def _subset(arm: ArmData, keep: list[bool]) -> ArmData:
+    rows = [r for r, k in zip(arm.rows, keep, strict=True) if k]
+    mask = np.array(keep, dtype=bool)
+    return ArmData(variant=arm.variant, cost=arm.cost[mask], solved=arm.solved[mask], rows=rows)
+
+
+def by_tier(control: ArmData, treatment: ArmData, m: float, seed: int) -> dict[str, Any]:
+    """The primary estimates again for the fresh tier alone and the pre-cutoff tier alone.
+
+    Secondary analysis from experiment 1's amendment: reported, never part of the decision.
+    """
+
+    def is_fresh(r: dict[str, Any]) -> bool:
+        return str(r.get("trait_created_month") or "") >= FRESH_FROM_MONTH
+
+    out: dict[str, Any] = {}
+    for k, (tier, want_fresh) in enumerate((("fresh", True), ("pre_cutoff", False))):
+        c = _subset(control, [is_fresh(r) == want_fresh for r in control.rows])
+        t = _subset(treatment, [is_fresh(r) == want_fresh for r in treatment.rows])
+        entry: dict[str, Any] = {}
+        for arm in (c, t):
+            stats = _trait_level_stats(arm.rows)
+            stats["cost_per_solve"] = ratio_or_none(stats["cost_mean"] or 0.0, stats["solve_rate"] or 0.0)
+            stats["solve_rate_ci"] = beta_interval(stats["solves"], arm.n) if arm.n else None
+            entry[arm.variant] = stats
+        delta: dict[str, Any] = dict.fromkeys(
+            (
+                "cost_mean_pct",
+                "cost_mean_pct_ci",
+                "solve_rate_pp",
+                "solve_rate_ci",
+                "p_solve_drop_within_m",
+                "cost_per_solve_pct",
+            )
+        )
+        if c.n and t.n:
+            sc, st = entry[c.variant], entry[t.variant]
+            boot_c = bootstrap_arm(c, np.random.default_rng([seed, 10 + 3 * k]))
+            boot_t = bootstrap_arm(t, np.random.default_rng([seed, 11 + 3 * k]))
+            with np.errstate(divide="ignore", invalid="ignore"):
+                diff_pct = (boot_t.mean - boot_c.mean) / boot_c.mean * 100
+            draws = posterior_delta_draws(
+                sc["solves"], c.n, st["solves"], t.n, np.random.default_rng([seed, 12 + 3 * k])
+            )
+            cps_c, cps_t = sc["cost_per_solve"], st["cost_per_solve"]
+            delta = {
+                "cost_mean_pct": (st["cost_mean"] / sc["cost_mean"] - 1) * 100 if sc["cost_mean"] else None,
+                "cost_mean_pct_ci": percentile_ci(diff_pct),
+                "solve_rate_pp": (st["solve_rate"] - sc["solve_rate"]) * 100,
+                "solve_rate_ci": [v * 100 for v in percentile_ci(draws)],
+                "p_solve_drop_within_m": float(np.mean(draws > -m)),
+                "cost_per_solve_pct": (cps_t / cps_c - 1) * 100 if cps_c and cps_t else None,
+            }
+        entry["delta"] = delta
+        out[tier] = entry
+    return out
+
+
 # Pre-registration and power
 
 
@@ -387,16 +449,25 @@ def prereg_info(prereg_dir: Path, exp: str) -> dict[str, Any]:
     return info
 
 
-def load_power(path: Path) -> dict[str, Any]:
-    if path.exists():
-        p = json.loads(path.read_text(encoding="utf-8"))
-        return {
-            "n_per_arm": p.get("n_per_arm"),
-            "mde_solve_pp": p.get("mde_solve_pp"),
-            "mde_cost_pct": p.get("mde_cost_pct"),
-            "power": p.get("power", 0.8),
-        }
-    return {"n_per_arm": None, "mde_solve_pp": None, "mde_cost_pct": None, "power": 0.8}
+# Size per arm that each registration states its power at (prereg/experiment-1-amendment-1.md,
+# prereg/experiment-2.md), and the power.py output that statement was read from.
+REGISTERED_POWER = {"exp1": (70, "power.json"), "exp2": (65, "power-exp2/power.json")}
+
+
+def load_power(path: Path, n_per_arm: int | None = None) -> dict[str, Any]:
+    """Power figures at `n_per_arm` from the grid power.py wrote; its own headline row otherwise."""
+    empty = {"n_per_arm": None, "mde_solve_pp": None, "mde_cost_pct": None, "guardrail_pass_rate": None, "power": 0.8}
+    if not path.exists():
+        return empty
+    p = json.loads(path.read_text(encoding="utf-8"))
+    row = next((g for g in p.get("grid") or [] if g.get("n_per_arm") == n_per_arm), p)
+    return {
+        "n_per_arm": row.get("n_per_arm"),
+        "mde_solve_pp": row.get("mde_solve_pp"),
+        "mde_cost_pct": row.get("mde_cost_pct"),
+        "guardrail_pass_rate": row.get("guardrail_pass_rate"),
+        "power": p.get("power", 0.8),
+    }
 
 
 # --------------------------------------------------------------------------------------
@@ -563,6 +634,7 @@ def analyse_experiment(
         "cuped": cuped(control_arm, treat_arm, ridge, ps_len),
         "by_trait": traits,
         "by_trait_meta": trait_meta,
+        "by_tier": by_tier(control_arm, treat_arm, m, seed),
         "unassigned_exclusions": run.unassigned_exclusions(),
         "seed": seed,
         "bootstrap_resamples": N_BOOT,
@@ -668,7 +740,7 @@ def build_numbers(
     parquet = out / "parquet"
     available = {p.name for p in parquet.iterdir() if (p / "tasks.parquet").exists()} if parquet.exists() else set()
 
-    power = load_power(out / "power.json")
+    power = load_power(out / REGISTERED_POWER["exp1"][1], REGISTERED_POWER["exp1"][0])
     numbers: dict[str, Any] = {
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "source_commit": source_commit(root),
@@ -679,12 +751,13 @@ def build_numbers(
     ps_len: dict[str, int] = {}
     for name in sorted(available):
         ps_len.update(load_pool_lengths(runs / name, root))
+    # The pilot ran as one run per forced arm (pilot-control, pilot-lanes_v1); pool them for the covariate.
+    pilot_dirs = [n for n in sorted(available) if n == pilot_exp or n.startswith(f"{pilot_exp}-")]
+    pilot_rows = [r for n in pilot_dirs for r in Run(parquet / n).all_rows() if not r["excluded"]]
+    if len(pilot_rows) >= 3:
+        ridge = fit_ridge(pilot_rows, ps_len)
     if pilot_exp in available:
-        pilot = Run(parquet / pilot_exp)
-        pilot_rows = [r for r in pilot.all_rows() if not r["excluded"]]
-        if len(pilot_rows) >= 3:
-            ridge = fit_ridge(pilot_rows, ps_len)
-        pb = simple_block(pilot)
+        pb = simple_block(Run(parquet / pilot_exp))
         exp1_m = m if m is not None else prereg_info(prereg_dir, "exp1")["m"]
         numbers["pilot"] = {**pb, "m": exp1_m, "n_per_arm": power["n_per_arm"]}
 
@@ -697,8 +770,17 @@ def build_numbers(
             raise typer.BadParameter(f"no --m given and no `m = <value>` found in {prereg['file']}")
         if not 0 < m_exp < 1:
             raise typer.BadParameter(f"m must be a solve-rate fraction in (0, 1), got {m_exp}")
+        n_reg, power_file = REGISTERED_POWER[exp]
         numbers[exp] = analyse_experiment(
-            Run(parquet / exp), exp, m_exp, seed, flagsmith_dir, prereg, power, ridge, ps_len
+            Run(parquet / exp),
+            exp,
+            m_exp,
+            seed,
+            flagsmith_dir,
+            prereg,
+            load_power(out / power_file, n_reg),
+            ridge,
+            ps_len,
         )
 
     if "rollout" in available:

@@ -56,7 +56,19 @@ Ship: <!--n:exp1.decision.ship:str-->lanes_v1<!--/n-->. Flagsmith chance to beat
 
 ### Secondary: CUPED (labelled secondary, not part of the decision)
 
-Variance reduction from the pilot-trained cost covariate: <!--n:exp1.cuped.variance_reduction_pct:pct1-->n/a<!--/n-->; adjusted mean cost difference <!--n:exp1.cuped.delta_cost_mean:usd4-->n/a<!--/n-->.
+Variance reduction from the pilot-trained cost covariate: <!--n:exp1.cuped.variance_reduction_pct:pct1-->+3.4%<!--/n-->; adjusted mean cost difference <!--n:exp1.cuped.delta_cost_mean:usd4-->−$0.0448<!--/n-->.
+
+### Secondary: by tier (reported, not part of the decision)
+
+`fresh` tasks were created after the models' training cutoff; `pre_cutoff` tasks were created before it.
+
+| tier | `control` n | `control` solve rate | `control` mean cost | `control` cost per solve | `lanes_v1` n | `lanes_v1` solve rate | `lanes_v1` mean cost | `lanes_v1` cost per solve |
+|---|---|---|---|---|---|---|---|---|
+| `fresh` | <!--n:exp1.by_tier.fresh.control.n:int-->54<!--/n--> | <!--n:exp1.by_tier.fresh.control.solve_rate:prob1-->50.0%<!--/n--> | <!--n:exp1.by_tier.fresh.control.cost_mean:usd4-->$0.0782<!--/n--> | <!--n:exp1.by_tier.fresh.control.cost_per_solve:usd4-->$0.1564<!--/n--> | <!--n:exp1.by_tier.fresh.lanes_v1.n:int-->40<!--/n--> | <!--n:exp1.by_tier.fresh.lanes_v1.solve_rate:prob1-->37.5%<!--/n--> | <!--n:exp1.by_tier.fresh.lanes_v1.cost_mean:usd4-->$0.0346<!--/n--> | <!--n:exp1.by_tier.fresh.lanes_v1.cost_per_solve:usd4-->$0.0924<!--/n--> |
+| `pre_cutoff` | <!--n:exp1.by_tier.pre_cutoff.control.n:int-->22<!--/n--> | <!--n:exp1.by_tier.pre_cutoff.control.solve_rate:prob1-->31.8%<!--/n--> | <!--n:exp1.by_tier.pre_cutoff.control.cost_mean:usd4-->$0.0789<!--/n--> | <!--n:exp1.by_tier.pre_cutoff.control.cost_per_solve:usd4-->$0.2480<!--/n--> | <!--n:exp1.by_tier.pre_cutoff.lanes_v1.n:int-->29<!--/n--> | <!--n:exp1.by_tier.pre_cutoff.lanes_v1.solve_rate:prob1-->44.8%<!--/n--> | <!--n:exp1.by_tier.pre_cutoff.lanes_v1.cost_mean:usd4-->$0.0331<!--/n--> | <!--n:exp1.by_tier.pre_cutoff.lanes_v1.cost_per_solve:usd4-->$0.0738<!--/n--> |
+
+- `fresh`: mean cost <!--n:exp1.by_tier.fresh.delta.cost_mean_pct:pct1-->−55.7%<!--/n--> (bootstrap interval <!--n:exp1.by_tier.fresh.delta.cost_mean_pct_ci.0:pct1-->−69.4%<!--/n--> to <!--n:exp1.by_tier.fresh.delta.cost_mean_pct_ci.1:pct1-->−34.3%<!--/n-->), cost per solved task <!--n:exp1.by_tier.fresh.delta.cost_per_solve_pct:pct1-->−40.9%<!--/n-->, solve rate <!--n:exp1.by_tier.fresh.delta.solve_rate_pp:pp1-->−12.5 pp<!--/n--> (posterior interval <!--n:exp1.by_tier.fresh.delta.solve_rate_ci.0:pp1-->−31.1 pp<!--/n--> to <!--n:exp1.by_tier.fresh.delta.solve_rate_ci.1:pp1-->+7.9 pp<!--/n-->), posterior probability that the drop is within m: <!--n:exp1.by_tier.fresh.delta.p_solve_drop_within_m:prob1-->78.9%<!--/n-->.
+- `pre_cutoff`: mean cost <!--n:exp1.by_tier.pre_cutoff.delta.cost_mean_pct:pct1-->−58.1%<!--/n--> (bootstrap interval <!--n:exp1.by_tier.pre_cutoff.delta.cost_mean_pct_ci.0:pct1-->−71.8%<!--/n--> to <!--n:exp1.by_tier.pre_cutoff.delta.cost_mean_pct_ci.1:pct1-->−36.3%<!--/n-->), cost per solved task <!--n:exp1.by_tier.pre_cutoff.delta.cost_per_solve_pct:pct1-->−70.3%<!--/n-->, solve rate <!--n:exp1.by_tier.pre_cutoff.delta.solve_rate_pp:pp1-->+13.0 pp<!--/n--> (posterior interval <!--n:exp1.by_tier.pre_cutoff.delta.solve_rate_ci.0:pp1-->−14.0 pp<!--/n--> to <!--n:exp1.by_tier.pre_cutoff.delta.solve_rate_ci.1:pp1-->+36.5 pp<!--/n-->), posterior probability that the drop is within m: <!--n:exp1.by_tier.pre_cutoff.delta.p_solve_drop_within_m:prob1-->99.2%<!--/n-->.
 
 ### By trait
 

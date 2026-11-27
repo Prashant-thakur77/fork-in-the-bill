@@ -40,3 +40,4 @@ analysis/out/parquet/
 
 # Document builder sources (the build/ rule above would hide them)
 !docs/build/
+runs/*/.done

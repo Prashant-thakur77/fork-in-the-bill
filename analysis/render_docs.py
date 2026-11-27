@@ -326,6 +326,44 @@ def _experiment_block(name: str, numbers: Any) -> list[str]:
         f"{marker(name + '.cuped.variance_reduction_pct', 'pct1', numbers)}; adjusted mean cost "
         f"difference {marker(name + '.cuped.delta_cost_mean', 'usd4', numbers)}.",
         "",
+    ]
+    tiers = {t: v for t, v in (exp.get("by_tier") or {}).items() if all((v.get(a) or {}).get("n") for a in arms)}
+    if len(tiers) > 1:
+        lines += [
+            "### Secondary: by tier (reported, not part of the decision)",
+            "",
+            "`fresh` tasks were created after the models' training cutoff; `pre_cutoff` tasks were created before it.",
+            "",
+            "| tier | "
+            + " | ".join(f"`{a}` n | `{a}` solve rate | `{a}` mean cost | `{a}` cost per solve" for a in arms)
+            + " |",
+            "|---" * (1 + 4 * len(arms)) + "|",
+        ]
+        for tier in tiers:
+            base = f"{name}.by_tier.{tier}"
+            cells = []
+            for a in arms:
+                cells += [
+                    marker(f"{base}.{a}.n", "int", numbers),
+                    marker(f"{base}.{a}.solve_rate", "prob1", numbers),
+                    marker(f"{base}.{a}.cost_mean", "usd4", numbers),
+                    marker(f"{base}.{a}.cost_per_solve", "usd4", numbers),
+                ]
+            lines.append(f"| `{tier}` | " + " | ".join(cells) + " |")
+        lines.append("")
+        for tier in tiers:
+            d = f"{name}.by_tier.{tier}.delta"
+            lines.append(
+                f"- `{tier}`: mean cost {marker(d + '.cost_mean_pct', 'pct1', numbers)} "
+                f"(bootstrap interval {_ci(d + '.cost_mean_pct_ci', 'pct1', numbers)}), "
+                f"cost per solved task {marker(d + '.cost_per_solve_pct', 'pct1', numbers)}, "
+                f"solve rate {marker(d + '.solve_rate_pp', 'pp1', numbers)} "
+                f"(posterior interval {_ci(d + '.solve_rate_ci', 'pp1', numbers)}), "
+                f"posterior probability that the drop is within m: "
+                f"{marker(d + '.p_solve_drop_within_m', 'prob1', numbers)}."
+            )
+        lines.append("")
+    lines += [
         "### By trait",
         "",
     ]

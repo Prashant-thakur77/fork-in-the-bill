@@ -75,6 +75,84 @@
       }
     },
     "bootstrap_resamples": 10000,
+    "by_tier": {
+      "fresh": {
+        "control": {
+          "cost_mean": 0.07821294814814815,
+          "cost_per_solve": 0.1564258962962963,
+          "n": 54,
+          "solve_rate": 0.5,
+          "solve_rate_ci": [
+            0.37070534510532216,
+            0.6292946548946778
+          ],
+          "solves": 27
+        },
+        "delta": {
+          "cost_mean_pct": -55.69912198633777,
+          "cost_mean_pct_ci": [
+            -69.40246834165191,
+            -34.25762618824868
+          ],
+          "cost_per_solve_pct": -40.932162648450365,
+          "p_solve_drop_within_m": 0.789115,
+          "solve_rate_ci": [
+            -31.113893342547556,
+            7.856338163442719
+          ],
+          "solve_rate_pp": -12.5
+        },
+        "lanes_v1": {
+          "cost_mean": 0.03464902275,
+          "cost_per_solve": 0.09239739400000001,
+          "n": 40,
+          "solve_rate": 0.375,
+          "solve_rate_ci": [
+            0.24201096717868845,
+            0.5306374519671666
+          ],
+          "solves": 15
+        }
+      },
+      "pre_cutoff": {
+        "control": {
+          "cost_mean": 0.07890329090909091,
+          "cost_per_solve": 0.24798177142857145,
+          "n": 22,
+          "solve_rate": 0.3181818181818182,
+          "solve_rate_ci": [
+            0.1637635983749499,
+            0.5291916660085065
+          ],
+          "solves": 7
+        },
+        "delta": {
+          "cost_mean_pct": -58.09161556916915,
+          "cost_mean_pct_ci": [
+            -71.84422278731098,
+            -36.28655291788093
+          ],
+          "cost_per_solve_pct": -70.25383902287182,
+          "p_solve_drop_within_m": 0.9921,
+          "solve_rate_ci": [
+            -14.007416490503466,
+            36.50406672954723
+          ],
+          "solve_rate_pp": 13.009404388714735
+        },
+        "lanes_v1": {
+          "cost_mean": 0.03306709448275862,
+          "cost_per_solve": 0.07376505692307693,
+          "n": 29,
+          "solve_rate": 0.4482758620689655,
+          "solve_rate_ci": [
+            0.2834180791835371,
+            0.6257265493907793
+          ],
+          "solves": 13
+        }
+      }
+    },
     "by_trait": {
       "created_month": {
         "2026-03": {
@@ -348,15 +426,14 @@
     "cuped": {
       "ci_method": "normal approximation",
       "covariate": "pilot_pred_cost",
-      "delta_cost_mean": null,
+      "delta_cost_mean": -0.044795839072997175,
       "delta_cost_mean_ci": [
-        null,
-        null
+        -0.062283817619760776,
+        -0.02730786052623357
       ],
       "label": "secondary",
-      "note": "no pilot data or too few analysed tasks",
-      "theta": null,
-      "variance_reduction_pct": null
+      "theta": 0.3420237900204646,
+      "variance_reduction_pct": 3.3885595471954466
     },
     "decision": {
       "bars": {
@@ -419,9 +496,10 @@
     },
     "posterior_draws": 200000,
     "power": {
-      "mde_cost_pct": 27.0,
-      "mde_solve_pp": 23.0,
-      "n_per_arm": 55,
+      "guardrail_pass_rate": 0.865,
+      "mde_cost_pct": 25.0,
+      "mde_solve_pp": 20.0,
+      "n_per_arm": 70,
       "power": 0.8
     },
     "prereg": {
@@ -441,7 +519,7 @@
     },
     "unassigned_exclusions": 0
   },
-  "generated_at": "2026-11-27T12:52:20+00:00",
+  "generated_at": "2026-11-27T13:27:09+00:00",
   "integrity": {
     "assignment": {
       "checked": 146,
@@ -629,7 +707,7 @@
     "n": 13,
     "solve_rate": 0.5384615384615384
   },
-  "source_commit": "27d077f77e1e9b4120566fa4908000fd1c6e745e",
+  "source_commit": "86909966e9177d5cd54f451365482dcb1a3bdd7d",
   "spend": {
     "by_experiment": {
       "dryrun-control": 0.145731,

@@ -56,7 +56,8 @@ These are sent per task by `harness/events.py`, using the same identifier as the
                   "solve_rate_status": "...", "pulled_at": "..."},
     "agreement": {"cost_mean_abs_diff": {"control": 0, "lanes_v1": 0}},
     "decision": {"ship": "lanes_v1|control", "rule_met": {"flagsmith_95": true, "guardrail_90": true, "no_guardrail_loss": true}},
-    "power": {"n_per_arm": 0, "mde_solve_pp": 0, "power": 0.8},
+    "power": {"n_per_arm": 0, "mde_solve_pp": 0, "mde_cost_pct": 0, "guardrail_pass_rate": 0, "power": 0.8},
+    "by_tier": {"fresh": {"<arm>": {"n": 0, "solve_rate": 0, "cost_mean": 0, "cost_per_solve": 0}, "delta": {"solve_rate_pp": 0, "p_solve_drop_within_m": 0}}, "pre_cutoff": {}},
     "cuped": {"variance_reduction_pct": 0},
     "by_trait": {"difficulty": {}, "language": {}, "created_month": {}}
   },
