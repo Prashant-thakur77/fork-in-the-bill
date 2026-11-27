@@ -1,3 +1,4 @@
 44d715bd6bd7f8580e8bb1950a21ea852dfea4daaf040c84009f391bf56e19c2  prereg/experiment-1.md
 eb5b8c4c2aaa72c3a7e436fbdd8f9d10440db471d95ba411b80916ebb1dfc175  prereg/pilot-report.md
 f54a0cbbf415237a8c4fed55817e4d0d8055e6da8cde2bb2e146fb7bc1cc63c6  prereg/experiment-1-amendment-1.md
+a04a2e207ed7780f66e9f766383e9c8ff207f156e8575e2f09670a18a2473bfb  prereg/experiment-2.md
