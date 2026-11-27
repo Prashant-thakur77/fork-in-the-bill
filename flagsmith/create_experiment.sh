@@ -27,7 +27,8 @@ BODY=$(render_experiment "$TEMPLATE" "$IDS" "$POLICIES" "$PREREG")
 # The rollout's control value must be the flag's current value: control is the flag's own value.
 FLAG_ID=$(jq -r .feature <<<"$BODY")
 FLAG_NAME=$(jq -r --argjson id "$FLAG_ID" '.features | to_entries[] | select(.value == $id) | .key' "$IDS")
-CURRENT=$(fs feature get "$FLAG_NAME" --json | jq -r .default_value)
+# the environment value, not the project default: after a rollout the winner is the environment value
+CURRENT=$(fs flag get "$FLAG_NAME" --json | jq -r .value)
 WANT=$(jq -r .experiment_rollout.feature_state_value.value <<<"$BODY")
 same_json "$CURRENT" "$WANT" \
   || die "the template's control value differs from the current value of $FLAG_NAME; check which policy is control"

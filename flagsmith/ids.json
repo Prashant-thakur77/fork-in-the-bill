@@ -6,6 +6,7 @@
   },
   "variants": {
     "agent_routing": {
+      "lanes_v2": 38243,
       "lanes_v1": 37431
     }
   },
