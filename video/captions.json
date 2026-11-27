@@ -285,6 +285,181 @@
       "key": "spend.total_usd",
       "fmt": "usd2",
       "text": "$11.87"
+    },
+    "price_ratio": {
+      "key": "pricing.frontier_to_small_ratio",
+      "fmt": "int",
+      "text": "20"
+    },
+    "price_frontier": {
+      "key": "pricing.frontier_input_per_mtok",
+      "fmt": "usd2",
+      "text": "$2.00"
+    },
+    "price_small": {
+      "key": "pricing.small_input_per_mtok",
+      "fmt": "usd2",
+      "text": "$0.10"
+    },
+    "wl_control": {
+      "key": "exp1.arms.control.delegate_cost_mean",
+      "fmt": "usd4",
+      "text": "$0.0490"
+    },
+    "wl_v1": {
+      "key": "exp1.arms.lanes_v1.delegate_cost_mean",
+      "fmt": "usd4",
+      "text": "$0.0039"
+    },
+    "proj_control": {
+      "key": "projection.per_1000_solved.control",
+      "fmt": "usd2",
+      "text": "$175.28"
+    },
+    "proj_v1": {
+      "key": "projection.per_1000_solved.lanes_v1",
+      "fmt": "usd2",
+      "text": "$83.75"
+    },
+    "proj_saved": {
+      "key": "projection.per_1000_solved.saved",
+      "fmt": "usd2",
+      "text": "$91.53"
+    },
+    "proj_label": {
+      "key": "projection.label",
+      "fmt": "str",
+      "text": "arithmetic on measured figures, not a measurement"
+    },
+    "scale_tests_executed": {
+      "key": "scale.tests_executed",
+      "fmt": "int",
+      "text": "994,644"
+    },
+    "scale_tasks_run": {
+      "key": "scale.tasks_run",
+      "fmt": "int",
+      "text": "197"
+    },
+    "scale_model_calls": {
+      "key": "scale.model_calls",
+      "fmt": "int",
+      "text": "2,642"
+    },
+    "scale_ledger_records": {
+      "key": "scale.ledger_records",
+      "fmt": "int",
+      "text": "551"
+    },
+    "scale_transcripts": {
+      "key": "scale.transcripts",
+      "fmt": "int",
+      "text": "163"
+    },
+    "scale_unit_tests": {
+      "key": "scale.unit_tests",
+      "fmt": "int",
+      "text": "400"
+    },
+    "scale_examples": {
+      "key": "scale.examples",
+      "fmt": "int",
+      "text": "9"
+    },
+    "scale_npm_packages": {
+      "key": "scale.npm_packages",
+      "fmt": "int",
+      "text": "2"
+    },
+    "scale_events_sent": {
+      "key": "scale.events_sent",
+      "fmt": "int",
+      "text": "546"
+    },
+    "scale_repos": {
+      "key": "scale.repos",
+      "fmt": "int",
+      "text": "67"
+    },
+    "scale_languages": {
+      "key": "scale.languages",
+      "fmt": "int",
+      "text": "8"
+    },
+    "scale_prereg_tags": {
+      "key": "scale.prereg_tags",
+      "fmt": "int",
+      "text": "3"
+    },
+    "av_cross": {
+      "key": "exp1.secondary.always_valid.cost.first_cross_at",
+      "fmt": "int",
+      "text": "72"
+    },
+    "av_n": {
+      "key": "exp1.secondary.always_valid.n_tasks",
+      "fmt": "int",
+      "text": "145"
+    },
+    "av_p_final": {
+      "key": "exp1.secondary.always_valid.cost.p_final",
+      "fmt": "p3",
+      "text": "<0.001"
+    },
+    "av_solve_p": {
+      "key": "exp1.secondary.always_valid.solve.p_final",
+      "fmt": "p3",
+      "text": "0.630"
+    },
+    "mv_specs": {
+      "key": "exp1.secondary.multiverse.n_specs",
+      "fmt": "int",
+      "text": "72"
+    },
+    "mv_cost": {
+      "key": "exp1.secondary.multiverse.cost_direction",
+      "fmt": "int",
+      "text": "72"
+    },
+    "mv_pass": {
+      "key": "exp1.secondary.multiverse.guardrail_pass",
+      "fmt": "int",
+      "text": "48"
+    },
+    "mv_fail": {
+      "key": "exp1.secondary.multiverse.guardrail_fail",
+      "fmt": "int",
+      "text": "24"
+    },
+    "mv_fresh": {
+      "key": "exp1.secondary.multiverse.fresh_specs",
+      "fmt": "int",
+      "text": "24"
+    },
+    "mv_fail_sets": {
+      "key": "exp1.secondary.multiverse.guardrail_fail_task_sets",
+      "fmt": "str",
+      "text": "fresh tier"
+    },
+    "fr_arms": {
+      "key": "frontier.n_arms",
+      "fmt": "int",
+      "text": "5"
+    },
+    "fr_on": {
+      "key": "frontier.n_on_frontier",
+      "fmt": "int",
+      "text": "3"
+    },
+    "proof_verified": {
+      "key": "integrity.proofs.exp1.verified",
+      "fmt": "int",
+      "text": "146"
+    },
+    "proof_leaves": {
+      "key": "integrity.proofs.exp1.leaves",
+      "fmt": "int",
+      "text": "146"
     }
   }
 }
