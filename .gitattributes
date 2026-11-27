@@ -15,3 +15,6 @@ uv.lock linguist-generated
 *.pdf binary
 *.png binary
 *.gz binary
+
+# Inclusion proofs written by analysis.analyse from the ledgers
+analysis/out/proofs/*.json linguist-generated

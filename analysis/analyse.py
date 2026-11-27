@@ -29,9 +29,11 @@ import typer
 from numpy.typing import NDArray
 from scipy import stats
 
-from analysis import pull_results
+from analysis import always_valid, frontier, multiverse, pull_results
 from analysis.render_docs import process as render_process
+from analysis.scale import build_pricing, build_scale
 from analysis.to_parquet import convert_all, read_jsonl
+from integrity.prove import export as export_proofs
 from integrity.verify_assignment import verify as verify_assignment
 from integrity.verify_ledger import verify as verify_ledger
 from tasks.model import TaskInstance
@@ -65,16 +67,19 @@ class ArmData:
         return len(self.rows)
 
 
+# One row per identity: its last attempt (the registered rule), or its first for the
+# specification curve. An identity is excluded if listed in exclusions.jsonl or if the kept attempt
+# ended in an infrastructure error.
 _TASKS_SQL = """
 WITH t AS (SELECT * FROM read_parquet(?)),
-last AS (
+kept AS (
   SELECT * FROM t
-  QUALIFY row_number() OVER (PARTITION BY identity ORDER BY attempt DESC, finished_at DESC) = 1
+  QUALIFY row_number() OVER (PARTITION BY identity ORDER BY attempt {order}, finished_at {order}) = 1
 ),
 ex AS (SELECT DISTINCT identity FROM read_parquet(?))
-SELECT last.*, (ex.identity IS NOT NULL OR last.outcome = 'infra_error') AS excluded
-FROM last LEFT JOIN ex ON last.identity = ex.identity
-ORDER BY last.variant, last.identity
+SELECT kept.*, (ex.identity IS NOT NULL OR kept.outcome = 'infra_error') AS excluded
+FROM kept LEFT JOIN ex ON kept.identity = ex.identity
+ORDER BY kept.variant, kept.identity
 """
 
 _ARM_SQL = """
@@ -102,10 +107,9 @@ class Run:
 
     def __init__(self, parquet_dir: Path) -> None:
         self.con = duckdb.connect()
-        self.con.execute(
-            "CREATE TABLE tasks AS " + _TASKS_SQL,
-            [str(parquet_dir / "tasks.parquet"), str(parquet_dir / "exclusions.parquet")],
-        )
+        params = [str(parquet_dir / "tasks.parquet"), str(parquet_dir / "exclusions.parquet")]
+        self.con.execute("CREATE TABLE tasks AS " + _TASKS_SQL.format(order="DESC"), params)
+        self.con.execute("CREATE TABLE tasks_first AS " + _TASKS_SQL.format(order="ASC"), params)
         self.exclusions = self._rows("SELECT * FROM read_parquet(?)", [str(parquet_dir / "exclusions.parquet")])
 
     def _rows(self, sql: str, params: list[Any] | None = None) -> list[dict[str, Any]]:
@@ -115,6 +119,11 @@ class Run:
 
     def all_rows(self) -> list[dict[str, Any]]:
         return self._rows("SELECT * FROM tasks")
+
+    def analysed_rows(self, attempt: str = "last") -> list[dict[str, Any]]:
+        """Rows that enter the analysis, keeping each identity's last (or first) attempt."""
+        table = {"last": "tasks", "first": "tasks_first"}[attempt]
+        return self._rows(f"SELECT * FROM {table} WHERE NOT excluded")
 
     def arm_summary(self) -> dict[str, dict[str, Any]]:
         return {r["variant"]: r for r in self._rows(_ARM_SQL)}
@@ -480,6 +489,10 @@ def arm_block(summary: dict[str, Any] | None, arm: ArmData, boot: ArmBoot) -> di
     solves = int(arm.solved.sum())
     rate = solves / n if n else None
     mean = float(arm.cost.mean()) if n else None
+
+    def lane_mean(field: str) -> float | None:
+        return float(np.mean([_num(r.get(field)) for r in arm.rows])) if n else None
+
     return {
         "n_exposed": int(s.get("n_exposed") or 0),
         "n_excluded": int(s.get("n_excluded") or 0),
@@ -496,6 +509,8 @@ def arm_block(summary: dict[str, Any] | None, arm: ArmData, boot: ArmBoot) -> di
         "cost_per_solve_ci": percentile_ci(boot.cost_per_solve),
         "delegate_share_cost": s.get("delegate_share_cost"),
         "delegate_share_tokens": s.get("delegate_share_tokens"),
+        "delegate_cost_mean": lane_mean("usd_delegate"),
+        "main_cost_mean": lane_mean("usd_main"),
         "turns_mean": s.get("turns_mean"),
         "seconds_mean": s.get("seconds_mean"),
     }
@@ -547,6 +562,7 @@ def analyse_experiment(
     power: dict[str, Any],
     ridge: RidgeModel | None,
     ps_len: dict[str, int],
+    pilot_rows: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     summary = run.arm_summary()
     variants = sorted(summary)
@@ -622,6 +638,13 @@ def analyse_experiment(
     }
 
     traits, trait_meta = by_trait(control_arm, treat_arm)
+    by_attempt = {
+        a: [r for r in run.analysed_rows(a) if r["variant"] in (CONTROL, treatment)] for a in ("last", "first")
+    }
+    secondary = {
+        "always_valid": always_valid.analyse(by_attempt["last"], pilot_rows or [], treatment),
+        "multiverse": multiverse.summarise(multiverse.specifications(by_attempt, CONTROL, treatment, m, seed), m),
+    }
     return {
         "prereg": {"tag": prereg["tag"], "sha256": prereg["sha256"], "m": m},
         "arms": arms,
@@ -635,6 +658,7 @@ def analyse_experiment(
         "by_trait": traits,
         "by_trait_meta": trait_meta,
         "by_tier": by_tier(control_arm, treat_arm, m, seed),
+        "secondary": secondary,
         "unassigned_exclusions": run.unassigned_exclusions(),
         "seed": seed,
         "bootstrap_resamples": N_BOOT,
@@ -673,6 +697,32 @@ def assignment_check(run_dir: Path) -> dict[str, Any] | None:
     rep = verify_assignment(run_dir).to_json()
     keys = ("checked", "matched", "match_rate", "recorded_counts", "expected_counts", "flag_engine_version", "ok")
     return {k: rep[k] for k in keys} | {"mismatched": len(rep["mismatched"]), "env_sha256": rep["env_sha256"]}
+
+
+PROOF_RUNS = ("exp1", "rollout", "exp2")
+
+
+def proofs_block(runs: Path, out: Path) -> dict[str, Any]:
+    """Write analysis/out/proofs/<run>.json for each published run and summarise them."""
+    block: dict[str, Any] = {}
+    for name in PROOF_RUNS:
+        if (runs / name / "ledger.jsonl").exists():
+            summary = export_proofs(runs / name, out / "proofs" / f"{name}.json")
+            block[name] = {"file": f"proofs/{name}.json", **summary}
+    return block
+
+
+def projection_block(exp: dict[str, Any]) -> dict[str, Any]:
+    """Dollars per 1,000 solved tasks at each arm's measured cost per solved task. Arithmetic, not a measurement."""
+    arms = {a: v.get("cost_per_solve") for a, v in exp["arms"].items()}
+    per = {a: 1000 * v if v is not None else None for a, v in arms.items()}
+    treatment = exp["delta"]["treatment"]
+    c, t = per.get(CONTROL), per.get(treatment)
+    return {
+        "label": "arithmetic on measured figures, not a measurement",
+        "basis": "1000 x exp1 cost per solved task",
+        "per_1000_solved": per | {"saved": c - t if c is not None and t is not None else None},
+    }
 
 
 def integrity_block(runs: Path, primary: str) -> dict[str, Any]:
@@ -755,7 +805,7 @@ def build_numbers(
         ps_len.update(load_pool_lengths(runs / name, root))
     # The pilot ran as one run per forced arm (pilot-control, pilot-lanes_v1); pool them for the covariate.
     pilot_dirs = [n for n in sorted(available) if n == pilot_exp or n.startswith(f"{pilot_exp}-")]
-    pilot_rows = [r for n in pilot_dirs for r in Run(parquet / n).all_rows() if not r["excluded"]]
+    pilot_rows = [r for n in pilot_dirs for r in Run(parquet / n).analysed_rows()]
     if len(pilot_rows) >= 3:
         ridge = fit_ridge(pilot_rows, ps_len)
     if pilot_exp in available:
@@ -783,13 +833,28 @@ def build_numbers(
             load_power(power_dir / power_file, n_reg),
             ridge,
             ps_len,
+            pilot_rows,
         )
 
     if "rollout" in available:
         numbers["rollout"] = simple_block(Run(parquet / "rollout"))
 
+    # Secondary, added after exp1 ended (DECISIONS.md, D29): every arm on one cost-accuracy plane.
+    numbers["frontier"] = frontier.build(
+        {n: Run(parquet / n).analysed_rows() for n in sorted(available) if frontier.batch_of(n)}, seed
+    )
+    if "exp1" in numbers:
+        numbers["projection"] = projection_block(numbers["exp1"])
+        exp1_run = Run(parquet / "exp1")
+        models = {r["variant"]: r.get("delegate_model") for r in exp1_run.analysed_rows() if r.get("delegate_model")}
+        pricing = build_pricing(root, models.get(CONTROL), models.get(numbers["exp1"]["delta"]["treatment"]))
+        if pricing:
+            numbers["pricing"] = pricing
+
     primary = "exp1" if "exp1" in available else (sorted(available)[0] if available else "exp1")
     numbers["integrity"] = integrity_block(runs, primary)
+    numbers["integrity"]["proofs"] = proofs_block(runs, out)
+    numbers["scale"] = build_scale(runs, root, primary)
     return clean(numbers)
 
 

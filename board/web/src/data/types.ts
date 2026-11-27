@@ -19,7 +19,7 @@ export interface Snapshot {
 
 import type { FlagChange } from "./flags";
 
-export type Fmt = "usd2" | "usd4" | "pct1" | "pp1" | "int" | "f3" | "prob1" | "hash12";
+export type Fmt = "usd2" | "usd4" | "pct1" | "pp1" | "int" | "f3" | "prob1" | "hash12" | "p3";
 
 /** One figure copied from analysis/out/numbers.json; checked like the README markers. */
 export interface SeedEntry {

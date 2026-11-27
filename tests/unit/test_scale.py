@@ -1,4 +1,4 @@
-"""Scale counters and list prices, on a tiny made-up repository."""
+"""Scale counters, list prices and the per-1,000 projection, on a tiny made-up repository."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from analysis.analyse import projection_block
 from analysis.scale import build_pricing, build_scale
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -104,3 +105,14 @@ def test_pricing_reads_the_table_for_the_arms_models() -> None:
     assert p["frontier_to_small_ratio"] == pytest.approx(20.0)
     assert build_pricing(ROOT, "claude-sonnet-5-5", "no-such-model") is None
     assert build_pricing(ROOT, None, "claude-haiku-5-5") is None
+
+
+def test_projection_is_arithmetic_on_cost_per_solve() -> None:
+    exp = {
+        "arms": {"control": {"cost_per_solve": 0.2}, "lanes_v1": {"cost_per_solve": 0.05}},
+        "delta": {"treatment": "lanes_v1"},
+    }
+    out = projection_block(exp)["per_1000_solved"]
+    assert out == pytest.approx({"control": 200.0, "lanes_v1": 50.0, "saved": 150.0})
+    exp["arms"]["lanes_v1"]["cost_per_solve"] = None
+    assert projection_block(exp)["per_1000_solved"]["saved"] is None

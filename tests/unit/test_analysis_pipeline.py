@@ -80,6 +80,34 @@ def test_numbers_shape(balanced: tuple[Path, dict[str, Any]]) -> None:
     assert set(exp["decision"]["rule_met"]) == {"flagsmith_95", "guardrail_90", "no_guardrail_loss"}
     assert exp["prereg"]["m"] == 0.05
     assert set(n["integrity"]) >= {"merkle_root", "task_done_records", "env_snapshots", "env_snapshot_distinct_hashes"}
+    for arm in exp["arms"].values():
+        assert arm["delegate_cost_mean"] + arm["main_cost_mean"] == pytest.approx(arm["cost_mean"])
+
+
+def test_secondary_blocks(balanced: tuple[Path, dict[str, Any]]) -> None:
+    root, n = balanced
+    sec = n["exp1"]["secondary"]
+    av = sec["always_valid"]
+    assert (
+        av["label"] == "secondary"
+        and av["n_tasks"] == n["exp1"]["arms"]["control"]["n_analysed"] + n["exp1"]["arms"]["lanes_v1"]["n_analysed"]
+    )
+    assert 0 < av["cost"]["p_final"] <= 1 and 0 < av["solve"]["p_final"] <= 1
+    mv = sec["multiverse"]
+    assert mv["n_specs"] == len(mv["specs"]) > 0
+    reg = mv["registered"]
+    assert reg["cps_change_pct"] == pytest.approx(n["exp1"]["delta"]["cost_per_solve_pct"])
+    assert reg["guardrail_posterior"] == pytest.approx(n["exp1"]["delta"]["p_solve_drop_within_m"], abs=0.005)
+    fr = n["frontier"]
+    assert fr["batches"] == ["pilot", "exp1"] and fr["n_arms"] == 4
+    assert any(a["on_frontier"] for a in fr["arms"].values())
+    proofs = n["integrity"]["proofs"]
+    assert set(proofs) == {"exp1"}
+    assert proofs["exp1"]["verified"] == proofs["exp1"]["leaves"] == n["integrity"]["task_done_records"]
+    assert (root / "analysis" / "out" / proofs["exp1"]["file"]).exists()
+    assert n["scale"]["tasks_run"] >= n["integrity"]["task_done_records"]
+    per = n["projection"]["per_1000_solved"]
+    assert per["saved"] == pytest.approx(per["control"] - per["lanes_v1"])
 
 
 def test_fixture_effects_recovered(balanced: tuple[Path, dict[str, Any]]) -> None:

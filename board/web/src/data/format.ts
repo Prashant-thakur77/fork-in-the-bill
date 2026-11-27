@@ -29,6 +29,8 @@ export function format(value: number | string, fmt: Fmt): string {
       return Math.round(v).toLocaleString("en-US");
     case "f3":
       return `${v < 0 ? MINUS : ""}${Math.abs(v).toFixed(3)}`;
+    case "p3":
+      return v < 0.001 ? "<0.001" : v.toFixed(3);
     case "prob1":
       return `${v < 0 ? MINUS : ""}${Math.abs(v * 100).toFixed(1)}%`;
   }

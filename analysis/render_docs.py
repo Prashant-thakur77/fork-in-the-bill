@@ -9,8 +9,9 @@ Value conventions in numbers.json: `*_pct` fields are already percentages (-32.1
 -32.1%), `*_pp` fields are percentage points, and rates, shares and probabilities are 0-1
 fractions rendered with `prob1`.
 
-Formats: usd2, usd4, pct1, pp1, int, f3, prob1, hash12, plus `str` for labels such as the
-shipped arm. A key segment that is an integer indexes a list (`...cost_mean_ci.0`).
+Formats: usd2, usd4, pct1, pp1, int, f3, prob1, hash12, p3 (a p-value to three decimals, or
+`<0.001`), plus `str` for labels such as the shipped arm. A key segment that is an integer
+indexes a list (`...cost_mean_ci.0`).
 
 This module also owns the generated block of analysis/results.md between
 `<!--results:start-->` and `<!--results:end-->`; text outside that block is kept as written.
@@ -31,7 +32,7 @@ import typer
 MARKER_RE = re.compile(r"<!--n:(?P<key>[^:<>\s]+):(?P<fmt>[a-z0-9]+)-->(?P<val>.*?)<!--/n-->")
 RESULTS_START = "<!--results:start-->"
 RESULTS_END = "<!--results:end-->"
-FORMATS = ("usd2", "usd4", "pct1", "pp1", "int", "f3", "prob1", "hash12", "str")
+FORMATS = ("usd2", "usd4", "pct1", "pp1", "int", "f3", "prob1", "hash12", "p3", "str")
 MISSING = "n/a"
 
 MARKDOWN_TARGETS = ("README.md", "analysis/results.md", "docs/paper.md", "docs/build/deck.html", "SUBMISSION.md")
@@ -95,6 +96,8 @@ def fmt_value(value: Any, fmt: str) -> str:
         return f"{math.floor(v + 0.5):,}"  # Math.round
     if fmt == "f3":
         return f"{minus}{_fixed(abs(v), 3)}"
+    if fmt == "p3":
+        return "<0.001" if v < 0.001 else _fixed(v, 3)
     p = v * 100
     return f"{MINUS if p < 0 else ''}{_fixed(abs(p), 1)}%"  # prob1
 
@@ -239,6 +242,176 @@ def _ci(base: str, fmt: str, numbers: Any) -> str:
     return f"{marker(base + '.0', fmt, numbers)} to {marker(base + '.1', fmt, numbers)}"
 
 
+def _lit(text: str) -> str:
+    """Wrap fixed text that holds digits (Beta(1,1), p99) so the bare-number check skips it."""
+    return f"<!--lit-->{text}<!--/lit-->" if any(c.isdigit() for c in text) else text
+
+
+SPEC_LABELS = {
+    "all": "all tasks",
+    "fresh": "fresh tier",
+    "pre_cutoff": "pre-cutoff tier",
+    "last": "last",
+    "first": "first",
+    "mean": "mean",
+    "median": "median",
+    "trimmed10": "10% trimmed mean",
+    "beta11": "Beta(1,1)",
+    "beta0505": "Beta(0.5,0.5)",
+    "as_is": "as recorded",
+    "winsorised": "winsorised at p99",
+}
+
+
+def _always_valid_lines(name: str, exp: dict[str, Any], numbers: Any) -> list[str]:
+    av = (exp.get("secondary") or {}).get("always_valid") or {}
+    if "cost" not in av:
+        return []
+    b = f"{name}.secondary.always_valid"
+    alpha = marker(b + ".alpha", "f3", numbers)
+    cost = (
+        f"it first fell below {alpha} after task {marker(b + '.cost.first_cross_at', 'int', numbers)}, "
+        f"which finished at {marker(b + '.cost.first_cross_finished_at', 'str', numbers)}"
+        if av["cost"].get("crossed")
+        else f"it never fell below {alpha}"
+    )
+    harm = (
+        f"it crossed {alpha} in the harmful direction after task "
+        f"{marker(b + '.solve.first_harmful_cross_at', 'int', numbers)}"
+        if av["solve"].get("crossed_harmful")
+        else f"it never crossed {alpha} with `{exp['delta']['treatment']}` solving less"
+    )
+    lines = [
+        "### Secondary: always-valid p-values (added after `exp1` ended, not part of the decision)",
+        "",
+        f"The run is replayed in the order its {marker(b + '.n_tasks', 'int', numbers)} analysed tasks finished. "
+        "A mixture sequential probability ratio test with a normal mixing distribution is evaluated after every "
+        f"task once each arm has {marker(b + '.min_per_arm', 'int', numbers)} tasks, which first happens at task "
+        f"{marker(b + '.first_evaluated_at', 'int', numbers)}. The mixing scale comes from the pilot alone: "
+        f"{marker(b + '.cost.tau', 'usd4', numbers)} per task for cost and "
+        f"{marker(b + '.solve.tau', 'prob1', numbers)} for solve rate (`analysis/always_valid.py`, DECISIONS.md D29).",
+        "",
+        f"- Mean cost per task: always-valid p = {marker(b + '.cost.p_final', 'p3', numbers)} at the end; {cost}. "
+        f"Always-valid interval at the end: {_ci(b + '.cost.ci_final', 'usd4', numbers)}.",
+        f"- Solve rate: always-valid p = {marker(b + '.solve.p_final', 'p3', numbers)} at the end, interval "
+        f"{_ci(b + '.solve.ci_final_pp', 'pp1', numbers)}; {harm}.",
+    ]
+    if av.get("board_live_after_tasks"):
+        lines.append(
+            "- When the live board went public (DECISIONS.md D24), "
+            f"{marker(b + '.board_live_after_tasks', 'int', numbers)} tasks had finished. The always-valid p was "
+            f"then {marker(b + '.cost.p_at_board_live', 'p3', numbers)} for cost and "
+            f"{marker(b + '.solve.p_at_board_live', 'p3', numbers)} for solve rate."
+        )
+    return [*lines, "", f"![Always-valid p-values for {name}](charts/{name}-always-valid.png)", ""]
+
+
+def _multiverse_lines(name: str, exp: dict[str, Any], numbers: Any) -> list[str]:
+    mv = (exp.get("secondary") or {}).get("multiverse") or {}
+    if not mv.get("n_specs"):
+        return []
+    b = f"{name}.secondary.multiverse"
+    treatment = exp["delta"]["treatment"]
+
+    def share(key: str) -> str:
+        return f"{marker(f'{b}.{key}', 'int', numbers)} ({marker(f'{b}.{key}_share', 'prob1', numbers)})"
+
+    lines = [
+        "### Secondary: specification curve (added after `exp1` ended, not part of the decision)",
+        "",
+        f"{marker(b + '.n_specs', 'int', numbers)} specifications: every combination of task set (all, fresh tier, "
+        "pre-cutoff tier), the attempt kept for an identity that ran twice (last, first), the cost statistic (mean, "
+        f"median, {_lit('10%')} trimmed mean), the solve-rate prior ({_lit('Beta(1,1)')}, {_lit('Beta(0.5,0.5)')}) "
+        f"and cost outliers (as recorded, winsorised at the pooled {_lit('99th')} percentile). A tier with too few "
+        "tasks in an arm is left out (`analysis/multiverse.py`, DECISIONS.md D29).",
+        "",
+        f"- Guardrail posterior at or above the bar: {share('guardrail_pass')} of specifications.",
+        f"- Cost per solved task lower under `{treatment}`: {share('cost_direction')}; with the whole bootstrap "
+        f"interval below zero: {share('cps_ci_below_zero')}.",
+        f"- Both the guardrail and the cost direction hold: {share('both')}.",
+        f"- The change in cost per solved task ranges from {_ci(b + '.cps_change_pct_range', 'pct1', numbers)}, "
+        f"and the guardrail posterior from {_ci(b + '.guardrail_posterior_range', 'prob1', numbers)}.",
+        "- Specifications below the guardrail bar use the task set: "
+        f"{marker(b + '.guardrail_fail_task_sets', 'str', numbers)} "
+        f"({marker(b + '.fresh_specs_failing', 'int', numbers)} of {marker(b + '.fresh_specs', 'int', numbers)} "
+        f"fresh-tier specifications fail, and {marker(b + '.non_fresh_specs_failing', 'int', numbers)} others do), "
+        "as in the by-tier section.",
+        "",
+        f"![Specification curve for {name}](charts/{name}-specification-curve.png)",
+        "",
+        "<details>",
+        "<summary>Every specification</summary>",
+        "",
+        "| task set | attempt | cost statistic | prior | outliers | n control | n treatment "
+        "| change in cost per solved task | bootstrap interval | P(Δsolve > \u2212m) |",
+        "|---|---|---|---|---|---|---|---|---|---|",
+    ]
+    for i, s in enumerate(mv["specs"]):
+        base = f"{b}.specs.{i}"
+        choices = [_lit(SPEC_LABELS[s[k]]) for k in ("task_set", "attempt", "cost_stat", "prior", "outliers")]
+        if s.get("registered"):
+            choices[0] = f"{choices[0]} (registered)"
+        cells = [
+            *choices,
+            marker(base + ".n_control", "int", numbers),
+            marker(base + ".n_treatment", "int", numbers),
+            marker(base + ".cps_change_pct", "pct1", numbers),
+            _ci(base + ".cps_change_pct_ci", "pct1", numbers),
+            marker(base + ".guardrail_posterior", "prob1", numbers),
+        ]
+        lines.append("| " + " | ".join(cells) + " |")
+    return [*lines, "", "</details>", ""]
+
+
+def _frontier_lines(numbers: Any) -> list[str]:
+    fr = numbers.get("frontier") or {}
+    if not fr.get("arms"):
+        return []
+    lines = [
+        "## Secondary: every arm on one cost-accuracy plane (added after `exp1` ended)",
+        "",
+        "Mean cost per task against solve rate for every arm the project ran, with percentile bootstrap intervals "
+        "on both. An arm is on the frontier when no other arm costs no more and solves no less. The batches ran on "
+        "different task pools (pilot, exp1, rollout, exp2), so a comparison across batches describes them and tests "
+        "nothing; only the arms within one experiment were randomised (`analysis/frontier.py`).",
+        "",
+        "| arm | tasks | mean cost | interval | solve rate | interval | on the frontier |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for key in fr["order"]:
+        base = f"frontier.arms.{key}"
+        lines.append(
+            f"| {marker(base + '.label', 'str', numbers)} | {marker(base + '.n', 'int', numbers)} "
+            f"| {marker(base + '.cost_mean', 'usd4', numbers)} | {_ci(base + '.cost_mean_ci', 'usd4', numbers)} "
+            f"| {marker(base + '.solve_rate', 'prob1', numbers)} | {_ci(base + '.solve_rate_ci', 'prob1', numbers)} "
+            f"| {marker(base + '.on_frontier', 'str', numbers)} |"
+        )
+    return [*lines, "", "![Every arm on one cost-accuracy plane](charts/frontier.png)", ""]
+
+
+def _proof_lines(numbers: Any) -> list[str]:
+    proofs = (numbers.get("integrity") or {}).get("proofs") or {}
+    if not proofs:
+        return []
+    lines = [
+        "## Integrity: inclusion proofs",
+        "",
+        "Every `task_done` record has an audit path to its run's Merkle root (`integrity/merkle.py`). "
+        "`uv run python -m integrity.prove --run runs/exp1 --task <identity>` prints one and checks it; "
+        "the files below hold every path, for the site.",
+        "",
+    ]
+    for run in proofs:
+        b = f"integrity.proofs.{run}"
+        lines.append(
+            f"- `{run}`: {marker(b + '.verified', 'int', numbers)} of {marker(b + '.leaves', 'int', numbers)} "
+            f"leaves verified against root {marker(b + '.root', 'hash12', numbers)}, longest path "
+            f"{marker(b + '.path_length_max', 'int', numbers)} hashes, "
+            f"{marker(b + '.bytes', 'int', numbers)} bytes in `analysis/out/{proofs[run]['file']}`."
+        )
+    return [*lines, ""]
+
+
 def _experiment_block(name: str, numbers: Any) -> list[str]:
     exp = numbers[name]
     arms = _arm_names(exp)
@@ -363,6 +536,8 @@ def _experiment_block(name: str, numbers: Any) -> list[str]:
                 f"{marker(d + '.p_solve_drop_within_m', 'prob1', numbers)}."
             )
         lines.append("")
+    lines += _always_valid_lines(name, exp, numbers)
+    lines += _multiverse_lines(name, exp, numbers)
     lines += [
         "### By trait",
         "",
@@ -404,6 +579,8 @@ def build_results_body(numbers: Any) -> str:
         if isinstance(numbers.get(name), dict) and numbers[name].get("arms"):
             lines += _experiment_block(name, numbers)
             lines.append("")
+    lines += _frontier_lines(numbers)
+    lines += _proof_lines(numbers)
     return "\n".join(lines).rstrip() + "\n"
 
 

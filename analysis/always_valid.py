@@ -304,7 +304,7 @@ def analyse(
     harmful = [s for s in solve if s.p_step <= alpha and s.estimate is not None and s.estimate < 0]
     last_s = solve[-1]
     out["solve"] = {
-        "tau_pp": taus["tau_solve"] * 100,
+        "tau": taus["tau_solve"],
         "estimate_pp": _pp(last_s.estimate),
         "p_final": last_s.p,
         "ci_final_pp": [_pp(last_s.lo), _pp(last_s.hi)],

@@ -27,6 +27,17 @@ runs/<exp>/transcripts/     the raw planner transcript and graded patch of every
 
 `hash = sha256(prev_hash_hex + canonical_json(payload))`. Here `canonical_json` means `json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)` encoded as UTF-8. The first record uses `prev_hash = "0" * 64`. The Merkle root is computed over the `hash` of every `task_done` record in `seq` order: leaves are the raw 32-byte digests, a node is `sha256(left + right)`, and an odd node is paired with itself.
 
+## Inclusion proofs
+
+`uv run python -m integrity.prove --run runs/<exp> --task <identity>` prints a `task_done` record, its leaf hash and its audit path, and checks the path against the root published in `numbers.json`. `analysis.analyse` writes every leaf's proof for `exp1`, `rollout` and `exp2` (when committed) to `analysis/out/proofs/<run>.json`:
+
+```json
+{"run": "exp1", "size": 146, "root": "...", "rule": "...",
+ "leaves": [{"identity": "swelive:...", "seq": 3, "index": 0, "leaf": "...", "path": ["...", "..."]}]}
+```
+
+`seq` is the record's sequence number in `ledger.jsonl`, `index` its position among the `task_done` records, and `leaf` its `hash`. `path` holds the sibling hashes from the leaf level up. To check a proof, start from the leaf with `i = index` and `n = size`, and while `n > 1`: if `i` is odd, hash the next path entry followed by the node; if `i` is even and `i + 1 < n`, hash the node followed by the next path entry; otherwise (the last node of an odd level) hash the node with itself, using no path entry. Then `i = i // 2` and `n = (n + 1) // 2`. The path must be used up exactly and the result must equal `root`. This is the tree rule of the [Ledger](#ledger) section; it differs from RFC 6962, which prefixes leaves and nodes and does not pair an odd node with itself.
+
 ## Flagsmith events
 
 These are sent per task by `harness/events.py`, using the same identifier as the exposure (`swelive:<instance_id>`).
@@ -60,11 +71,20 @@ These are sent per task by `harness/events.py`, using the same identifier as the
     "power": {"n_per_arm": 0, "mde_solve_pp": 0, "mde_cost_pct": 0, "guardrail_pass_rate": 0, "power": 0.8},
     "by_tier": {"fresh": {"<arm>": {"n": 0, "solve_rate": 0, "cost_mean": 0, "cost_per_solve": 0}, "delta": {"solve_rate_pp": 0, "p_solve_drop_within_m": 0}}, "pre_cutoff": {}},
     "cuped": {"variance_reduction_pct": 0},
-    "by_trait": {"difficulty": {}, "language": {}, "created_month": {}}
+    "by_trait": {"difficulty": {}, "language": {}, "created_month": {}},
+    "secondary": {"always_valid": ALWAYS_VALID, "multiverse": MULTIVERSE}
   },
   "rollout": {"n": 0, "cost_mean": 0, "solve_rate": 0},
   "exp2": {"...": "same shape as exp1"},
-  "integrity": {"merkle_root": "...", "task_done_records": 0, "env_snapshots": 0, "env_snapshot_distinct_hashes": 0}
+  "frontier": FRONTIER,
+  "projection": {"label": "...", "basis": "...", "per_1000_solved": {"control": 0, "lanes_v1": 0, "saved": 0}},
+  "pricing": {"frontier_model": "...", "small_model": "...", "frontier_input_per_mtok": 0, "frontier_output_per_mtok": 0,
+              "small_input_per_mtok": 0, "small_output_per_mtok": 0, "frontier_to_small_ratio": 0},
+  "scale": SCALE,
+  "integrity": {"merkle_root": "...", "task_done_records": 0, "env_snapshots": 0, "env_snapshot_distinct_hashes": 0,
+                "by_experiment": {"<run>": {"merkle_root": "...", "task_done_records": 0, "...": "..."}},
+                "proofs": {"exp1": {"file": "proofs/exp1.json", "leaves": 0, "verified": 0, "root": "...",
+                                    "path_length_max": 0, "bytes": 0}, "rollout": {}}}
 }
 ```
 
@@ -73,12 +93,89 @@ where
 ```
 ARM = {"n_exposed", "n_excluded", "n_analysed", "cost_mean", "cost_mean_ci", "cost_median",
        "solve_rate", "solve_rate_ci", "solves", "cost_per_solve", "cost_per_solve_ci",
-       "delegate_share_cost", "delegate_share_tokens", "turns_mean", "seconds_mean"}
+       "delegate_share_cost", "delegate_share_tokens", "delegate_cost_mean", "main_cost_mean",
+       "turns_mean", "seconds_mean"}
 ```
+
+`delegate_cost_mean` and `main_cost_mean` are the mean worker-lane and planner-lane dollars per analysed task; they add up to `cost_mean`.
+
+### Secondary analyses added after experiment 1 ended
+
+These four blocks were added after experiment 1 was decided (DECISIONS.md, D29). They are robustness readings, labelled `"label": "secondary"`, and none of them changes a registered decision. Each runs for `exp2` too once `runs/exp2` is committed.
+
+`<exp>.secondary.always_valid` (`analysis/always_valid.py`): the mixture sequential probability ratio test replayed in the order tasks finished.
+
+```
+ALWAYS_VALID = {"label", "added_after_exp1", "method", "alpha", "min_per_arm", "order", "tau_rule",
+  "n_tasks", "first_evaluated_at", "board_live_after_tasks",
+  "pilot": {"pilot_treatment", "pilot_n_control", "pilot_n_treatment", "pilot_delta_cost", "pilot_delta_solve"},
+  "cost":  {"tau" (USD), "estimate" (USD), "p_final", "ci_final" (USD), "crossed", "first_cross_at",
+            "first_cross_finished_at", "first_cross_estimate", "p_at_board_live"},
+  "solve": {"tau" (fraction), "estimate_pp", "p_final", "ci_final_pp", "crossed", "crossed_harmful",
+            "first_harmful_cross_at", "p_at_board_live"}}
+```
+
+`first_cross_at`, `first_harmful_cross_at`, `first_evaluated_at` and `board_live_after_tasks` count analysed tasks in finishing order. `p_final` is the always-valid p-value after the last task (the running minimum of 1/Λ), and `ci_final` the running intersection of the always-valid intervals. `board_live_after_tasks` is the number of tasks that had finished when the live board went public (D24). `p_at_board_live` is the p-value at that point.
+
+`<exp>.secondary.multiverse` (`analysis/multiverse.py`): the specification curve.
+
+```
+MULTIVERSE = {"label", "added_after_exp1", "choices", "m", "guardrail_bar", "bootstrap_resamples", "n_specs",
+  "guardrail_pass", "guardrail_pass_share", "guardrail_fail", "cost_direction", "cost_direction_share",
+  "cps_ci_below_zero", "cps_ci_below_zero_share", "both", "both_share",
+  "cps_change_pct_range", "guardrail_posterior_range", "guardrail_fail_task_sets", "guardrail_fail_only_fresh",
+  "fresh_specs", "fresh_specs_failing", "non_fresh_specs_failing",
+  "registered": {"cps_change_pct", "guardrail_posterior"},
+  "specs": [{"task_set", "attempt", "cost_stat", "prior", "outliers", "registered", "n_control", "n_treatment",
+             "cps_change_pct", "cps_change_pct_ci", "guardrail_posterior", "guardrail_pass", "cost_direction",
+             "cps_ci_below_zero"}]}
+```
+
+Choices: `task_set` is `all`, `fresh` or `pre_cutoff`; `attempt` is `last` or `first`; `cost_stat` is `mean`, `median` or `trimmed10`; `prior` is `beta11` or `beta0505`; `outliers` is `as_is` or `winsorised` (pooled 99th percentile). `cost_direction` means cost per solved task is lower under the treatment; `both` counts specifications where that and the guardrail both hold. The registered specification is first in `specs`.
+
+`frontier` (`analysis/frontier.py`): every arm on one cost-accuracy plane.
+
+```
+FRONTIER = {"label", "added_after_exp1", "note", "batches", "order", "n_arms", "n_on_frontier",
+  "on_frontier" (labels, cheapest first), "bootstrap_resamples", "seed",
+  "arms": {"<batch>_<variant>": {"batch", "variant", "policy", "label", "n", "cost_mean", "cost_mean_ci",
+                                 "solve_rate", "solve_rate_ci", "on_frontier"}}}
+```
+
+Batches are `pilot` (the `runs/pilot-*` directories pooled by arm), `exp1`, `rollout` and `exp2`; dry runs are left out. The batches used different task pools, so comparisons across them are descriptive.
+
+`integrity.proofs` lists the proof files `analysis.analyse` writes (paths relative to `analysis/out/`), with the leaf count, how many verified against the root, the longest audit path and the file size. The file format is under [Inclusion proofs](#inclusion-proofs).
+
+### Projection, pricing and scale
+
+`projection` is arithmetic on measured figures, not a measurement: `per_1000_solved.<arm>` is 1,000 times `exp1.arms.<arm>.cost_per_solve` in USD, and `saved` is control minus the treatment.
+
+`pricing` is copied from `harness/pricing.json` (USD per million tokens) for the models the experiment 1 arms used: `frontier_model` is the control arm's worker model and `small_model` the treatment arm's. `frontier_to_small_ratio` is the ratio of their input prices.
+
+`scale` counts what is committed, over every run directory under `runs/` (experiment 2 included once committed) unless a key says otherwise. All values are integers.
+
+| Key | Definition |
+|---|---|
+| `tasks_run`, `tasks_by_batch.<run>` | `task_done` records in the run ledgers |
+| `task_attempts`, `task_attempts_by_batch.<run>` | distinct (task, attempt) pairs with a task record or a transcript. One transcript is written per attempt. In `runs/exp1`, four first attempts were cut off by a stopped worker after the agent finished and before the task record was written; their leases were re-queued and the second attempt wrote the record, so 150 transcripts stand behind 146 records |
+| `tests_executed`, `tests_executed_by_batch.<run>`, `tests_by_result.<result>` | per-test results the grader recorded (`tests` in each task record: the FAIL_TO_PASS and PASS_TO_PASS entries), summed over task records; `tests_by_result` splits them into pass, fail and skip |
+| `model_calls` | lines in `calls.jsonl` |
+| `tokens`, `tokens_by_kind.<kind>` | input, output, 5-minute and 1-hour cache-write and cache-read tokens over all calls |
+| `ledger_records` | lines in the run ledgers |
+| `events_sent` | lines in `events.jsonl`, one per event sent to Flagsmith. The ledger's `event_sent` records group a task's events and miss the three events of the first attempt of `swelive:gui-cs__Terminal.Gui-4860`, so the file is the fuller count |
+| `env_snapshots` | files under `runs/*/env/` |
+| `transcripts` | files under `runs/*/transcripts/` |
+| `repos`, `languages` | distinct `repo` and `language` traits among experiment 1's task records |
+| `npm_packages` | `package.json` files under `kit/` without `"private": true` |
+| `examples` | directories `examples/NN-*` |
+| `unit_tests_python` | functions named `test_*` under `tests/`, counted in the source (a parametrized test counts once) |
+| `unit_tests_ts` | `test(` and `it(` calls in the `*.test.ts` files of `board/web`, `board/worker`, `kit/ts` and `kit/mcp` (a call inside a loop counts once) |
+| `unit_tests` | `unit_tests_python` plus `unit_tests_ts` |
+| `prereg_tags` | registration files (`prereg/experiment-*.md`, amendments included) listed in `prereg/HASHES.txt`, each of which has a `prereg-*` tag; `prereg/pilot-report.md` is hashed there too but has no tag and is not counted |
 
 ### Number markers
 
-In README.md, analysis/results.md, docs/paper.md and docs/build/deck.html, every figure taken from numbers.json is wrapped as `<!--n:exp1.arms.control.cost_mean:usd2-->$1.23<!--/n-->`. `analysis/render_docs.py` fills the markers, and `analysis/check_consistency.py` re-renders them and fails if any marker is stale. It also fails if a results section contains a bare number with no marker. Formats: `usd2`, `usd4`, `pct1`, `pp1`, `int`, `f3`, `prob1` (probability rendered as a percent), `hash12`.
+In README.md, analysis/results.md, docs/paper.md and docs/build/deck.html, every figure taken from numbers.json is wrapped as `<!--n:exp1.arms.control.cost_mean:usd2-->$1.23<!--/n-->`. `analysis/render_docs.py` fills the markers, and `analysis/check_consistency.py` re-renders them and fails if any marker is stale. It also fails if a results section contains a bare number with no marker. Formats: `usd2`, `usd4`, `pct1`, `pp1`, `int`, `f3`, `prob1` (probability rendered as a percent), `hash12`, `p3` (a p-value to three decimals, or `<0.001` below that), and `str` for labels.
 
 The board seed (`board/web/src/seed.json`) and the captions file (`video/captions.json`) store `{"key": "exp1.delta.cost_mean_pct", "fmt": "pct1", "text": "..."}` entries, which are checked the same way.
 
