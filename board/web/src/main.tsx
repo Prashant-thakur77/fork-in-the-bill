@@ -5,6 +5,7 @@ import "@fontsource/overpass-mono/400.css";
 import "@fontsource/overpass-mono/600.css";
 import "./styles.css";
 import "./site/site.css";
+import "./site/pages.css";
 import { Site } from "./site/Shell";
 
 const root = document.getElementById("root")!;

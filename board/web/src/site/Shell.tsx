@@ -8,6 +8,9 @@ import { Footer } from "./Footer";
 import { routeFor } from "./routes";
 import Home from "../pages/Home";
 import Live from "../pages/Live";
+import HowItWorks from "../pages/HowItWorks";
+import WhyFlagsmith from "../pages/WhyFlagsmith";
+import FlagsmithUses from "../pages/FlagsmithUses";
 import NotFound from "../pages/NotFound";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -15,6 +18,9 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 export const PAGES: Record<string, ComponentType> = {
   "/": Home,
   "/live": Live,
+  "/how-it-works": HowItWorks,
+  "/why-flagsmith": WhyFlagsmith,
+  "/flagsmith": FlagsmithUses,
   "/404": NotFound,
 };
 
