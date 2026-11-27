@@ -72,6 +72,26 @@ describe("navigation", () => {
   });
 });
 
+describe("the home page", () => {
+  it("tells the whole story with figures from the analysis output", () => {
+    const page = text("/");
+    const n1 = data.numbers?.exp1;
+    if (!n1) return;
+    for (const h of ["Most of the bill was grunt work", "One flag does four jobs", "Four ways the result could have been wrong", "Put your own agent on the same road"]) expect(page, h).toContain(h);
+    expect(page).toContain(`$${n1.arms.control.delegate_cost_mean.toFixed(4)}`);
+    expect(page).toContain(`$${n1.arms.lanes_v1.main_cost_mean.toFixed(4)}`);
+    expect(page).toContain(`${(n1.arms.control.delegate_share_cost * 100).toFixed(1)}%`);
+    if (data.numbers.projection) {
+      expect(page).toContain("Arithmetic on measured figures, not a measurement");
+      expect(page).toContain(`$${data.numbers.projection.per_1000_solved.saved.toFixed(2)}`);
+    }
+    if (data.kit.mcp) expect(page).toContain("npx -y forkbill-mcp");
+    expect(page).toContain(data.snippets.tsInstall.code.split("\n")[0]);
+    // the caveat still sits with the answer
+    expect(page).toContain("Caveat: on the fresh tier alone");
+  });
+});
+
 describe("experiment 2 and the rollout", () => {
   it("shows the registration and no verdict while experiment 2 is open", () => {
     const exp2 = data.batches.find((b: { id: string }) => b.id === "exp2");

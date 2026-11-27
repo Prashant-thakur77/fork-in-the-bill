@@ -15,6 +15,7 @@ import "./site/shell.css";
 import "./site/newpages.css";
 import "./site/scale.css";
 import "./site/merge.css";
+import "./site/home2.css";
 import { Site } from "./site/Shell";
 
 const root = document.getElementById("root")!;

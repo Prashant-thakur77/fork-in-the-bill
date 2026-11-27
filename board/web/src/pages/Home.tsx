@@ -14,6 +14,7 @@ import { ResultPair } from "../site/ResultPair";
 import { Booth } from "../site/Booth";
 import { HEADLINE } from "./Scale";
 import { ROWS } from "./Different";
+import { Bill, Checks, FourJobs, Money, UseStrip } from "./HomeMore";
 import { useLiveState } from "../site/live";
 import { CURRENT, batchOf, batchStatus } from "../site/batches";
 import { format, money } from "../data/format";
@@ -396,6 +397,12 @@ export default function Home() {
         <HeroJunction />
       </section>
 
+      {/* 1b. the problem, as a bill */}
+      <Bill />
+
+      {/* 1c. Flagsmith's four jobs */}
+      <FourJobs />
+
       {/* 2. a task's journey */}
       <section className="hsec journey-sec" aria-labelledby="journey-h">
         <div className="hsec-copy wide">
@@ -422,6 +429,10 @@ export default function Home() {
       {/* 5. the result so far */}
       <Result />
 
+      {/* 5a. the gap at a larger size, and the checks run afterwards */}
+      <Money />
+      <Checks />
+
       {/* 5b. by the numbers, and how this is different */}
       <section className="hsec strip-sec" aria-labelledby="nums-h">
         <div className="strip-head">
@@ -431,14 +442,29 @@ export default function Home() {
             Every count, with its source <span aria-hidden="true">→</span>
           </Link>
         </div>
-        <ul className="strip-figs" data-reveal="row">
-          {HEADLINE.map((x) => (
-            <li key={x.label}>
-              <b data-count="">{x.value}</b>
-              <span>{x.label}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="strip-figs-wrap">
+          <ul className="strip-figs" data-reveal="row">
+            {HEADLINE.map((x) => (
+              <li key={x.label}>
+                <b data-count="">{x.value}</b>
+                <span>{x.label}</span>
+              </li>
+            ))}
+          </ul>
+          <ul className="strip-figs is-second" data-reveal="row">
+            {[
+              [repo.scale.totals.tokens.toLocaleString("en-US"), "tokens through the models"],
+              [repo.scale.totals.repos.toLocaleString("en-US"), `repositories, in ${repo.scale.totals.languageCount} languages`],
+              [repo.scale.totals.ledger.toLocaleString("en-US"), "hash-chained ledger records"],
+              [(repo.scale.tests.python + repo.scale.tests.typescript).toLocaleString("en-US"), "test functions in the repository"],
+            ].map(([v, l]) => (
+              <li key={l}>
+                <b data-count="">{v}</b>
+                <span>{l}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
       <section className="hsec strip-sec is-diff" aria-labelledby="diff-h">
         <div className="strip-head">
@@ -465,6 +491,9 @@ export default function Home() {
           ))}
         </ol>
       </section>
+
+      {/* 5c. use it */}
+      <UseStrip />
 
       {/* 6. live strip */}
       <section className="hsec live-sec" aria-labelledby="live-h">
