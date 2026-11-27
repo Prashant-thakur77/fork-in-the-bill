@@ -28,14 +28,22 @@ chmod 700 "$STATE"
 printf '*\n' >"$STATE/.gitignore"
 umask 077
 
-if [ ! -f "$HERE/.env" ]; then
-  {
-    echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)"
-    echo "DJANGO_SECRET_KEY=$(openssl rand -hex 32)"
-    echo "WAREHOUSE_CREDENTIALS_SECRET=$(openssl rand -hex 32)"
-  } >"$HERE/.env"
-  echo "wrote selfhost/.env with random secrets"
-fi
+# Add each secret that selfhost/.env does not have yet. The file may already exist with only a
+# port or a subnet in it, and compose would then fall back to its fixed local-only defaults.
+# An instance that is already initialised keeps what it started with: its database volume was
+# created with that password.
+touch "$HERE/.env"
+add_secret() { # add_secret NAME BYTES
+  if [ -f "$CREDS" ] || grep -q "^$1=" "$HERE/.env"; then return 0; fi
+  [ ! -s "$HERE/.env" ] || [ -z "$(tail -c1 "$HERE/.env")" ] || echo >>"$HERE/.env"
+  echo "$1=$(openssl rand -hex "$2")" >>"$HERE/.env"
+  WROTE_SECRETS=1
+}
+WROTE_SECRETS=0
+add_secret POSTGRES_PASSWORD 16
+add_secret DJANGO_SECRET_KEY 32
+add_secret WAREHOUSE_CREDENTIALS_SECRET 32
+if [ "$WROTE_SECRETS" -eq 1 ]; then echo "wrote selfhost/.env with random secrets"; fi
 set -a
 # shellcheck disable=SC1091
 source "$HERE/.env"

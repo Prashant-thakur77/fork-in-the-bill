@@ -30,7 +30,7 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT=$(cd "$HERE/.." && pwd)
 # shellcheck source=../flagsmith/lib.sh
 source "$ROOT/flagsmith/lib.sh"
-need jq "$FS_BIN"
+need jq docker "$FS_BIN"
 
 STATE="$HERE/.state"
 [ -f "$STATE/credentials.env" ] || die "run selfhost/bootstrap.sh first"
@@ -97,8 +97,13 @@ if [[ " ${MODES[*]} " == *" edge"* ]]; then
   URLS+=(--edge-url "$EDGE_URL")
 fi
 
+# Rows in Flagsmith's own events table for this environment. The warehouse connection's
+# total_events_received is not used for the before and after counts: each API worker caches it
+# for 60 seconds, so a read can be older than the one before it.
 stored_events() {
-  fs_api GET "api/v1/environments/$ENV/warehouse-connections/" | jq -r '.[0].total_events_received // 0'
+  docker compose -f "$HERE/docker-compose.yml" --env-file "$HERE/.env" exec -T postgres \
+    psql -U postgres -d flagsmith -At -v ON_ERROR_STOP=1 -v env="$ENV" \
+    <<<"select count(*) from experimentation_sdkexperimentationevent where environment_key = :'env'"
 }
 
 if [ "${#MODES[@]}" -gt 1 ]; then
@@ -118,7 +123,7 @@ for m in "${MODES[@]}"; do
   # What the kit sent: one exposure per exposed task, plus every task event it logged.
   sent=$(( $(jq -s 'map(select(.exposed)) | length' "$STATE/demo-$m/tasks.jsonl") + $(wc -l <"$STATE/demo-$m/events.jsonl") ))
   expected=$((total + sent))
-  # The counter is updated as events are written and can trail (or read stale) for a moment.
+  # Events are written as the API receives them; give the last request a moment to land.
   for _ in $(seq 1 15); do
     stored=$(stored_events)
     [ "$stored" -ge "$expected" ] && break
@@ -128,7 +133,7 @@ for m in "${MODES[@]}"; do
   total=$stored
 done
 
-echo "== stored events (warehouse connection counters)"
+echo "== stored events (warehouse connection counters, cached by the API for up to 60 s)"
 fs_api GET "api/v1/environments/$ENV/warehouse-connections/" \
   | jq -c '.[] | {name, status, total_events_received, unique_events_count, last_event_received_at}'
 
