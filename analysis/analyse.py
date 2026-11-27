@@ -32,6 +32,7 @@ from scipy import stats
 from analysis import pull_results
 from analysis.render_docs import process as render_process
 from analysis.to_parquet import convert_all, read_jsonl
+from integrity.verify_assignment import verify as verify_assignment
 from integrity.verify_ledger import verify as verify_ledger
 from tasks.model import TaskInstance
 from tasks.sources import read_pool
@@ -593,13 +594,23 @@ def spend(runs: Path) -> dict[str, Any]:
     return {"total_usd": float(sum(by_exp.values())), "by_experiment": by_exp}
 
 
+def assignment_check(run_dir: Path) -> dict[str, Any] | None:
+    """Recompute every recorded arm offline with Flagsmith's engine from the run's first env snapshot."""
+    if not (run_dir / "tasks.jsonl").exists():
+        return None
+    rep = verify_assignment(run_dir).to_json()
+    keys = ("checked", "matched", "match_rate", "recorded_counts", "expected_counts", "flag_engine_version", "ok")
+    return {k: rep[k] for k in keys} | {"mismatched": len(rep["mismatched"]), "env_sha256": rep["env_sha256"]}
+
+
 def integrity_block(runs: Path, primary: str) -> dict[str, Any]:
     by_exp: dict[str, Any] = {}
     for run_dir in sorted(p for p in runs.iterdir() if p.is_dir()) if runs.exists() else []:
         if not (run_dir / "ledger.jsonl").exists():
             continue
         rep = verify_ledger(run_dir)
-        snaps = sorted((run_dir / "env_snapshots").glob("*.json"))
+        env_dir = run_dir / "env" if (run_dir / "env").is_dir() else run_dir / "env_snapshots"
+        snaps = sorted(env_dir.glob("*.json"))
         digests = {hashlib.sha256(p.read_bytes()).hexdigest() for p in snaps}
         by_exp[run_dir.name] = {
             "merkle_root": rep.merkle_root,
@@ -608,6 +619,7 @@ def integrity_block(runs: Path, primary: str) -> dict[str, Any]:
             "env_snapshot_distinct_hashes": len(digests),
             "ledger_ok": rep.ok,
             "ledger_errors": rep.errors[:20],
+            "assignment": assignment_check(run_dir) if (run_dir / "env").is_dir() else None,
         }
     main = by_exp.get(primary) or {}
     return {
@@ -616,6 +628,7 @@ def integrity_block(runs: Path, primary: str) -> dict[str, Any]:
         "task_done_records": main.get("task_done_records", 0),
         "env_snapshots": main.get("env_snapshots", 0),
         "env_snapshot_distinct_hashes": main.get("env_snapshot_distinct_hashes", 0),
+        "assignment": main.get("assignment"),
         "by_experiment": by_exp,
     }
 

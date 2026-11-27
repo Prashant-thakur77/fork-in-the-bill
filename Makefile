@@ -78,6 +78,7 @@ analyse: ## Reproduce every published number from the run logs
 
 verify: ## Re-check the hash-chained ledgers and print the Merkle roots
 	for d in runs/*/; do [ -f "$$d/ledger.jsonl" ] && $(UV) run python -m integrity.verify_ledger "$$d"; done
+	for d in runs/*/; do [ -d "$$d/env" ] && $(UV) run python -m integrity.verify_assignment --run "$$d" --out /dev/null >/dev/null && echo "$$d assignments match Flagsmith engine"; done
 
 board-seed: ## Write final numbers into the board's static seed
 	cd board/web && npm run seed -- ../../analysis/out/numbers.json
