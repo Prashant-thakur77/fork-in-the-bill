@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fork in the Bill</title>
+<!-- Figures are number markers filled from analysis/out/numbers.json by analysis/render_docs.py
+     and checked by analysis/check_consistency.py. docs/build/build.mjs prints this file to docs/deck.pdf. -->
+<style>
+@font-face { font-family: "Overpass"; src: url("node_modules/@fontsource-variable/overpass/files/overpass-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; }
+@font-face { font-family: "Overpass Mono"; src: url("node_modules/@fontsource/overpass-mono/files/overpass-mono-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "Overpass Mono"; src: url("node_modules/@fontsource/overpass-mono/files/overpass-mono-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+@page { size: 1280px 720px; margin: 0; }
+:root {
+  --ground: #ECEAE3; --surface: #F6F5F0; --inset: #DFDDD4; --line: #C9C6BB;
+  --text: #1B211E; --quiet: #4A514C; --sign: #0B6B45; --sheet: #F4F5EF;
+  --housing: #141716; --led: #FFB21A; --led-quiet: #C48A1C; --asphalt: #2B2E2D;
+  --paint-yellow: #EDBB2C; --orange: #EE6A1F; --red-text: #A91C15; --go: #3BD67A;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--ground); }
+body { font-family: "Overpass", Arial, sans-serif; color: var(--text); font-variant-numeric: tabular-nums; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.slide { width: 1280px; height: 720px; position: relative; overflow: hidden; padding: 56px 72px 64px; background: var(--ground); break-after: page; display: flex; flex-direction: column; }
+.slide:last-child { break-after: auto; }
+.slide.center { justify-content: center; padding-bottom: 80px; }
+.exit { position: absolute; top: 0; right: 72px; background: var(--paint-yellow); color: var(--text); font-weight: 800; font-size: 15px; padding: 10px 14px 8px; border-radius: 0 0 6px 6px; letter-spacing: 0.04em; }
+.foot { position: absolute; left: 72px; right: 72px; bottom: 24px; display: flex; justify-content: space-between; font-size: 13px; color: var(--quiet); border-top: 1px solid var(--line); padding-top: 8px; }
+.kicker { font-size: 15px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sign); margin: 0 0 10px; }
+h1 { font-size: 50px; font-weight: 900; line-height: 1.0; letter-spacing: -0.03em; margin: 0 0 22px; max-width: 1000px; }
+h2 { font-size: 24px; font-weight: 800; margin: 0 0 10px; }
+p { font-size: 22px; line-height: 1.4; margin: 0 0 14px; }
+.quiet { color: var(--quiet); }
+code, .mono { font-family: "Overpass Mono", monospace; }
+p code, li code, td code { font-size: 0.86em; background: var(--inset); padding: 1px 6px 0; border-radius: 4px; }
+.row { display: flex; gap: 28px; }
+.col { flex: 1; min-width: 0; }
+/* guide sign: green plate, white inset border */
+.sign { background: var(--sign); color: var(--sheet); border-radius: 14px; padding: 6px; }
+.sign > .in { border: 3px solid var(--sheet); border-radius: 10px; padding: 18px 22px; height: 100%; }
+.sign .tab { display: inline-block; background: var(--sheet); color: var(--sign); font-weight: 800; font-size: 15px; padding: 3px 10px 1px; border-radius: 5px; margin-bottom: 10px; font-family: "Overpass Mono", monospace; }
+.sign h2 { color: var(--sheet); font-size: 28px; margin: 0 0 6px; }
+.sign p { color: var(--sheet); font-size: 19px; margin: 0; }
+/* LED housing */
+.led { background: var(--housing); border-radius: 10px; padding: 14px 18px 12px; color: var(--led); font-family: "Overpass Mono", monospace; font-weight: 700;
+  background-image: radial-gradient(rgba(255,178,26,0.10) 1px, transparent 1.4px); background-size: 6px 6px; }
+.led .cap { font-family: "Overpass", sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--led-quiet); }
+.led .big { font-size: 64px; line-height: 1.05; letter-spacing: -0.02em; }
+.led .mid { font-size: 38px; line-height: 1.1; }
+.led .sub { font-size: 16px; color: var(--led-quiet); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px; }
+.panel h2 { font-size: 21px; }
+.panel p { font-size: 18px; margin: 0 0 6px; }
+.rule { display: flex; gap: 16px; align-items: flex-start; margin: 0 0 14px; }
+.diamond { flex: none; width: 34px; height: 34px; background: var(--paint-yellow); transform: rotate(45deg); border-radius: 4px; display: flex; align-items: center; justify-content: center; margin: 4px 6px 0; }
+.diamond span { transform: rotate(-45deg); font-weight: 900; font-size: 17px; }
+.rule p { margin: 0; font-size: 21px; }
+.state { display: inline-block; font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px 1px; border-radius: 4px; background: var(--sign); color: var(--sheet); }
+.state.pending { background: var(--orange); color: var(--text); }
+table { border-collapse: collapse; width: 100%; font-size: 19px; }
+th { text-align: left; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--quiet); font-weight: 800; padding: 0 12px 8px 0; border-bottom: 2px solid var(--text); }
+td { padding: 9px 12px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.n { font-weight: 800; white-space: nowrap; }
+pre { font-family: "Overpass Mono", monospace; font-size: 16px; line-height: 1.5; background: var(--housing); color: var(--sheet); border-radius: 10px; padding: 16px 20px; margin: 0; white-space: pre; }
+pre .c { color: #9aa39d; }
+pre .k { color: var(--led); }
+img.shot { display: block; width: 100%; border-radius: 8px; border: 1px solid var(--line); }
+img.chart { display: block; max-width: 100%; max-height: 330px; border-radius: 8px; border: 1px solid var(--line); background: #fff; }
+.plates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.plate { background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--sign); border-radius: 8px; padding: 12px 16px 10px; }
+.plate h2 { font-size: 18px; margin: 0 0 4px; }
+.plate p { font-size: 15.5px; line-height: 1.35; margin: 0; }
+.workzone { background: var(--orange); color: var(--text); border-radius: 12px; padding: 6px; }
+.workzone > .in { border: 3px solid var(--text); border-radius: 8px; padding: 18px 22px; height: 100%; }
+.workzone h2 { font-size: 28px; }
+.workzone p { font-size: 19px; margin: 0 0 8px; }
+.hash { font-family: "Overpass Mono", monospace; font-size: 17px; word-break: break-all; }
+.receipt { background: #fffdf6; border: 1px solid var(--line); border-radius: 4px; padding: 18px 24px; font-family: "Overpass Mono", monospace; font-size: 17px; line-height: 1.55;
+  box-shadow: 0 1px 0 var(--line); }
+.receipt .ln { display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px dashed var(--line); padding: 3px 0; }
+.receipt .ln:last-child { border-bottom: 0; }
+.receipt b { font-weight: 700; }
+.mark { width: 120px; height: 120px; }
+a { color: inherit; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<!-- 1. Title -->
+<section class="slide" style="justify-content:center">
+  <div class="row" style="align-items:center; gap:44px">
+    <div class="col" style="flex:1.05">
+      <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+        <rect x="3" y="3" width="114" height="114" rx="14" fill="#0B6B45"/>
+        <rect x="10" y="10" width="100" height="100" rx="9" fill="none" stroke="#F4F5EF" stroke-width="4"/>
+        <path d="M60 98 V66 M60 66 L38 40 M60 66 L82 40" stroke="#F4F5EF" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M28 40 L38 26 L48 40 Z M72 40 L82 26 L92 40 Z" fill="#F4F5EF"/>
+      </svg>
+      <p class="kicker" style="margin-top:26px">Toggle Wars · Track 01</p>
+      <h1 style="font-size:72px; margin-bottom:18px">Fork in the Bill</h1>
+      <p style="font-size:28px; font-weight:700; line-height:1.25; margin-bottom:18px">Can a small model do a coding agent's grunt work, and cut the cost per solved task?</p>
+      <p class="quiet" style="font-size:20px">A pre-registered Flagsmith experiment on real bug fixes, paid for in real dollars.</p>
+      <p style="font-size:18px; margin-top:22px"><b>Fork in the Bill team</b> (CoffeeAndToggle)</p>
+    </div>
+    <div class="col" style="flex:1">
+      <img class="shot" src="../img/site-home.png" alt="The project site: two guide signs over a forked road, one lane per arm">
+    </div>
+  </div>
+</section>
+
+<!-- 2. The bill problem -->
+<section class="slide center">
+  <span class="exit">EXIT 1</span>
+  <p class="kicker">The bill</p>
+  <h1>Most of an agent's work needs little judgement. It is still billed at the frontier price.</h1>
+  <div class="row" style="margin-top:10px">
+    <div class="col led">
+      <div class="cap">Sonnet 5.5 · per million tokens</div>
+      <div class="mid">$2.00 in · $10.00 out</div>
+      <div class="sub">frontier model</div>
+    </div>
+    <div class="col led">
+      <div class="cap">Haiku 5.5 · per million tokens</div>
+      <div class="mid">$0.10 in · $0.50 out</div>
+      <div class="sub">small model, 20x cheaper</div>
+    </div>
+  </div>
+  <div class="row" style="margin-top:26px; align-items:center">
+    <div class="col" style="flex:0 0 330px">
+      <div class="led"><div class="cap">Worker share of cost, all-Sonnet arm</div><div class="big"><!--n:exp1.arms.control.delegate_share_cost:prob1-->62.5%<!--/n--></div></div>
+    </div>
+    <div class="col">
+      <p>Searching the repo, reading long files, running the tests and reading the log: the worker lane. When it runs on the frontier model, that is where most of the money goes.</p>
+      <p class="quiet" style="font-size:16px">Prices: <code>harness/pricing.json</code>, checked 2026-11-27. Share: experiment 1, <code>control</code> arm.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Fork in the Bill</span><span>The bill problem</span></div>
+</section>
+
+<!-- 3. The question -->
+<section class="slide center">
+  <span class="exit">EXIT 2</span>
+  <p class="kicker">The question</p>
+  <h1>Move the worker to the small model. Does each solved task get cheaper, or do fewer tasks get solved?</h1>
+  <p class="quiet" style="font-size:19px; margin-bottom:22px">Decision rule, fixed and hashed before the first task. Ship <code>lanes_v1</code> only if all three hold:</p>
+  <div class="rule"><div class="diamond"><span>1</span></div><p>Flagsmith reports a chance to beat control of at least 95% on <code>task_cost</code>.</p></div>
+  <div class="rule"><div class="diamond"><span>2</span></div><p>Our Beta(1,1) posterior gives P(Δsolve &gt; −m) ≥ 0.90, with m = 20 percentage points.</p></div>
+  <div class="rule"><div class="diamond"><span>3</span></div><p>Flagsmith does not report <code>task_solved</code> as losing.</p></div>
+  <p class="quiet" style="font-size:17px; margin-top:6px">No early stopping. The run ends when every task is done, excluded or invalid. Source: <code>prereg/experiment-1.md</code>.</p>
+  <div class="foot"><span>Fork in the Bill</span><span>The question</span></div>
+</section>
+
+<!-- 4. The design -->
+<section class="slide center">
+  <span class="exit">EXIT 3</span>
+  <p class="kicker">The design</p>
+  <h1 style="font-size:44px">Two lanes, one field apart. Flagsmith picks the lane.</h1>
+  <div class="row" style="gap:22px; min-height:250px">
+    <div class="col sign"><div class="in">
+      <span class="tab">control</span>
+      <h2>Frontier everywhere</h2>
+      <p>Planner: <b>Sonnet 5.5</b><br>Worker: <b>Sonnet 5.5</b></p>
+    </div></div>
+    <div class="col sign"><div class="in">
+      <span class="tab">lanes_v1</span>
+      <h2>Small delegate</h2>
+      <p>Planner: <b>Sonnet 5.5</b><br>Worker: <b>Haiku 5.5</b></p>
+    </div></div>
+    <div class="col panel" style="flex:1.25">
+      <h2>Registered first</h2>
+      <p class="hash" style="font-size:14px; margin-bottom:10px">sha256 <!--n:exp1.prereg.sha256:str-->44d715bd6bd7f8580e8bb1950a21ea852dfea4daaf040c84009f391bf56e19c2<!--/n--></p>
+      <p>Tag <code>prereg-exp1</code>, committed 22:57:35 UTC.</p>
+      <p>Experiment 822 started 23:02:34 UTC.</p>
+      <p class="quiet" style="font-size:15px">Amendment 1 added 80 pre-cutoff tasks to clear Flagsmith's 50-per-variant floor, before any per-arm result was seen.</p>
+    </div>
+  </div>
+  <p style="font-size:18px; margin-top:18px">Same prompts, tools, token limits and caps (40 turns, $0.60, 1200 s). The planner has no shell, so all grunt work goes through the worker. Tasks: real SWE-bench-Live issues in 8 languages.</p>
+  <div class="foot"><span>Fork in the Bill</span><span>The design</span></div>
+</section>
+
+<!-- 5. How Flagsmith is used -->
+<section class="slide center">
+  <span class="exit">EXIT 4</span>
+  <p class="kicker">How Flagsmith is used</p>
+  <h1 style="font-size:42px; margin-bottom:18px">Flagsmith assigns every task, records it and gives the verdict.</h1>
+  <div class="plates">
+    <div class="plate"><h2>Flag</h2><p><code>agent_routing</code>, multivariate. Its value is the whole routing policy as JSON, schema-checked on every read.</p></div>
+    <div class="plate"><h2>Variants</h2><p>Keyed variant <code>lanes_v1</code>, plus a <code>routing_kill</code> switch that sends no exposure. Never used in the run.</p></div>
+    <div class="plate"><h2>Identities</h2><p>One task, one identity: <code>swelive:&lt;id&gt;</code>, with repo, language and month traits.</p></div>
+    <div class="plate"><h2>Metrics</h2><p><code>task_cost</code> primary, <code>task_solved</code> guardrail, turns and seconds informational.</p></div>
+    <div class="plate"><h2>Experiment</h2><p>Id 822, 50/50 at 100% rollout, flag locked, prereg hypothesis pasted verbatim.</p></div>
+    <div class="plate"><h2>End and roll out</h2><p>End Experiment with <code>lanes_v1</code> as the decision: it becomes the same flag's value at 100%.</p></div>
+  </div>
+  <pre style="margin-top:18px; font-size:15px"><span class="c"># harness/policy.py, once per task</span>
+flag = client.<span class="k">get_experiment_flag</span>("agent_routing", identifier=identity, traits=traits)
+client.flush_events()   <span class="c"># exposure sent before anything else is tracked</span></pre>
+  <div class="foot"><span>Fork in the Bill</span><span>Flag, variants, identities, metrics, experiment, rollout</span></div>
+</section>
+
+<!-- 6. Result: cost -->
+<section class="slide center">
+  <span class="exit">EXIT 5</span>
+  <p class="kicker">The result · cost</p>
+  <h1 style="font-size:46px">Cost per solved task fell by more than half.</h1>
+  <div class="row" style="align-items:flex-start">
+    <div class="col" style="flex:0 0 520px">
+      <div class="led" style="margin-bottom:14px">
+        <div class="cap">control · per solved task</div>
+        <div class="big"><!--n:exp1.arms.control.cost_per_solve:usd4-->$0.1753<!--/n--></div>
+        <div class="sub"><!--n:exp1.arms.control.cost_per_solve_ci.0:usd4-->$0.1233<!--/n--> to <!--n:exp1.arms.control.cost_per_solve_ci.1:usd4-->$0.2607<!--/n--></div>
+      </div>
+      <div class="led">
+        <div class="cap">lanes_v1 · per solved task</div>
+        <div class="big"><!--n:exp1.arms.lanes_v1.cost_per_solve:usd4-->$0.0837<!--/n--></div>
+        <div class="sub"><!--n:exp1.arms.lanes_v1.cost_per_solve_ci.0:usd4-->$0.0614<!--/n--> to <!--n:exp1.arms.lanes_v1.cost_per_solve_ci.1:usd4-->$0.1191<!--/n--></div>
+      </div>
+      <p style="font-size:19px; margin-top:16px"><b><!--n:exp1.delta.cost_per_solve_pct:pct1-->−52.2%<!--/n--></b> per solved task. Mean cost per task <!--n:exp1.arms.control.cost_mean:usd4-->$0.0784<!--/n--> → <!--n:exp1.arms.lanes_v1.cost_mean:usd4-->$0.0340<!--/n--> (<!--n:exp1.delta.cost_mean_pct:pct1-->−56.7%<!--/n-->).</p>
+    </div>
+    <div class="col">
+      <img class="chart" style="max-height:400px" src="../../analysis/charts/exp1-cost-per-solve.png" alt="Bar chart: cost per solved task with bootstrap intervals, control against lanes_v1">
+      <p class="quiet" style="font-size:15px; margin-top:8px"><!--n:exp1.arms.control.n_analysed:int-->76<!--/n--> control and <!--n:exp1.arms.lanes_v1.n_analysed:int-->69<!--/n--> lanes_v1 tasks. Intervals: percentile bootstrap.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Fork in the Bill</span><span>Cost per solved task = mean cost ÷ solve rate</span></div>
+</section>
+
+<!-- 7. Result: solve rate -->
+<section class="slide center">
+  <span class="exit">EXIT 6</span>
+  <p class="kicker">The result · guardrail</p>
+  <h1 style="font-size:46px">Solve rate: a small drop, well inside the margin.</h1>
+  <div class="row" style="align-items:flex-start">
+    <div class="col" style="flex:0 0 520px">
+      <table>
+        <tr><th></th><th>Solved</th><th>Rate</th><th>Interval</th></tr>
+        <tr><td><code>control</code></td><td class="n"><!--n:exp1.arms.control.solves:int-->34<!--/n--> / <!--n:exp1.arms.control.n_analysed:int-->76<!--/n--></td><td class="n"><!--n:exp1.arms.control.solve_rate:prob1-->44.7%<!--/n--></td><td><!--n:exp1.arms.control.solve_rate_ci.0:prob1-->34.1%<!--/n--> to <!--n:exp1.arms.control.solve_rate_ci.1:prob1-->55.9%<!--/n--></td></tr>
+        <tr><td><code>lanes_v1</code></td><td class="n"><!--n:exp1.arms.lanes_v1.solves:int-->28<!--/n--> / <!--n:exp1.arms.lanes_v1.n_analysed:int-->69<!--/n--></td><td class="n"><!--n:exp1.arms.lanes_v1.solve_rate:prob1-->40.6%<!--/n--></td><td><!--n:exp1.arms.lanes_v1.solve_rate_ci.0:prob1-->29.8%<!--/n--> to <!--n:exp1.arms.lanes_v1.solve_rate_ci.1:prob1-->52.4%<!--/n--></td></tr>
+      </table>
+      <div class="row" style="margin-top:20px; gap:14px">
+        <div class="col led"><div class="cap">Δ solve rate</div><div class="mid"><!--n:exp1.delta.solve_rate_pp:pp1-->−4.2 pp<!--/n--></div><div class="sub"><!--n:exp1.delta.solve_rate_ci.0:pp1-->−19.8 pp<!--/n--> to <!--n:exp1.delta.solve_rate_ci.1:pp1-->+11.8 pp<!--/n--></div></div>
+        <div class="col led"><div class="cap">P(drop within m)</div><div class="mid"><!--n:exp1.delta.p_solve_drop_within_m:prob1-->97.7%<!--/n--></div><div class="sub">bar <!--n:exp1.decision.bars.guardrail_posterior:prob1-->90.0%<!--/n-->, m = <!--n:exp1.prereg.m:prob1-->20.0%<!--/n--></div></div>
+      </div>
+      <p class="quiet" style="font-size:16px; margin-top:14px">This rules out large losses only. A drop of a few points would go undetected at this size.</p>
+    </div>
+    <div class="col">
+      <img class="chart" style="max-height:380px" src="../../analysis/charts/exp1-solve-posteriors.png" alt="Solve-rate posterior densities for both arms">
+    </div>
+  </div>
+  <div class="foot"><span>Fork in the Bill</span><span>Beta(1,1) posteriors on solve rate</span></div>
+</section>
+
+<!-- 8. Flagsmith vs replication -->
+<section class="slide center">
+  <span class="exit">EXIT 7</span>
+  <p class="kicker">Flagsmith's verdict, then ours</p>
+  <h1 style="font-size:44px">Two methods, one answer: ship <code style="font-size:0.9em"><!--n:exp1.decision.ship:str-->lanes_v1<!--/n--></code>.</h1>
+  <div class="row">
+    <div class="col" style="flex:1.3">
+      <table style="font-size:21px">
+        <tr><th>Mean cost change</th><th>Flagsmith (normal)</th><th>Ours (bootstrap)</th></tr>
+        <tr><td>Point</td><td class="n"><!--n:exp1.flagsmith.lift_cost:prob1-->−56.6%<!--/n--></td><td class="n"><!--n:exp1.delta.cost_mean_pct:pct1-->−56.7%<!--/n--></td></tr>
+        <tr><td>Interval</td><td><!--n:exp1.flagsmith.ci_cost.0:prob1-->−68.8%<!--/n--> to <!--n:exp1.flagsmith.ci_cost.1:prob1-->−44.3%<!--/n--></td><td><!--n:exp1.delta.cost_mean_pct_ci.0:pct1-->−67.1%<!--/n--> to <!--n:exp1.delta.cost_mean_pct_ci.1:pct1-->−42.9%<!--/n--></td></tr>
+        <tr><td><code>lanes_v1</code> mean cost</td><td><!--n:exp1.flagsmith.cost_mean_by_variant.lanes_v1:usd4-->$0.0341<!--/n--></td><td><!--n:exp1.arms.lanes_v1.cost_mean:usd4-->$0.0340<!--/n--></td></tr>
+        <tr><td>Sample ratio</td><td colspan="2">p = <!--n:exp1.srm.p:f3-->0.561<!--/n-->, flagged: <!--n:exp1.srm.flag:str-->False<!--/n--></td></tr>
+      </table>
+    </div>
+    <div class="col">
+      <div class="rule"><div class="diamond"><span>1</span></div><p style="font-size:20px">Chance to beat control on cost: <b><!--n:exp1.flagsmith.chance_to_beat_control_cost:prob1-->100.0%<!--/n--></b>. Met: <!--n:exp1.decision.rule_met.flagsmith_95:str-->True<!--/n--></p></div>
+      <div class="rule"><div class="diamond"><span>2</span></div><p style="font-size:20px">Posterior within the margin: <b><!--n:exp1.delta.p_solve_drop_within_m:prob1-->97.7%<!--/n--></b>. Met: <!--n:exp1.decision.rule_met.guardrail_90:str-->True<!--/n--></p></div>
+      <div class="rule"><div class="diamond"><span>3</span></div><p style="font-size:20px">Flagsmith's <code>task_solved</code>: <b><!--n:exp1.flagsmith.solve_rate_status:str-->inconclusive<!--/n--></b>, not losing. Met: <!--n:exp1.decision.rule_met.no_guardrail_loss:str-->True<!--/n--></p></div>
+    </div>
+  </div>
+  <p class="quiet" style="font-size:16px; margin-top:12px">Flagsmith uses a delta-method normal approximation; we use a bootstrap and Beta posteriors on purpose, so agreement is not an artefact of one method. Results pulled <!--n:exp1.flagsmith.pulled_at:str-->20261127T120242Z<!--/n-->.</p>
+  <div class="foot"><span>Fork in the Bill</span><span>Flagsmith's verdict against our replication</span></div>
+</section>
+
+<!-- 9. Integrity -->
+<section class="slide center">
+  <span class="exit">EXIT 8</span>
+  <p class="kicker">Integrity</p>
+  <h1 style="font-size:44px">Don't trust the numbers. Check them.</h1>
+  <div class="row" style="align-items:flex-start">
+    <div class="col receipt" style="font-size:19px">
+      <div class="ln"><span>task_done records</span><b><!--n:integrity.task_done_records:int-->146<!--/n--></b></div>
+      <div class="ln"><span>Arms re-derived by flag-engine</span><b><!--n:integrity.assignment.matched:int-->146<!--/n--> / <!--n:integrity.assignment.checked:int-->146<!--/n--></b></div>
+      <div class="ln"><span>Env snapshots</span><b><!--n:integrity.env_snapshots:int-->56<!--/n--></b></div>
+      <div class="ln"><span>Distinct env hashes</span><b><!--n:integrity.env_snapshot_distinct_hashes:int-->1<!--/n--></b></div>
+      <div class="ln" style="display:block"><span>Merkle root</span><br><b class="hash" style="font-size:15px"><!--n:integrity.merkle_root:str-->7ed364648c7513ef22280eaed97a2ab77e92d91b8f88f5bbfab08d747a989929<!--/n--></b></div>
+    </div>
+    <div class="col">
+      <pre style="font-size:15px"><span class="c"># hash chain and Merkle root</span>
+uv run python -m integrity.verify_ledger runs/exp1
+<span class="c"># every arm recomputed offline</span>
+uv run python -m integrity.verify_assignment \
+    --run runs/exp1
+<span class="c"># registration matches its hash</span>
+sha256sum -c prereg/HASHES.txt
+<span class="c"># every figure matches numbers.json</span>
+uv run python -m analysis.check_consistency
+<span class="c"># all of it, every run</span>
+<span class="k">make verify</span></pre>
+    </div>
+  </div>
+  <div class="foot"><span>Fork in the Bill</span><span>Hash-chained ledger, env snapshots, offline assignment</span></div>
+</section>
+
+<!-- 10. What's next -->
+<section class="slide center">
+  <span class="exit">EXIT 9</span>
+  <p class="kicker">What's next</p>
+  <h1 style="font-size:46px">The winner now runs as the flag's own value.</h1>
+  <div class="row" style="gap:24px; min-height:300px">
+    <div class="col workzone"><div class="in">
+      <span class="state" style="background:var(--text); color:var(--sheet)">Pending</span>
+      <h2 style="margin-top:12px">Rollout on the same flag</h2>
+      <p>Experiment 822 ended with <code>lanes_v1</code> as the rollout decision. No code changed.</p>
+      <p>A fresh batch from <code>tasks/pools/rollout.txt</code> is running on that flag now. Numbers appear when it ends.</p>
+    </div></div>
+    <div class="col workzone"><div class="in">
+      <span class="state" style="background:var(--text); color:var(--sheet)">Pending</span>
+      <h2 style="margin-top:12px">Experiment 2</h2>
+      <p><code>lanes_v2</code> against the experiment 1 winner. One change: <code>prompt_variant</code>, from <code>delegate_v1</code> to <code>draft_review_v1</code>.</p>
+      <p>It will be registered, hashed and tagged before its first task. Not run yet.</p>
+    </div></div>
+  </div>
+  <div class="foot"><span>Fork in the Bill</span><span>Rollout and experiment 2</span></div>
+</section>
+
+<!-- 11. Use the kit -->
+<section class="slide center">
+  <span class="exit">EXIT 10</span>
+  <p class="kicker">Use the kit</p>
+  <h1 style="font-size:44px">Run the same experiment on your own agent.</h1>
+  <pre style="font-size:15px; margin-bottom:16px"><span class="c"># flag, variant, kill switch, metrics and experiment from your policy files</span>
+uv run forkbill init --control flagsmith/policies/control.json \
+  --variant lanes_v1=flagsmith/policies/lanes_v1.json \
+  --metrics flagsmith/metrics.json --hypothesis-file prereg/experiment-1.md --start</pre>
+  <pre style="font-size:15px"><span class="k">lanes</span> = RoutedLanes(flagsmith=flagsmith, identity=f"swelive:{instance_id}", pricing=pricing)
+reply = client.messages.create(model=<span class="k">lanes.main_model</span>, ...)
+lanes.record_call("main", Usage.from_anthropic(reply.usage))
+sub = client.messages.create(model=<span class="k">lanes.delegate_model</span>, ...)
+lanes.record_call("delegate", Usage.from_anthropic(sub.usage))
+lanes.finish(solved=solved, turns=turns)   <span class="c"># task_cost, task_solved, task_turns, task_seconds</span></pre>
+  <p style="font-size:17px; margin-top:16px">Python and TypeScript, an OpenFeature adapter, and remote, local, Edge Proxy and edge-local modes. Checked on self-hosted Flagsmith with experimentation on.</p>
+  <div class="foot"><span>Fork in the Bill</span><span>kit/forkbill, kit/ts, selfhost/</span></div>
+</section>
+
+<!-- 12. Links -->
+<section class="slide">
+  <span class="exit">EXIT 11</span>
+  <p class="kicker">Links</p>
+  <div class="row" style="align-items:center; gap:40px; flex:1">
+    <div class="col">
+      <h1 style="font-size:52px">Read it, run it, check it.</h1>
+      <div class="sign" style="margin-bottom:16px"><div class="in" style="padding:14px 20px">
+        <span class="tab">Repository</span>
+        <p class="mono" style="font-size:19px">github.com/Prashant-thakur77/fork-in-the-bill</p>
+      </div></div>
+      <div class="sign"><div class="in" style="padding:14px 20px">
+        <span class="tab">Live site</span>
+        <p class="mono" style="font-size:19px">forkbill.prashantthakur.dev</p>
+      </div></div>
+      <p class="quiet" style="font-size:16px; margin-top:16px">Paper: <code>docs/paper.pdf</code>. Every figure in it and in this deck comes from <code>analysis/out/numbers.json</code>.</p>
+    </div>
+    <div class="col">
+      <img class="shot" src="../img/site-live.png" alt="The live board during experiment 1">
+    </div>
+  </div>
+  <div class="foot"><span>Fork in the Bill team (CoffeeAndToggle)</span><span>Toggle Wars · Track 01</span></div>
+</section>
+
+</body>
+</html>
