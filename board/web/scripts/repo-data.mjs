@@ -441,6 +441,27 @@ function paperFrom(root) {
   };
 }
 
+/** Flagsmith dashboard screenshots committed under docs/img, with their pixel size (from the PNG header). */
+function shotsFrom(root) {
+  const dir = join(root, "docs/img");
+  if (!existsSync(dir)) return {};
+  const out = {};
+  for (const f of readdirSync(dir).filter((x) => /^flagsmith-[a-z0-9-]+\.png$/.test(x))) {
+    const buf = readFileSync(join(dir, f));
+    out[f.replace(/^flagsmith-|\.png$/g, "")] = { file: f, width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
+  }
+  return out;
+}
+
+/** How many task transcripts are public for each run, and whether rendered examples exist. */
+function transcriptsFrom(root) {
+  const count = (run) => {
+    const d = join(root, `runs/${run}/transcripts`);
+    return existsSync(d) ? readdirSync(d).filter((x) => x.endsWith(".json")).length : 0;
+  };
+  return { exp1: count("exp1"), rollout: count("rollout"), examples: existsSync(join(root, "examples/transcripts/README.md")) };
+}
+
 /** A committed run ledger, gzipped, for the page that checks it in the browser. */
 export function ledgerGz(root, run) {
   const p = join(root, `runs/${run}/ledger.jsonl`);
@@ -453,7 +474,11 @@ function kitFrom(root) {
   const mcpPkg = readJson(root, "kit/mcp/package.json");
   const mcpReadme = read(root, "kit/mcp/README.md");
   const py = read(root, "pyproject.toml") ?? "";
-  const mcpBlocks = mcpReadme ? [...mcpReadme.matchAll(/```([a-z]*)\n([\s\S]*?)```/g)].slice(0, 3).map((m) => ({ lang: m[1] || "sh", code: m[2].replace(/\s+$/, "") })) : [];
+  // The client configuration is the README's first code block; the tools are its "Tools" table.
+  const mcpBlocks = mcpReadme ? [...mcpReadme.matchAll(/```([a-z]*)\n([\s\S]*?)```/g)].slice(0, 1).map((m) => ({ lang: m[1] || "sh", code: m[2].replace(/\s+$/, "") })) : [];
+  const mcpTools = mcpReadme
+    ? (blocks((sections(mcpReadme)["Tools"] ?? "").split(/\n###\s/)[0]).find((b) => b.type === "table")?.rows ?? []).map((r) => ({ name: r[0].replace(/`/g, ""), does: r[1], flagsmith: r[2] ?? "" }))
+    : [];
   return {
     ts: ts ? { name: ts.name, version: ts.version, published: ts.private !== true, node: ts.engines?.node ?? null } : null,
     py: { name: (/^name\s*=\s*"([^"]+)"/m.exec(py) ?? [])[1] ?? null, script: /^forkbill\s*=/m.test(py) ? "forkbill" : null, python: (/^requires-python\s*=\s*"([^"]+)"/m.exec(py) ?? [])[1] ?? null },
@@ -463,8 +488,10 @@ function kitFrom(root) {
           version: mcpPkg.version,
           published: mcpPkg.private !== true,
           description: mcpPkg.description ?? "",
-          intro: mcpReadme ? blocks(mcpReadme.split(/\n##\s/)[0].split("\n").slice(1).join("\n")).slice(0, 2) : [],
+          intro: mcpReadme ? blocks(mcpReadme.split(/\n##\s/)[0].split("\n").slice(1).join("\n")).filter((b) => b.type === "p").slice(0, 1) : [],
+          node: mcpPkg.engines?.node ?? null,
           blocks: mcpBlocks,
+          tools: mcpTools,
         }
       : null,
   };
@@ -570,6 +597,8 @@ export function loadRepoData(root = REPO_ROOT) {
     paper: paperFrom(root),
     kit: kitFrom(root),
     releaseTag: git(root, "tag --list v0.1.0") || null,
+    shots: shotsFrom(root),
+    transcripts: transcriptsFrom(root),
     verifyLedger: (() => {
       const gz = ledgerGz(root, "rollout");
       return gz ? { run: "rollout", gzBytes: gz.length } : null;
@@ -637,7 +666,7 @@ export function loadRepoData(root = REPO_ROOT) {
       ledgerRule: S("integrity/canonical.py", /^def record_hash/, { count: 3 }),
       merkle: S("integrity/merkle.py", /^\s+level = list\(leaves\)/, { end: /return level\[0\]\.hex\(\)/ }),
       makeVerify: S("Makefile", /^verify:/, { count: 3 }),
-      ciVerify: S(".github/workflows/ci.yml", /integrity\.verify_ledger "\$d"/, { count: 2 }),
+      ciVerify: S(".github/workflows/ci.yml", /- name: ledgers and assignments of committed runs/, { count: 4 }),
       killFlag: S("infra/flagsmith/main.tf", /^resource "flagsmith_feature" "routing_kill"/, { end: /^\}/ }),
       policy: { file: "flagsmith/policies/lanes_v1.json", line: 1, code: JSON.stringify(readJson(root, "flagsmith/policies/lanes_v1.json"), null, 2) },
       demoLoop: S("kit/forkbill/demo.py", /^def fake_task/, { end: /return lanes\.finish/ }),
@@ -649,7 +678,8 @@ export function loadRepoData(root = REPO_ROOT) {
       kitPy: fenced(root, "README.md", /Python \(\[`kit\/forkbill\/lanes\.py`\]/, "python"),
       kitTs: fenced(root, "README.md", /TypeScript \(\[`kit\/ts`\]/, "ts"),
       kitOpenFeature: fenced(root, "README.md", /OpenFeature \(\[`kit\/forkbill\/openfeature\.py`\]/, "python"),
-      tsInstall: fenced(root, "kit/ts/README.md", /## Install and build/, "bash"),
+      tsInstall: fenced(root, "kit/ts/README.md", /## Install\n/, "bash"),
+      tsBuild: fenced(root, "kit/ts/README.md", /which is built on it:/, "bash"),
       selfhostRun: fenced(root, "README.md", /It uses a fake agent loop: no model is called and no money is spent\./, "sh"),
       selfhostDown: S("selfhost/README.md", /^docker compose -f selfhost\/docker-compose\.yml --profile edge down -v/, { count: 1 }),
       verifyLedgerUsage: S("integrity/verify_ledger.py", /^Usage: python -m integrity\.verify_ledger/, { count: 2 }),

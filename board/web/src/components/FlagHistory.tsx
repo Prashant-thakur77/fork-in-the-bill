@@ -8,6 +8,8 @@ export function FlagHistory({ board }: { board: Board }) {
   const t = timeline(board.flags);
   const state = t.during > 0 ? "changed" : t.start && t.end ? "unchanged" : t.start ? "watching" : "pending";
   const rows = t.rows.slice(-SHOW);
+  // Nothing has been reported yet: say why, and where the flag's state is recorded meanwhile.
+  const waiting = board.mode !== "replay" && t.rows.length === 0;
   const hidden = t.rows.length - rows.length;
   return (
     <section className="block flags" aria-labelledby="flags-title">
@@ -20,8 +22,12 @@ export function FlagHistory({ board }: { board: Board }) {
       </div>
       <div className={`flaglog is-${state}`} data-reveal="hang">
         <p className="flaglog-summary" aria-live="polite">
-          <span className="flaglog-tag">{state}</span>
-          <span>{t.summary}</span>
+          <span className="flaglog-tag">{waiting ? "after experiment 2" : state}</span>
+          <span>
+            {waiting
+              ? "The webhook that feeds this list is connected once experiment 2 has ended, because nothing about the flag is touched while an experiment runs. Until then the flag's state is in each run's ledger, as hashed environment snapshots taken at the start, every 15 minutes and at the end."
+              : t.summary}
+          </span>
         </p>
         {rows.length > 0 && (
           <ol className="flaglog-list">

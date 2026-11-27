@@ -2,10 +2,11 @@ import { DocPage } from "../site/DocPage";
 import { Link } from "../site/router";
 import { Code, Md, Section } from "../site/ui";
 import { LivePanel } from "../site/LivePanel";
-import { repo, ghFile, type ExperimentNumbers } from "../site/data";
+import { repo, ghFile, type ExperimentNumbers, type TierNumbers } from "../site/data";
 import { batchOf, gapBetween, utcStamp } from "../site/batches";
 import { format } from "../data/format";
 import { ResultPair } from "../site/ResultPair";
+import { Shot } from "../site/Shot";
 
 // Every figure here is read from analysis/out/numbers.json at build time. Nothing is typed in.
 // Until the file holds a decision, the page shows its empty state. Experiment 2 shows running
@@ -87,6 +88,9 @@ function RuleList({ exp, items }: { exp: string; items: string[] }) {
   );
 }
 
+type TierArm = { n: number; solves: number; solve_rate: number; cost_mean: number; cost_per_solve: number };
+const tierArm = (t: TierNumbers, arm: string) => t[arm] as TierArm;
+
 function listOf(blocks: typeof repo.prereg.decisionRule): string[] {
   const b = blocks.find((x) => x.type === "list");
   return b && b.type === "list" ? b.items : [];
@@ -161,6 +165,7 @@ function Exp1() {
           {b?.flagsmithId && <>Flagsmith experiment {b.flagsmithId}. </>}
           The full table is in <a href={ghFile("analysis/results.md")}>analysis/results.md</a>.
         </p>
+        <Shot name="results" caption="Flagsmith's results page for experiment 1: lanes_v1 confirmed as the winner on task_cost and rolled out to everyone." />
       </Section>
 
       {n && (
@@ -175,6 +180,35 @@ function Exp1() {
               The guardrail only rules out a drop larger than {format(n.prereg.m * 100, "pp1").replace("+", "")}, the margin fixed before the run. At this
               sample size a drop of a few points cannot be told from zero. <Link to="/faq#margin">Why the margin is that wide</Link>.
             </p>
+            {n.by_tier?.fresh && n.by_tier.pre_cutoff && (
+              <>
+                <p>
+                  <strong>The caveat that matters most.</strong> The decision was registered on all tasks of both tiers. On the fresh tier alone, the tasks the models
+                  cannot have seen, lanes_v1 solved {format(tierArm(n.by_tier.fresh, "lanes_v1").solve_rate, "prob1")} against{" "}
+                  {format(tierArm(n.by_tier.fresh, "control").solve_rate, "prob1")} for control: {format(n.by_tier.fresh.delta.solve_rate_pp, "pp1")}, and the
+                  guardrail's probability is {format(n.by_tier.fresh.delta.p_solve_drop_within_m, "prob1")}, under its{" "}
+                  {format(n.decision.bars.guardrail_posterior, "prob1")} bar. On that tier alone the solve-rate condition would not have held. The cost result holds on
+                  both tiers.
+                </p>
+                <Table
+                  caption="Experiment 1 by tier"
+                  cols={["control n", "control solved", "lanes_v1 n", "lanes_v1 solved", "solve rate", "P(drop within m)", "mean cost"]}
+                  rows={(["fresh", "pre_cutoff"] as const).map((k) => {
+                    const t = n.by_tier![k]!;
+                    return [
+                      k === "fresh" ? "Fresh tier (after the cutoff)" : "Pre-cutoff tier",
+                      String(tierArm(t, "control").n),
+                      format(tierArm(t, "control").solve_rate, "prob1"),
+                      String(tierArm(t, "lanes_v1").n),
+                      format(tierArm(t, "lanes_v1").solve_rate, "prob1"),
+                      format(t.delta.solve_rate_pp, "pp1"),
+                      format(t.delta.p_solve_drop_within_m, "prob1"),
+                      format(t.delta.cost_mean_pct, "pct1"),
+                    ];
+                  })}
+                />
+              </>
+            )}
           </div>
         </Section>
       )}
@@ -353,6 +387,24 @@ function Checks() {
       <p className="prose">
         <Link to="/verify">Check a ledger in your browser</Link>, or run the commands on the <Link to="/proof">proof page</Link>.
       </p>
+      {repo.transcripts.exp1 > 0 && (
+        <p className="prose">
+          Every task attempt's planner transcript and graded patch is public: <a href={ghFile("runs/exp1/transcripts")}>{repo.transcripts.exp1} files for experiment 1</a>
+          {repo.transcripts.rollout > 0 && (
+            <>
+              {" "}
+              and <a href={ghFile("runs/rollout/transcripts")}>{repo.transcripts.rollout} for the rollout batch</a>
+            </>
+          )}
+          .
+          {repo.transcripts.examples && (
+            <>
+              {" "}
+              Four of them are rendered to read, a solved and an unsolved task from each arm, in <a href={ghFile("examples/transcripts/README.md")}>examples/transcripts</a>.
+            </>
+          )}
+        </p>
+      )}
     </Section>
   );
 }

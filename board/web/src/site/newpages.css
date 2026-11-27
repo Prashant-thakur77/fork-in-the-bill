@@ -1559,3 +1559,72 @@
   box-shadow: none;
   border: 2px dashed var(--text);
 }
+
+/* ---------- a real dashboard screenshot, framed like a screen on a steel post ---------- */
+.fs-shot {
+  margin: clamp(20px, 3vw, 36px) 0;
+  max-width: 980px;
+}
+.fs-shot-frame {
+  border-radius: 10px;
+  background: var(--steel);
+  padding: 0 6px 6px;
+  box-shadow: 0 16px 28px -22px rgba(0, 0, 0, 0.55);
+}
+.fs-shot-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding-inline: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+.fs-shot-bar i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--asphalt);
+  opacity: 0.55;
+}
+.fs-shot-bar b {
+  margin-left: 6px;
+}
+.fs-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 5px;
+  background: #fff;
+}
+.fs-shot figcaption {
+  margin-top: 10px;
+  font-size: var(--t-small);
+  color: var(--quiet);
+  max-width: 76ch;
+}
+.answer-caveat {
+  grid-column: 1 / -1;
+  padding-top: 10px;
+  border-top: 2px solid rgba(244, 245, 239, 0.45);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.result-caveat {
+  padding: 12px 16px;
+  border-radius: var(--r-small);
+  background: var(--surface);
+  box-shadow: inset 4px 0 0 var(--paint-yellow);
+  max-width: 78ch;
+}
+.use-tools li {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.4fr) minmax(0, 1fr);
+}
+@media (max-width: 760px) {
+  .use-tools li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

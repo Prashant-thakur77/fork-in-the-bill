@@ -74,8 +74,10 @@ export default function Kit() {
         </p>
       </Section>
 
-      <Section id="typescript" title="TypeScript quickstart" kicker={`@flagsmith/nodejs ${V.nodeSdk ?? ""}. Package @forkbill/flagsmith-lanes, in kit/ts.`}>
-        <Code code={"cd kit/ts\nnpm ci\nnpm run build\nnpm test"} lang="sh" caption="kit/ts" />
+      <Section id="typescript" title="TypeScript quickstart" kicker={`@flagsmith/nodejs ${V.nodeSdk ?? ""}. Package ${repo.kit.ts?.name ?? "forkbill"}${repo.kit.ts ? ` ${repo.kit.ts.version}` : ""}, in kit/ts.`}>
+        <RepoCode s={S.tsInstall!} lang="sh" />
+        <p className="prose small">To work on the package itself, it sits in an npm workspace under kit/ with the MCP server:</p>
+        <RepoCode s={S.tsBuild!} lang="sh" />
         <RepoCode s={S.tsUsage!} lang="ts" />
       </Section>
 

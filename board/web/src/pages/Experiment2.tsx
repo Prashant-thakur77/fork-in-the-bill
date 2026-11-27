@@ -8,6 +8,7 @@ import { LivePanel } from "../site/LivePanel";
 import { useLiveState } from "../site/live";
 import { PolicyDiff } from "../art/PriceBoard";
 import { ResultPair } from "../site/ResultPair";
+import { Shot } from "../site/Shot";
 
 // Experiment 2, told in the order it happened: the question, the two roles, the registration,
 // the run as it stands, and what will count as ship or keep. No figure from the run's analysis
@@ -218,6 +219,10 @@ export default function Experiment2() {
           <RegLine label="Experiment 2" tag={B2.preregTag} sha={B2.preregSha} registeredAt={B2.registeredAt} startedAt={B2.startedAt} file={B2.preregFile} />
           <RegLine label="Experiment 1, for comparison" tag={B1.preregTag} sha={null} registeredAt={B1.registeredAt} startedAt={B1.startedAt} file={null} />
         </div>
+        <Shot
+          name="experiment-2-running"
+          caption="Experiment 2 in the Flagsmith dashboard at its start: running on agent_routing with the registered hypothesis, 50% control, 50% lanes_v2, lanes_v1 at 0%, results still collecting."
+        />
         <div className="x2-pool prose">
           <Blocks blocks={repo.prereg2.units} base="prereg/" className="x2-pool-list" />
         </div>

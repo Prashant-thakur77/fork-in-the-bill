@@ -144,7 +144,11 @@ const GROUPS: { id: string; title: string; sign: string; items: QA[] }[] = [
             </p>
             <p>
               Assignment is random, so a leak lifts both arms alike and does not bias the difference. It can raise the absolute solve rates, which is why the
-              month a task was created is reported per arm. <Link to="/results#traits">Results by month</Link>.
+              tiers are reported separately.
+              {N1?.by_tier?.fresh
+                ? ` On the fresh tier alone the solve rate was ${format(N1.by_tier.fresh.delta.solve_rate_pp, "pp1")} for lanes_v1 and the guardrail would not have cleared its bar; the decision was registered on both tiers together.`
+                : ""}{" "}
+              <Link to="/results#honest">The result by tier</Link>.
             </p>
           </>
         ),

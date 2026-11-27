@@ -3,6 +3,7 @@ import { Blocks, Code, Kinetic, PageHead, RepoCode, useReveals } from "../site/u
 import { Link } from "../site/router";
 import { routeFor } from "../site/routes";
 import { ghFile, repo } from "../site/data";
+import { Shot } from "../site/Shot";
 
 // A getting-started guide. Every command and code block is cut from a file in the repository when
 // the site is built (the README, the kit's own README, the self-host scripts), and package names
@@ -124,17 +125,14 @@ export default function UseIt() {
           </div>
           <div>
             <h3>TypeScript</h3>
-            {K.ts?.published ? (
-              <Code code={`npm install ${K.ts.name} @flagsmith/nodejs`} lang="sh" caption="shell" />
-            ) : (
-              <RepoCode s={S.tsInstall!} lang="sh" />
-            )}
+            <RepoCode s={S.tsInstall!} lang="sh" />
             <p className="prose small">
               Package <code>{tsName}</code>
               {K.ts ? ` ${K.ts.version}` : ""} in <a href={ghFile("kit/ts")}>kit/ts</a>
               {K.ts?.node ? `, Node ${K.ts.node.replace(">=", "")} or later` : ""}, <code>@flagsmith/nodejs</code> {V.nodeSdk ?? ""}.
-              {K.ts && !K.ts.published ? " It is built from the repository for now; it is not on npm in this build." : ""}
+              {K.ts?.published ? " To work on the package itself, build it from the repository:" : ""}
             </p>
+            {K.ts?.published && <RepoCode s={S.tsBuild!} lang="sh" />}
           </div>
         </div>
       </Step>
@@ -150,6 +148,7 @@ export default function UseIt() {
           <a href={ghFile("flagsmith/policies/lanes_v1.json")}>lanes_v1.json</a>, <a href={ghFile("flagsmith/metrics.json")}>metrics.json</a>. Write the hypothesis
           and the decision rule down first. <Link to="/method">How this study registered its own</Link>.
         </p>
+        <Shot name="flags" caption="What that leaves in the Flagsmith dashboard for this study: agent_routing, the smoke-test flag and the routing_kill switch." />
       </Step>
 
       <Step n={4} id="use-4" title="Wrap your agent loop">
@@ -212,13 +211,28 @@ export default function UseIt() {
             <div className="prose">
               <p>
                 <code>{K.mcp.name}</code> {K.mcp.version}
-                {K.mcp.description ? `: ${K.mcp.description}` : ""}
+                {K.mcp.node ? `, Node ${K.mcp.node.replace(">=", "")} or later` : ""}. It gives any agent that speaks MCP the same loop as tools, built on the{" "}
+                <code>{K.ts?.name ?? "forkbill"}</code> kit. The server never chooses an arm: if Flagsmith cannot serve a valid policy, the tool returns Flagsmith's
+                error and no models.
               </p>
             </div>
-            {K.mcp.intro.length > 0 && <Blocks blocks={K.mcp.intro} base="kit/mcp/" />}
             {K.mcp.blocks.map((b, i) => (
-              <Code key={i} code={b.code} lang={b.lang === "bash" ? "sh" : b.lang} caption="kit/mcp/README.md" href={ghFile("kit/mcp/README.md")} />
+              <Code key={i} code={b.code} lang={b.lang === "bash" ? "sh" : b.lang} caption="your MCP client's configuration" href={ghFile("kit/mcp/README.md")} label="kit/mcp/README.md" />
             ))}
+            {K.mcp.tools.length > 0 && (
+              <ul className="use-events use-tools">
+                {K.mcp.tools.map((t) => (
+                  <li key={t.name}>
+                    <code>{t.name}</code>
+                    <span>{t.does}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="prose small">
+              Flagsmith needs the same four things as in step 3 before the first task. The tools' inputs and a worked example are in{" "}
+              <a href={ghFile("kit/mcp/README.md")}>kit/mcp/README.md</a>.
+            </p>
           </>
         ) : (
           <div className="use-soon" role="note">

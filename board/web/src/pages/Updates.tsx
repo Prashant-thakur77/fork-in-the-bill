@@ -43,10 +43,10 @@ export default function Updates() {
             </li>
             <li>
               <span className="up-tab">One email</span>
-              <b>A note when the kit is on npm</b>
+              <b>A note when the next kit version is out</b>
               <p>
-                Today <code>{tsName}</code> is{repo.kit.ts?.published ? " published" : " built from the repository"}. The note says where to install it from and what
-                changed. <Link to="/use-it">Use it from the repository now</Link>.
+                Version {repo.kit.ts?.version ?? "0.1.0"} of <code>{tsName}</code> is what the guide installs today. The note is sent when the next version is
+                published, and says what changed. <Link to="/use-it">Use it now</Link>.
               </p>
             </li>
           </ol>

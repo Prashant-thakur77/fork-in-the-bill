@@ -88,6 +88,11 @@ export interface TraitLevel {
   [arm: string]: { n: number; solves: number; solve_rate: number | null; cost_mean: number | null } | number | null;
 }
 
+export interface TierNumbers {
+  delta: { cost_mean_pct: number; cost_per_solve_pct: number; p_solve_drop_within_m: number; solve_rate_pp: number; solve_rate_ci: [number, number] };
+  [arm: string]: { n: number; solves: number; solve_rate: number; cost_mean: number; cost_per_solve: number } | TierNumbers["delta"];
+}
+
 export interface ExperimentNumbers {
   prereg: { tag: string; sha256: string; m: number };
   arms: Record<string, ArmNumbers>;
@@ -110,6 +115,8 @@ export interface ExperimentNumbers {
   decision: { ship: string; rule_met: Record<string, boolean>; bars: { flagsmith_chance: number; guardrail_posterior: number; m: number } };
   power: { n_per_arm: number; mde_solve_pp: number; mde_cost_pct: number; power: number };
   by_trait: Record<string, Record<string, TraitLevel>>;
+  /** The same estimates for the fresh tier and the pre-cutoff tier alone; reported, not part of the decision. */
+  by_tier?: Record<string, TierNumbers>;
   bootstrap_resamples: number;
   posterior_draws: number;
 }
@@ -165,7 +172,7 @@ export interface PaperData {
 export interface KitData {
   ts: { name: string; version: string; published: boolean; node: string | null } | null;
   py: { name: string | null; script: string | null; python: string | null };
-  mcp: { name: string; version: string; published: boolean; description: string; intro: Block[]; blocks: { lang: string; code: string }[] } | null;
+  mcp: { name: string; version: string; published: boolean; description: string; intro: Block[]; node: string | null; blocks: { lang: string; code: string }[]; tools: { name: string; does: string; flagsmith: string }[] } | null;
 }
 
 export interface RepoData {
@@ -183,6 +190,9 @@ export interface RepoData {
   paper: PaperData | null;
   kit: KitData;
   releaseTag: string | null;
+  /** Flagsmith dashboard screenshots in docs/img, keyed by name (results, experiments, flags, experiment-2-running). */
+  shots: Record<string, { file: string; width: number; height: number }>;
+  transcripts: { exp1: number; rollout: number; examples: boolean };
   /** The ledger the verify page fetches, gzipped into the site at build. */
   verifyLedger: { run: string; gzBytes: number } | null;
   power2: { m: number; power: number; sims: number; seed: number; pilot: { n: number; solve_rate: number }; grid: PowerRow[] } | null;

@@ -32,6 +32,7 @@ const split = repo.split;
 const N1 = repo.numbers?.exp1 ?? null;
 const SHIP1 = repo.decisions["exp1.decision.ship"];
 const f = repo.figures;
+const FRESH = N1?.by_tier?.fresh ?? null;
 
 function shortModel(id: string | undefined): string {
   return (/claude-([a-z]+)/.exec(id ?? "")?.[1] ?? "").toUpperCase();
@@ -227,6 +228,11 @@ function Answer() {
         <b>{SHIP1 === "control" ? "No: control stays." : "Yes, by the registered rule."}</b> Mean cost per task {cut} with the small model on the grunt work; solve
         rate {pp}, inside the margin fixed before the run.<span aria-hidden="true"> →</span>
       </span>
+      {FRESH && (
+        <span className="answer-caveat">
+          Caveat: on the fresh tier alone the solve rate was {format(FRESH.delta.solve_rate_pp, "pp1")} and the solve-rate check would not have passed.
+        </span>
+      )}
     </Link>
   );
 }
@@ -266,6 +272,13 @@ function Result() {
           {d.solve_rate_pp < 0 ? "fewer" : "more"} bugs, a gap that is inside the {Math.round(N1.prereg.m * 100)}-point margin fixed before the run and cannot be told
           from zero at this sample size.
         </p>
+        {FRESH && (
+          <p className="result-caveat">
+            <b>The caveat.</b> The rule was registered on all tasks. On the fresh tier alone, the tasks created after the models' training cutoff, the solve rate was{" "}
+            {format(FRESH.delta.solve_rate_pp, "pp1")} and the guardrail's probability {format(FRESH.delta.p_solve_drop_within_m, "prob1")}, under its{" "}
+            {format(N1.decision.bars.guardrail_posterior, "prob1")} bar. <Link to="/results#honest">What this does and does not show</Link>.
+          </p>
+        )}
       </div>
       <ResultPair exp="exp1" treatment="lanes_v1" n={N1} heading="p" />
       <div className="result-foot">

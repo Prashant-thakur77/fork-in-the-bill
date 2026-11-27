@@ -188,6 +188,13 @@ export function Footer() {
                   <a href="/downloads/fork-in-the-bill-deck.pdf">The deck (PDF)</a>
                 </li>
               )}
+              {repo.transcripts.examples && (
+                <li>
+                  <a href={ghFile("examples/transcripts/README.md")} rel="noopener">
+                    Task transcripts
+                  </a>
+                </li>
+              )}
               {repo.releaseTag && (
                 <li>
                   <a href={`${repo.site.repo}/releases/tag/${repo.releaseTag}`} rel="noopener">
@@ -220,7 +227,7 @@ export function Footer() {
         <div className="footer-meta">
           <StatusLine />
           <p>
-            Made for the Toggle Wars hackathon, Track 01: Test Something Real.{" "}
+            Toggle Wars · Track 01: Test Something Real.{" "}
             {repo.site.commit && (
               <>
                 Build{" "}

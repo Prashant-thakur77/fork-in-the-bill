@@ -6,6 +6,7 @@ import { ghFile, repo, type FlagState } from "../site/data";
 import { batchOf, gapBetween, utcStamp } from "../site/batches";
 import { format } from "../data/format";
 import { Led } from "../led/Led";
+import { Shot } from "../site/Shot";
 
 // What ending experiment 1 did, read from the two environment snapshots that open the exp1 and
 // rollout ledgers, and what the fresh batch on the same flag cost and solved (numbers.json).
@@ -213,6 +214,12 @@ export default function Rollout() {
             </div>
           </dl>
         </div>
+        <Shot name="experiments" caption="The experiments list in Flagsmith: experiment 1 completed, experiment 2 running on the same flag." />
+        {repo.transcripts.rollout > 0 && (
+          <p className="prose">
+            The planner transcript and graded patch of every task in this batch are public: <a href={ghFile("runs/rollout/transcripts")}>runs/rollout/transcripts</a>.
+          </p>
+        )}
         <Code code={"uv run python -m integrity.verify_ledger runs/rollout\nuv run python -m integrity.verify_assignment --run runs/rollout"} lang="sh" caption="from a clone, after uv sync" />
       </section>
     </div>
