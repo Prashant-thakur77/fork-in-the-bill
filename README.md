@@ -217,6 +217,7 @@ An OpenFeature adapter ([`kit/forkbill/openfeature.py`](kit/forkbill/openfeature
 | Flag-change webhooks | [`board/worker/src/flags.ts`](board/worker/src/flags.ts) |
 | Feature health | [`runner/health.py`](runner/health.py) |
 | Remote, local, Edge Proxy and OpenFeature clients | [`kit/forkbill/`](kit/forkbill/__init__.py), [`kit/ts/`](kit/ts/README.md) |
+| The same loop as MCP tools for any agent | [`kit/mcp/`](kit/mcp/README.md) |
 | Self-hosted Flagsmith with Experimentation | [`selfhost/`](selfhost/README.md) |
 | Smoke test of the whole path | [`flagsmith/smoke_test.sh`](flagsmith/smoke_test.sh) |
 
@@ -352,6 +353,7 @@ flowchart LR
 | Experiment control | Flagsmith Cloud, CLI v2, Admin API, Python SDK 6.7 | [`flagsmith/`](flagsmith/setup.sh), [`harness/policy.py`](harness/policy.py) |
 | Flags as code | Terraform Flagsmith provider, plan only | [`infra/flagsmith/`](infra/flagsmith/README.md) |
 | Portability | Self-hosted Flagsmith 2.295.2 with Experimentation, Edge Proxy 2.24.0 | [`selfhost/`](selfhost/README.md) |
+| Agent integration | MCP server on stdio (TypeScript, `@modelcontextprotocol/sdk`, zod) over the TypeScript kit | [`kit/mcp/`](kit/mcp/README.md) |
 | Tasks | SWE-bench-Live MultiLang at a pinned dataset revision | [`tasks/`](tasks/select_tasks.py), [`tasks/pools/manifest.json`](tasks/pools/manifest.json) |
 | Sandbox | Docker Engine and the Docker SDK for Python, CPU and memory limits | [`runner/containers.py`](runner/containers.py) |
 | Orchestration | Redis Streams consumer group with leases | [`runner/queue.py`](runner/queue.py) |
@@ -362,7 +364,7 @@ flowchart LR
 | Integrity | Hash-chained ledger, Merkle root, env snapshots, flag-engine re-derivation | [`integrity/`](integrity/verify_ledger.py) |
 | Live board and site | Cloudflare Workers, D1, Server-Sent Events, React and Vite | [`board/`](board/worker/wrangler.toml) |
 | Infra | Terraform on AWS EC2 with a budget alarm, cloud-init | [`infra/`](infra/README.md) |
-| CI | GitHub Actions: ruff, pyright, pytest with recorded API replays, gitleaks, consistency gate, ledger and assignment checks, board and kit builds | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
+| CI | GitHub Actions: ruff, pyright, pytest with recorded API replays, gitleaks, consistency gate, ledger and assignment checks, board and kit builds, kit and MCP server tests | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | Packaging | uv with a lockfile, Makefile, container images pinned by digest | [`pyproject.toml`](pyproject.toml), [`Makefile`](Makefile) |
 
 ## Setup
@@ -372,7 +374,7 @@ Needs Python 3.12+, [uv](https://docs.astral.sh/uv/), Node 22, Docker, `jq` and 
 ```sh
 git clone https://github.com/Prashant-thakur77/fork-in-the-bill
 cd fork-in-the-bill
-make setup          # uv sync, npm ci for the board and the TypeScript kit
+make setup          # uv sync, npm ci for the board and the kit's npm workspace
 make check          # lint, types, unit tests, consistency gate (no network, no spend)
 ```
 
@@ -480,12 +482,12 @@ result = lanes.finish(solved=solved, turns=turns)  # task_cost, task_solved, tas
 flagsmith.close()
 ```
 
-TypeScript ([`kit/ts`](kit/ts/README.md), needs `@flagsmith/nodejs` 9.5 or later):
+TypeScript ([`kit/ts`](kit/ts/README.md), the npm package `forkbill`; needs `@flagsmith/nodejs` 9.5 or later):
 
 ```ts
 import { readFileSync } from "node:fs";
 import { Flagsmith } from "@flagsmith/nodejs";
-import { RoutedLanes, TablePricing, usageFromAnthropic } from "@forkbill/flagsmith-lanes";
+import { RoutedLanes, TablePricing, usageFromAnthropic } from "forkbill";
 
 const flagsmith = new Flagsmith({ environmentKey: process.env.FLAGSMITH_SERVER_KEY!, enableEvents: true });
 const pricing = new TablePricing(JSON.parse(readFileSync("harness/pricing.json", "utf8")));
@@ -520,6 +522,36 @@ lanes = RoutedLanes(flagsmith=OpenFeatureFlagsmith.from_flagsmith(flagsmith), id
 
 Through OpenFeature the exposure is sent with `track("feature_flag.exposure", ...)` when the flag resolves to a variant. That is right for a 100% rollout, as here, and over-counts control for a partial one; the module docstring explains why. For local evaluation or an Edge Proxy, build the client with `forkbill.client.make_client(mode, ...)` or `flagsmithConfig(mode, ...)` in TypeScript.
 
+### MCP server
+
+An agent that speaks MCP can run the same loop through tools, with no SDK in its own code. [`kit/mcp`](kit/mcp/README.md) (the npm package `forkbill-mcp`) is a stdio server built on the TypeScript kit. Add it to any MCP client:
+
+```json
+{
+  "mcpServers": {
+    "forkbill": {
+      "command": "npx",
+      "args": ["-y", "forkbill-mcp"],
+      "env": {
+        "FLAGSMITH_SERVER_KEY": "<your environment key>"
+      }
+    }
+  }
+}
+```
+
+For self-hosted Flagsmith add `FLAGSMITH_SDK_API_URL` and `FLAGSMITH_EVENTS_API_URL`, the two URLs `selfhost/bootstrap.sh` writes. `FORKBILL_MODE` picks `remote`, `local`, `edge` or `edge-local`.
+
+| Tool | What it does |
+|---|---|
+| `get_routing_policy` | Asks Flagsmith for one task's policy (model per lane, caps, prompt variant), returns the variant key and records the exposure |
+| `report_outcome` | Sends `task_cost`, `task_solved`, `task_turns` and `task_seconds` for the task, and says which ones Flagsmith accepted |
+| `get_kill_switch` | Reads `routing_kill` |
+| `explain_assignment` | Re-derives an identity's arm offline from a saved environment document and shows the md5 working, checked against Flagsmith's engine |
+| `price_usage` | Turns tokens per lane into dollars with the pricing table |
+
+The server never picks an arm. When Flagsmith cannot serve a valid policy, `get_routing_policy` returns Flagsmith's error and no models, unless the caller passed its own `fallback_policy`. It also exposes the pricing table, its configuration (without the key) and the policy format as resources, and a `route_behind_experiment` prompt that gives an agent the whole loop. The bucketing code is shared: the kit's [`bucket.ts`](kit/ts/src/bucket.ts) is what the site's "move the split" lab runs, and the tests compare it with [`integrity/verify_assignment.py`](integrity/verify_assignment.py) and with every arm recorded in `runs/exp1`.
+
 ## Limits
 
 - Task source. Units are SWE-bench-Live MultiLang tasks (C, C++, C#, Go, Java, JavaScript, Rust, TypeScript) in one stratum: gold patches touching at most 3 files and 60 changed lines, problem statements under 12,000 characters ([D10](DECISIONS.md#d10-final-difficulty-stratum-at-most-3-files-and-60-changed-lines-c-included)). The result says nothing about larger changes or Python repositories.
@@ -545,7 +577,7 @@ Through OpenFeature the exposure is sent with `track("feature_flag.exposure", ..
 | [`runs/`](runs/pilot-control/meta.json) | Committed run logs and ledgers |
 | [`analysis/`](analysis/analyse.py) | Parquet, statistics, power, Flagsmith results, charts, doc rendering, consistency gate |
 | [`integrity/`](integrity/verify_ledger.py) | Ledger, Merkle root, env snapshots, assignment re-derivation |
-| [`kit/`](kit/forkbill/__init__.py) | Python and TypeScript kit, OpenFeature adapter, `forkbill` CLI |
+| [`kit/`](kit/forkbill/__init__.py) | Python and TypeScript kit, OpenFeature adapter, `forkbill` CLI, MCP server ([`kit/mcp`](kit/mcp/README.md)) |
 | [`selfhost/`](selfhost/README.md) | Self-hosted Flagsmith with Experimentation and the kit demo |
 | [`board/`](board/worker/wrangler.toml) | Live board and site: Cloudflare Worker, D1, React front end |
 | [`otel/`](otel/docker-compose.yml), [`otel_setup/`](otel_setup/tracing.py) | Telemetry stack and tracing |
