@@ -195,7 +195,8 @@ export function Booth({ source, heading = "h2" }: { source: string; heading?: "h
       </div>
 
       {enhanced && (
-        <ol className="booth-log" role="log" aria-live="polite" aria-label="The exchange so far">
+        <div role="log" aria-live="polite" aria-label="The exchange so far">
+        <ol className="booth-log">
           <BoothLine>
             You can get one email when the experiment 2 write-up is published, and one when the kit is on npm. {count !== null ? `${count} people are on the list. ` : ""}What
             should we send you?
@@ -220,6 +221,7 @@ export function Booth({ source, heading = "h2" }: { source: string; heading?: "h
           {step === "sending" && <BoothLine fresh>Printing your receipt…</BoothLine>}
           {step === "done" && <BoothLine fresh>{outcome === "joined" ? "Done. Here is your receipt." : "That address was already on the list. Here is the receipt."}</BoothLine>}
         </ol>
+        </div>
       )}
 
       <div className="booth-now">
