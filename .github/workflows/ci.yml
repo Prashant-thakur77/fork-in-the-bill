@@ -46,12 +46,9 @@ jobs:
       - name: consistency gate
         run: uv run python -m analysis.check_consistency
       - name: ledgers and assignments of committed runs
-        run: |
-          set -euo pipefail
-          for d in runs/*/; do
-            if [ -f "$d/ledger.jsonl" ]; then uv run python -m integrity.verify_ledger "$d"; fi
-            if [ -d "$d/env" ]; then uv run python -m integrity.verify_assignment --run "$d" --out /dev/null > /dev/null; echo "$d: every arm matches the Flagsmith engine"; fi
-          done
+        uses: ./.github/actions/verify-run
+        with:
+          run-dir: runs/*/
 
   gitleaks:
     name: gitleaks

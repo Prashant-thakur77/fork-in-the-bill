@@ -1,0 +1,63 @@
+name: Verify a Fork in the Bill run
+description: >-
+  Recompute the hash chain and Merkle root of a run ledger, and re-derive every recorded
+  arm offline with Flagsmith's engine. Needs no Flagsmith or model key.
+
+inputs:
+  run-dir:
+    description: >-
+      Run directory holding ledger.jsonl, plus tasks.jsonl and env/ for the assignment
+      check. Several directories may be given, separated by spaces or newlines, and shell
+      globs such as runs/*/ are expanded. Paths containing spaces are not supported.
+    required: true
+  assignment:
+    description: >-
+      auto re-derives assignments for each directory that has an env/ folder of
+      environment snapshots, true requires it for every directory, false skips it.
+    required: false
+    default: auto
+  uv-version:
+    description: uv release to install when the job has no uv on PATH yet
+    required: false
+    default: "0.10.9"
+
+outputs:
+  merkle-root:
+    description: >-
+      Merkle root over the task_done records of the run directory (of the last one when
+      several are given)
+    value: ${{ steps.verify.outputs.merkle-root }}
+
+runs:
+  using: composite
+  steps:
+    - name: look for uv
+      id: uv
+      shell: bash
+      run: |
+        if command -v uv > /dev/null; then echo "found=true" >> "$GITHUB_OUTPUT"; fi
+    - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+      if: ${{ steps.uv.outputs.found != 'true' }}
+      with:
+        version: ${{ inputs.uv-version }}
+        enable-cache: false
+    # ACTION_DIR is read from the github context in each step. The GITHUB_ACTION_PATH
+    # variable can point at a nested action (setup-uv above) once that action has run.
+    - name: uv sync
+      shell: bash
+      env:
+        ACTION_DIR: ${{ github.action_path }}
+      run: |
+        set -euo pipefail
+        # The verifiers and their lockfile come from this action's own checkout, so a
+        # caller's run directory is checked by the code at the ref the caller pinned.
+        # --inexact leaves alone whatever an earlier step installed in the same environment.
+        uv sync --locked --no-dev --inexact --project "$ACTION_DIR/../../.."
+    - name: verify
+      id: verify
+      shell: bash
+      env:
+        ACTION_DIR: ${{ github.action_path }}
+        RUN_DIRS: ${{ inputs.run-dir }}
+        ASSIGNMENT: ${{ inputs.assignment }}
+      run: bash "$ACTION_DIR/verify.sh"
