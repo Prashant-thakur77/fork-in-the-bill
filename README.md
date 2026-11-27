@@ -12,7 +12,7 @@ A pre-registered Flagsmith experiment on a coding agent's model routing: does ha
 
 Result in one line: with the delegate lane on Haiku (`lanes_v1`), the agent spent <!--n:exp1.arms.lanes_v1.cost_per_solve:usd4-->$0.0837<!--/n--> per solved task against <!--n:exp1.arms.control.cost_per_solve:usd4-->$0.1753<!--/n--> for all-Sonnet `control` (<!--n:exp1.delta.cost_per_solve_pct:pct1-->−52.2%<!--/n-->), measured on <!--n:exp1.arms.control.n_analysed:int-->76<!--/n--> control and <!--n:exp1.arms.lanes_v1.n_analysed:int-->69<!--/n--> lanes_v1 real SWE-bench-Live tasks. Shipped by the pre-registered rule: <!--n:exp1.decision.ship:str-->lanes_v1<!--/n-->.
 
-> Status: experiment 1 is complete and decided. The same-flag rollout and experiment 2 run next; their sections below fill in from `analysis/out/numbers.json` when those runs end.
+> Status: experiment 1 is complete, decided and rolled out on the same flag. Experiment 2 runs next; its section fills in from `analysis/out/numbers.json` when it ends.
 
 ## Contents
 
@@ -259,13 +259,13 @@ Decision: ship <!--n:exp1.decision.ship:str-->lanes_v1<!--/n-->. Flagsmith chanc
 
 ### Rollout on the same flag
 
-Pending. The Flagsmith experiment is ended with `lanes_v1` as the rollout decision, then a fresh batch of tasks from `tasks/pools/rollout.txt` runs on the same flag with no code change.
+After End Experiment, <!--n:exp1.decision.ship:str-->lanes_v1<!--/n--> became the value of `agent_routing`. A fresh batch from [`tasks/pools/rollout.txt`](tasks/pools/rollout.txt) then ran on the same flag with no code change: <!--n:rollout.n:int-->13<!--/n--> valid tasks at a mean cost of <!--n:rollout.cost_mean:usd4-->$0.0369<!--/n--> and a solve rate of <!--n:rollout.solve_rate:prob1-->53.8%<!--/n-->. It has no comparison arm, so it shows the winner working as the flag's own value rather than a second estimate of the effect.
 
 ### Experiment `exp2`: `lanes_v2` against the exp1 winner
 
 Pending. `lanes_v2` differs from the exp1 winner only in `prompt_variant`, and is registered and tagged before its first task.
 
-Total model spend across the study: <!--n:spend.total_usd:usd2-->$11.27<!--/n-->.
+Total model spend across the study: <!--n:spend.total_usd:usd2-->$11.87<!--/n-->.
 <!--results:end-->
 
 ### Power, and what was chosen after seeing data

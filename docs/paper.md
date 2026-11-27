@@ -218,17 +218,21 @@ By difficulty tertile, `lanes_v1` cost less in every tertile. Its solve rate was
 
 The amendment asked for the fresh tier (created in or after July) and the pre-cutoff tier to be reported separately. The by-month table in the appendix gives the counts and rates per month; the fresh tier is the `2026-07` row, with <!--n:exp1.by_trait.created_month.2026-07.control.n:int-->54<!--/n--> control and <!--n:exp1.by_trait.created_month.2026-07.lanes_v1.n:int-->40<!--/n--> lanes_v1 tasks, solve rates of <!--n:exp1.by_trait.created_month.2026-07.control.solve_rate:prob1-->50.0%<!--/n--> and <!--n:exp1.by_trait.created_month.2026-07.lanes_v1.solve_rate:prob1-->37.5%<!--/n-->, and mean costs of <!--n:exp1.by_trait.created_month.2026-07.control.cost_mean:usd4-->$0.0782<!--/n--> and <!--n:exp1.by_trait.created_month.2026-07.lanes_v1.cost_mean:usd4-->$0.0346<!--/n-->. Intervals per tier are not yet in the published numbers.
 
-Total model spend across the study, including dry runs and the pilot, was <!--n:spend.total_usd:usd2-->$11.27<!--/n-->, of which `exp1` used <!--n:spend.by_experiment.exp1:usd2-->$8.52<!--/n-->.
+Total model spend across the study, including dry runs and the pilot, was <!--n:spend.total_usd:usd2-->$11.87<!--/n-->, of which `exp1` used <!--n:spend.by_experiment.exp1:usd2-->$8.52<!--/n-->.
 
 <!--results:end-->
 
-## 6 Rollout on the same flag (pending)
+## 6 Rollout on the same flag
 
-After the decision, Flagsmith experiment 822 was ended with `lanes_v1` as the rollout decision, so `lanes_v1` became the value of `agent_routing` itself at 100%. The experiment was ended at 2026-11-27 12:05 UTC. No code changed. A fresh batch of tasks from `tasks/pools/rollout.txt`, disjoint from every other pool, is running now on the same flag with `make rollout`. It runs the winning policy as the flag's own value, outside any experiment, on tasks the experiment never saw. Its figures will appear here, filled from `numbers.json`, when the batch ends.
+After the decision, Flagsmith experiment 822 was ended with `lanes_v1` as the rollout decision, so `lanes_v1` became the value of `agent_routing` itself at 100%. The experiment was ended at 2026-11-27 12:05 UTC. No code changed. A fresh batch from `tasks/pools/rollout.txt`, disjoint from every other pool, then ran on the same flag with `make rollout`: the winning policy served as the flag's own value, outside any experiment, on tasks the experiment never saw.
+
+<!--results:start-->
+The batch ran <!--n:rollout.n:int-->13<!--/n--> valid tasks at a mean cost of <!--n:rollout.cost_mean:usd4-->$0.0369<!--/n--> per task and solved <!--n:rollout.solve_rate:prob1-->53.8%<!--/n--> of them. Every task got `lanes_v1` from the flag, which the offline re-derivation confirms. This batch is small and has no comparison arm, so it shows the rolled-out policy working as the flag's value at a cost in line with the experiment, not a second estimate of the effect.
+<!--results:end-->
 
 ## 7 Experiment 2 (pending)
 
-Experiment 2 starts from the rolled-out state. Its control is the experiment 1 winner, now the flag's own value, and its treatment `lanes_v2` differs from it only in `prompt_variant` (`delegate_v1` becomes `draft_review_v1`, a draft-review role for the worker); the models, caps and tools are unchanged (`flagsmith/policies/lanes_v2.json`, `flagsmith/experiment-2.json`). It will be registered, hashed and tagged before its first task, and is sized from the start to clear Flagsmith's 50-identity floor per variant (D22). It has not run yet.
+Experiment 2 starts from the rolled-out state. Its control is the experiment 1 winner, now the flag's own value, and its treatment `lanes_v2` differs from it only in `prompt_variant` (`delegate_v1` becomes `draft_review_v1`, a draft-review role for the worker, which switches the planner's and the worker's prompts and gives the worker file-editing tools); the models and caps are unchanged (`flagsmith/policies/lanes_v2.json`, `flagsmith/experiment-2.json`). It will be registered, hashed and tagged before its first task, and is sized from the start to clear Flagsmith's 50-identity floor per variant (D22). It has not run yet.
 
 ## 8 Threats to validity and limits
 
