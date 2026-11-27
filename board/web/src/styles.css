@@ -588,19 +588,48 @@ a.fs-link:active {
 .gore-stripe {
   fill: var(--paint);
 }
-.car-body {
-  fill: var(--sheet);
+/* vehicles (src/art/car.ts): flat sheeting tones, panel lines, an amber toll tag */
+.car-shadow {
+  fill: rgba(10, 12, 11, 0.42);
 }
+.car-body.tone-sheet { fill: var(--sheet); }
+.car-roof.tone-sheet { fill: #e6e7df; }
+.car-body.tone-concrete { fill: #d5d2c6; }
+.car-roof.tone-concrete { fill: #c6c3b6; }
+.car-body.tone-steel { fill: #9aa29d; }
+.car-roof.tone-steel { fill: #8c948f; }
+.car-body.tone-graphite { fill: #5a625d; }
+.car-roof.tone-graphite { fill: #4e5651; }
 .car-glass {
-  fill: #6c7a76;
+  fill: #33403d;
+}
+.car-line {
+  fill: none;
+  stroke: rgba(20, 23, 22, 0.32);
+  stroke-width: 0.9;
+}
+.car-head {
+  fill: #fbf6dc;
+  stroke: rgba(20, 23, 22, 0.35);
+  stroke-width: 0.6;
+}
+.car-tag {
+  fill: var(--led);
 }
 .car-tail {
   fill: #ff4a3d;
 }
-.cone {
+/* plan-view traffic cone: orange base, retroreflective collar, orange tip */
+.cone-base {
   fill: var(--orange);
-  stroke: var(--sheet);
-  stroke-width: 4;
+  stroke: rgba(10, 12, 11, 0.45);
+  stroke-width: 1;
+}
+.cone-band {
+  fill: var(--sheet);
+}
+.cone-tip {
+  fill: var(--orange);
 }
 .closure-board {
   fill: var(--orange);

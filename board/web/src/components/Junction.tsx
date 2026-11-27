@@ -124,7 +124,6 @@ export function Junction({ board }: { board: Board }) {
     const q = gsap.utils.selector(root.current);
     const tl = gsap.timeline();
     tl.from(q(".signal-closed"), { scale: 0.7, duration: 0.16, ease: "power4.out" })
-      .from(q(".closure .cone"), { scale: 0, transformOrigin: "50% 50%", transformBox: "fill-box", duration: 0.22, ease: "back.out(2.2)", stagger: 0.09 }, 0.1)
       .from(q(".closed-plate"), { scale: 1.35, opacity: 0, duration: 0.32, ease: "power4.out" }, 0.55);
     return () => {
       tl.kill();

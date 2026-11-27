@@ -51,6 +51,14 @@
 }
 
 @media (max-width: 760px) {
+  /* the question holds two lines on a phone: each line is sized to fit the column */
+  .home-hero .hero-title {
+    font-size: clamp(30px, 9.7vw, 60px);
+    line-height: 0.98;
+  }
+  .home-hero .hero-title .hl > span {
+    white-space: nowrap;
+  }
   .hero-junction .sign-stats {
     grid-template-columns: minmax(0, 1fr);
   }

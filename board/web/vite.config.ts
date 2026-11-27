@@ -40,6 +40,7 @@ function cleanUrls(): Plugin {
       server.middlewares.use((req, res, next) => {
         const url = (req.url ?? "/").split("?")[0]!;
         if (url === "/" || /\.[a-z0-9]+$/i.test(url)) return next();
+        if (process.env.BOARD_PROXY && /^\/(state|flags|stream)(\/|$)/.test(url)) return next();
         const clean = url.replace(/\/$/, "");
         if (existsSync(resolve(dist, `.${clean}.html`))) {
           req.url = `${clean}.html${req.url!.slice(url.length)}`;
@@ -57,5 +58,12 @@ export default defineConfig({
   plugins: [react(), repoData(), cleanUrls()],
   build: { target: "es2022", sourcemap: false },
   server: { fs: { allow: [REPO_ROOT] } },
-  preview: { headers: { "Cache-Control": "no-store" } },
+  preview: {
+    headers: { "Cache-Control": "no-store" },
+    // Local checks against the real API: BOARD_PROXY=https://<board host> forwards the API paths,
+    // so a build made with VITE_BOARD_API=http://localhost:<port> reads live data same-origin.
+    proxy: process.env.BOARD_PROXY
+      ? Object.fromEntries(["/state", "/flags", "/stream"].map((p) => [p, { target: process.env.BOARD_PROXY, changeOrigin: true }]))
+      : undefined,
+  },
 });
