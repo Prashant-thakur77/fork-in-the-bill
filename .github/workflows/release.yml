@@ -1,0 +1,164 @@
+# Builds and publishes a release when a v* tag is pushed.
+#
+# The build job has a read-only token. It re-runs the checks CI runs, re-derives
+# numbers.json from the committed run logs, builds the PDFs and the Parquet export, and
+# writes SHA256SUMS and the release notes. The publish job is the only one that can
+# write: it attests the assets and creates or updates the GitHub release.
+#
+# No Flagsmith or model key is used anywhere. Everything is rebuilt from files in the
+# repository.
+#
+# Run it by hand (Actions, release, Run workflow) to rehearse: with dry_run checked,
+# the default, the assets and notes are built and kept as a workflow artifact, and
+# nothing is attested or published.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build and check every asset, but do not attest or publish
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  UV_VERSION: "0.10.9"
+  NODE_VERSION: "22"
+
+jobs:
+  build:
+    name: build and check the assets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      # Nothing here calls a model or Flagsmith, and no secret is referenced.
+      ANTHROPIC_API_KEY: ""
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+    steps:
+      - name: refuse to publish from anything but a tag
+        run: |
+          set -euo pipefail
+          if [ "$DRY_RUN" != "true" ] && [ "$GITHUB_REF_TYPE" != "tag" ]; then
+            echo "::error::dry_run is off but $GITHUB_REF is not a tag; pick a v* tag in the ref menu"
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: docs/build/package-lock.json
+      - name: uv sync
+        run: uv sync --locked
+      - name: consistency gate
+        run: uv run python -m analysis.check_consistency
+      - name: registration files match their published hashes
+        run: sha256sum -c prereg/HASHES.txt
+      - name: ledgers and assignments of committed runs
+        run: |
+          set -euo pipefail
+          for d in runs/*/; do
+            if [ -f "$d/ledger.jsonl" ]; then uv run python -m integrity.verify_ledger "$d"; fi
+            if [ -d "$d/env" ]; then uv run python -m integrity.verify_assignment --run "$d" --out /dev/null > /dev/null; echo "$d: every arm matches the Flagsmith engine"; fi
+          done
+      - name: re-derive numbers.json from the run logs and compare
+        run: |
+          set -euo pipefail
+          uv run python -m analysis.analyse --runs runs --out analysis/out
+          uv run python -m tools.compare_numbers
+          # The release carries the committed files, not this run's copies with a new timestamp.
+          git checkout -- analysis/out/numbers.json analysis/results.md
+      - name: Chromium and its system libraries
+        working-directory: docs/build
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: build paper.pdf and deck.pdf
+        run: make docs
+      - name: the build changed nothing but the PDFs
+        run: git diff --exit-code --stat -- . ':(exclude)docs/paper.pdf' ':(exclude)docs/deck.pdf'
+      - name: export run data to Parquet
+        run: |
+          set -euo pipefail
+          rm -rf analysis/out/parquet
+          uv run python -m analysis.to_parquet --runs runs --out analysis/out
+      - name: assemble assets and checksums
+        run: |
+          set -euo pipefail
+          mkdir dist
+          cp docs/paper.pdf dist/fork-in-the-bill-paper.pdf
+          cp docs/deck.pdf dist/fork-in-the-bill-deck.pdf
+          cp analysis/out/numbers.json analysis/results.md dist/
+          (cd analysis/out && zip -r -X -q "$GITHUB_WORKSPACE/dist/run-data-parquet.zip" parquet)
+          (cd dist && sha256sum -- * > "$RUNNER_TEMP/SHA256SUMS")
+          mv "$RUNNER_TEMP/SHA256SUMS" dist/SHA256SUMS
+          (cd dist && sha256sum -c SHA256SUMS)
+      - name: release notes from numbers.json
+        run: |
+          set -euo pipefail
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then tag="$GITHUB_REF_NAME"; else tag="${GITHUB_SHA::12}"; fi
+          uv run python -m tools.release_notes --tag "$tag" --checksums dist/SHA256SUMS --repo "$GITHUB_REPOSITORY" > release-notes.md
+          {
+            if [ "$DRY_RUN" = "true" ]; then echo "> Dry run: nothing was attested or published."; echo; fi
+            cat release-notes.md
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-assets
+          path: |
+            dist/
+            release-notes.md
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: attest and publish
+    needs: build
+    if: ${{ github.ref_type == 'tag' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write # create the release and upload its assets
+      id-token: write # short-lived signing certificate for the attestation
+      attestations: write # store the attestation
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-assets
+      - name: checksums still hold after the hand-over
+        working-directory: dist
+        run: sha256sum -c SHA256SUMS
+      - name: build provenance for every asset
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/*
+      - name: create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --clobber
+            gh release edit "$TAG" --notes-file release-notes.md
+          else
+            gh release create "$TAG" dist/* --title "$TAG" --notes-file release-notes.md --verify-tag
+          fi
