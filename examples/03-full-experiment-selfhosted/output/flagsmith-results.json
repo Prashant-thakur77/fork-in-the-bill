@@ -1,0 +1,132 @@
+{
+  "results": {
+    "as_of": "2026-11-27T14:57:32.144131Z",
+    "last_error_at": null,
+    "refresh_requested_at": "2026-11-27T14:57:32.116148Z",
+    "payload": {
+      "metrics": [
+        {
+          "variants": {
+            "control": {
+              "n": 114,
+              "sum": 57.36438400000003,
+              "sum_squares": 31.301517634642003
+            },
+            "lanes_v1": {
+              "n": 86,
+              "sum": 29.979142999999983,
+              "sum_squares": 12.146686237954995
+            }
+          },
+          "inference": {
+            "lanes_v1": {
+              "lift": -0.30723924082750925,
+              "ci_low": -0.37721747463796873,
+              "ci_high": -0.23726100701704975,
+              "chance_to_win": 1.0
+            }
+          },
+          "metric_id": 1,
+          "conversions_timeseries": null
+        },
+        {
+          "variants": {
+            "control": {
+              "n": 114,
+              "sum": 40.0,
+              "sum_squares": 40.0
+            },
+            "lanes_v1": {
+              "n": 86,
+              "sum": 53.0,
+              "sum_squares": 53.0
+            }
+          },
+          "inference": {
+            "lanes_v1": {
+              "lift": 0.7563953488372094,
+              "ci_low": 0.22646851165604187,
+              "ci_high": 1.286322186018377,
+              "chance_to_win": 0.9974255728637169
+            }
+          },
+          "metric_id": 2,
+          "conversions_timeseries": {
+            "points": [
+              {
+                "bucket": "2026-11-27T14:00:00+00:00",
+                "converted_identities": {
+                  "control": 40,
+                  "lanes_v1": 53
+                }
+              }
+            ],
+            "granularity": "hour"
+          }
+        },
+        {
+          "variants": {
+            "control": {
+              "n": 114,
+              "sum": 1486.0,
+              "sum_squares": 21138.0
+            },
+            "lanes_v1": {
+              "n": 86,
+              "sum": 1296.0,
+              "sum_squares": 22208.0
+            }
+          },
+          "inference": {
+            "lanes_v1": {
+              "lift": 0.156092522457667,
+              "ci_low": 0.04461134931112938,
+              "ci_high": 0.26757369560420463,
+              "chance_to_win": 0.9969678245780697
+            }
+          },
+          "metric_id": 3,
+          "conversions_timeseries": null
+        },
+        {
+          "variants": {
+            "control": {
+              "n": 114,
+              "sum": 14477.966000000004,
+              "sum_squares": 2000197.9858100014
+            },
+            "lanes_v1": {
+              "n": 86,
+              "sum": 12701.229000000003,
+              "sum_squares": 2167586.0114949998
+            }
+          },
+          "inference": {
+            "lanes_v1": {
+              "lift": 0.1629059538104396,
+              "ci_low": 0.04652724804058503,
+              "ci_high": 0.27928465958029414,
+              "chance_to_win": 0.9969609812190898
+            }
+          },
+          "metric_id": 4,
+          "conversions_timeseries": null
+        }
+      ],
+      "srm_p_value": null,
+      "exposures_timeseries": {
+        "points": [
+          {
+            "bucket": "2026-11-27T14:00:00+00:00",
+            "new_identities": {
+              "control": 114,
+              "lanes_v1": 86
+            }
+          }
+        ],
+        "granularity": "hour"
+      }
+    },
+    "is_final": false
+  }
+}

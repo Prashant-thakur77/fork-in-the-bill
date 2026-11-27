@@ -1,0 +1,9 @@
+{
+  "name": "forkbill-example-screenshots",
+  "private": true,
+  "type": "module",
+  "description": "Takes the dashboard screenshots of the self-hosted Flagsmith used by the examples",
+  "dependencies": {
+    "playwright": "1.65.1"
+  }
+}

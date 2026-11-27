@@ -1,0 +1,1 @@
+{"exposures":{"as_of":"2026-11-27T14:57:32.078449Z","last_error_at":null,"refresh_requested_at":"2026-11-27T14:57:31.957707Z","payload":{"timeseries":{"points":[{"bucket":"2026-11-27T14:00:00+00:00","new_identities":{"control":114,"lanes_v1":86}}],"granularity":"hour"},"excluded_identities":0},"is_final":false}}

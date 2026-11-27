@@ -1,0 +1,244 @@
+== 1. forkbill init: flag ex03_routing, variant lanes_v1, kill switch ex03_kill, four metrics, experiment (started)
+{
+  "ids": {
+    "features": {
+      "ex03_routing": 1,
+      "ex03_kill": 2
+    },
+    "variants": {
+      "ex03_routing": {
+        "lanes_v1": 1
+      }
+    },
+    "metrics": {
+      "task_cost": 1,
+      "task_solved": 2,
+      "task_turns": 3,
+      "task_seconds": 4
+    }
+  },
+  "experiment": {
+    "id": 1,
+    "status": "running"
+  }
+}
+== 2. the experiment as Flagsmith stores it
+{
+  "id": 1,
+  "name": "example 03: full loop (simulated traffic, not study data)",
+  "status": "running",
+  "hypothesis": "Simulated traffic from the examples directory (no model calls, illustrative prices): routing the delegate lane to the small model (lanes_v1) lowers mean task_cost against control, without lowering task_solved. Not study data.",
+  "started_at": "2026-11-27T14:57:17.846673Z",
+  "ended_at": null,
+  "rollout_decision": null,
+  "rollout_percentage": 100.0,
+  "variant_split": [
+    {
+      "multivariate_feature_option": 1,
+      "percentage_allocation": 50.0
+    }
+  ],
+  "metrics": [
+    {
+      "metric_name": "task_cost",
+      "aggregation": "mean",
+      "direction": "down",
+      "expected_direction": "decrease"
+    },
+    {
+      "metric_name": "task_solved",
+      "aggregation": "occurrence",
+      "direction": "up",
+      "expected_direction": "not_decrease"
+    },
+    {
+      "metric_name": "task_turns",
+      "aggregation": "mean",
+      "direction": "informational",
+      "expected_direction": "not_increase"
+    },
+    {
+      "metric_name": "task_seconds",
+      "aggregation": "mean",
+      "direction": "informational",
+      "expected_direction": "not_increase"
+    }
+  ]
+}
+the flag while the experiment runs:
+{"feature":"ex03_routing","enabled":true,"own_value":"control","segment_overrides":1,"variants":[{"key":"lanes_v1","weight":0}]}
+== 3. forkbill demo: 200 simulated identities (ex03:0000 to ex03:0199) through the Python SDK
+deterministic fake agent loop (no model calls, illustrative prices)
+{
+  "mode": "remote",
+  "client": "flagsmith",
+  "identities": 200,
+  "by_variant": {
+    "control": {
+      "n": 114,
+      "exposed": 114,
+      "cost_mean": 0.5032,
+      "solve_rate": 0.3509,
+      "cost_per_solve": 1.4341,
+      "delegate_share_cost": 0.6304
+    },
+    "lanes_v1": {
+      "n": 86,
+      "exposed": 86,
+      "cost_mean": 0.3486,
+      "solve_rate": 0.6163,
+      "cost_per_solve": 0.5656,
+      "delegate_share_cost": 0.3702
+    }
+  }
+}
+events sent: 893; rows in Flagsmith's events table for ex03:*: 893 ($flag_exposure 200, task_cost 200, task_seconds 200, task_solved 93, task_turns 200)
+== 4. refresh exposures and results (Flagsmith computes them in its task processor)
+exposures refresh: HTTP/1.1 202 Accepted
+results refresh: HTTP/1.1 202 Accepted
+== 5. Flagsmith's exposures
+{"exposures":{"as_of":"2026-11-27T14:57:32.078449Z","last_error_at":null,"refresh_requested_at":"2026-11-27T14:57:31.957707Z","payload":{"timeseries":{"points":[{"bucket":"2026-11-27T14:00:00+00:00","new_identities":{"control":114,"lanes_v1":86}}],"granularity":"hour"},"excluded_identities":0},"is_final":false}}
+== 6. Flagsmith's results (time series left out here; the full response is saved as examples/03-full-experiment-selfhosted/output/flagsmith-results.json)
+{
+  "results": {
+    "as_of": "2026-11-27T14:57:32.144131Z",
+    "last_error_at": null,
+    "refresh_requested_at": "2026-11-27T14:57:32.116148Z",
+    "payload": {
+      "metrics": [
+        {
+          "variants": {
+            "control": {
+              "n": 114,
+              "sum": 57.36438400000003,
+              "sum_squares": 31.301517634642003
+            },
+            "lanes_v1": {
+              "n": 86,
+              "sum": 29.979142999999983,
+              "sum_squares": 12.146686237954995
+            }
+          },
+          "inference": {
+            "lanes_v1": {
+              "lift": -0.30723924082750925,
+              "ci_low": -0.37721747463796873,
+              "ci_high": -0.23726100701704975,
+              "chance_to_win": 1.0
+            }
+          },
+          "metric_id": 1
+        },
+        {
+          "variants": {
+            "control": {
+              "n": 114,
+              "sum": 40.0,
+              "sum_squares": 40.0
+            },
+            "lanes_v1": {
+              "n": 86,
+              "sum": 53.0,
+              "sum_squares": 53.0
+            }
+          },
+          "inference": {
+            "lanes_v1": {
+              "lift": 0.7563953488372094,
+              "ci_low": 0.22646851165604187,
+              "ci_high": 1.286322186018377,
+              "chance_to_win": 0.9974255728637169
+            }
+          },
+          "metric_id": 2
+        },
+        {
+          "variants": {
+            "control": {
+              "n": 114,
+              "sum": 1486.0,
+              "sum_squares": 21138.0
+            },
+            "lanes_v1": {
+              "n": 86,
+              "sum": 1296.0,
+              "sum_squares": 22208.0
+            }
+          },
+          "inference": {
+            "lanes_v1": {
+              "lift": 0.156092522457667,
+              "ci_low": 0.04461134931112938,
+              "ci_high": 0.26757369560420463,
+              "chance_to_win": 0.9969678245780697
+            }
+          },
+          "metric_id": 3
+        },
+        {
+          "variants": {
+            "control": {
+              "n": 114,
+              "sum": 14477.966000000004,
+              "sum_squares": 2000197.9858100014
+            },
+            "lanes_v1": {
+              "n": 86,
+              "sum": 12701.229000000003,
+              "sum_squares": 2167586.0114949998
+            }
+          },
+          "inference": {
+            "lanes_v1": {
+              "lift": 0.1629059538104396,
+              "ci_low": 0.04652724804058503,
+              "ci_high": 0.27928465958029414,
+              "chance_to_win": 0.9969609812190898
+            }
+          },
+          "metric_id": 4
+        }
+      ],
+      "srm_p_value": null
+    },
+    "is_final": false
+  }
+}
+== 7. the same results as a table (metric ids from step 1)
+metric        control n  control mean  lanes_v1 n  lanes_v1 mean  lift    95% interval      chance_to_win
+task_cost     114        0.5032        86          0.3486         -0.307  [-0.377, -0.237]  1
+task_solved   114        0.3509        86          0.6163         0.756   [0.226, 1.286]    0.997
+task_turns    114        13.0351       86          15.0698        0.156   [0.045, 0.268]    0.997
+task_seconds  114        126.9997      86          147.6887       0.163   [0.047, 0.279]    0.997
+== 8. decision rule (fixed before the run, see README.md)
+task_cost chance_to_win 1.0 (needs >= 0.95), task_solved chance_to_win 0.9974255728637169 (needs >= 0.05): roll out lanes_v1
+== 9. end the experiment with that rollout decision
+flagsmith api <experiment>/complete/ -X POST -F rollout_decision=variant -F rollout_variant=1
+{
+  "id": 1,
+  "name": "example 03: full loop (simulated traffic, not study data)",
+  "status": "completed",
+  "started_at": "2026-11-27T14:57:17.846673Z",
+  "ended_at": "2026-11-27T14:57:32.643827Z",
+  "rollout_decision": "variant",
+  "rollout_variant": 1
+}
+== 10. the flag afterwards
+{
+  "feature": "ex03_routing",
+  "enabled": true,
+  "own_value": "control",
+  "segment_overrides": 0,
+  "variants": [
+    {
+      "key": "lanes_v1",
+      "weight": 100
+    }
+  ]
+}
+five new identities, read with the SDK the same way as in step 3:
+ex03-after:0000  policy=lanes_v1  delegate=claude-haiku-5-5  variant=lanes_v1  flag_source=flag  exposed=false
+ex03-after:0001  policy=lanes_v1  delegate=claude-haiku-5-5  variant=lanes_v1  flag_source=flag  exposed=false
+ex03-after:0002  policy=lanes_v1  delegate=claude-haiku-5-5  variant=lanes_v1  flag_source=flag  exposed=false
+ex03-after:0003  policy=lanes_v1  delegate=claude-haiku-5-5  variant=lanes_v1  flag_source=flag  exposed=false
+ex03-after:0004  policy=lanes_v1  delegate=claude-haiku-5-5  variant=lanes_v1  flag_source=flag  exposed=false
