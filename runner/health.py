@@ -82,7 +82,7 @@ def read_run(run_dir: Path) -> RunView:
     total = 0.0
     if not path.exists():
         return RunView([], 0.0)
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8").split("\n"):
         try:
             rec = json.loads(line)
         except json.JSONDecodeError:

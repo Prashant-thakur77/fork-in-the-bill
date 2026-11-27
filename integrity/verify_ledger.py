@@ -47,7 +47,7 @@ def verify(path: Path) -> LedgerReport:
     prev = GENESIS
     expected_seq: int | None = None
     task_hashes: list[str] = []
-    for lineno, raw in enumerate(ledger.read_text(encoding="utf-8").splitlines(), start=1):
+    for lineno, raw in enumerate(ledger.read_text(encoding="utf-8").split("\n"), start=1):
         if not raw.strip():
             continue
         try:

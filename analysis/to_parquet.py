@@ -24,7 +24,7 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     out: list[dict[str, Any]] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8").split("\n"):
         if line.strip():
             out.append(json.loads(line))
     return out

@@ -238,7 +238,9 @@ def board_snapshot(run_dir: Path, exp: str) -> dict[str, Any]:
     latest: dict[str, dict[str, Any]] = {}
     p = run_dir / "tasks.jsonl"
     if p.exists():
-        for line in p.read_text().splitlines():
+        for line in p.read_text().split("\n"):
+            if not line.strip():
+                continue
             r = json.loads(line)
             latest[r["identity"]] = r
             last = r

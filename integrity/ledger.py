@@ -22,7 +22,8 @@ class Ledger:
     def append(self, kind: LedgerKind, payload: dict[str, object]) -> LedgerRecord:
         with open(self.path, "r+") as fh:
             fcntl.flock(fh, fcntl.LOCK_EX)
-            lines = fh.read().splitlines()
+            # split on "\n" only: str.splitlines() also breaks on U+0085 and U+2028, which JSON keeps raw
+            lines = [x for x in fh.read().split("\n") if x]
             if lines:
                 last = json.loads(lines[-1])
                 seq, prev = int(last["seq"]) + 1, str(last["hash"])

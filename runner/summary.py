@@ -17,7 +17,9 @@ def summarize(run_dir: Path) -> str:
     if calls_path.exists():
         agg: dict[tuple[str, str], list[float]] = defaultdict(lambda: [0, 0.0, 0, 0, 0, 0])
         stops: dict[str, int] = defaultdict(int)
-        for line in calls_path.read_text().splitlines():
+        for line in calls_path.read_text().split("\n"):
+            if not line.strip():
+                continue
             r = json.loads(line)
             a = agg[(r["task_identity"].removeprefix("swelive:"), r["lane"])]
             a[0] += 1
@@ -34,7 +36,9 @@ def summarize(run_dir: Path) -> str:
     tasks_path = run_dir / "tasks.jsonl"
     if tasks_path.exists():
         out.append("finished tasks:")
-        for line in tasks_path.read_text().splitlines():
+        for line in tasks_path.read_text().split("\n"):
+            if not line.strip():
+                continue
             r = json.loads(line)
             out.append(
                 f"  {r['instance_id']} {r['variant']} {r['outcome']} ${r['usd']:.4f} "

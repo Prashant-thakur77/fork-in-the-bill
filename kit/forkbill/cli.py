@@ -250,7 +250,7 @@ def _fallback_report(run_dir: Path) -> dict[str, Any]:
     if not tasks.exists():
         raise FileNotFoundError(f"{tasks} not found")
     by: dict[str, list[dict[str, Any]]] = {}
-    for line in tasks.read_text().splitlines():
+    for line in tasks.read_text().split("\n"):
         if line.strip():
             row = json.loads(line)
             by.setdefault(str(row.get("variant") or "(none)"), []).append(row)

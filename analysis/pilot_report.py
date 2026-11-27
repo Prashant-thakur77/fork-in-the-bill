@@ -23,7 +23,7 @@ INFRA = {Outcome.infra_error.value}
 def final_records(run_dir: Path) -> list[dict[str, Any]]:
     """The last record per instance; an infra error followed by a retry keeps the retry."""
     last: dict[str, dict[str, Any]] = {}
-    for line in (run_dir / "tasks.jsonl").read_text(encoding="utf-8").splitlines():
+    for line in (run_dir / "tasks.jsonl").read_text(encoding="utf-8").split("\n"):
         if line.strip():
             rec = json.loads(line)
             last[rec["instance_id"]] = rec
@@ -31,7 +31,7 @@ def final_records(run_dir: Path) -> list[dict[str, Any]]:
 
 
 def all_records(run_dir: Path) -> list[dict[str, Any]]:
-    lines = (run_dir / "tasks.jsonl").read_text(encoding="utf-8").splitlines()
+    lines = (run_dir / "tasks.jsonl").read_text(encoding="utf-8").split("\n")
     return [json.loads(x) for x in lines if x.strip()]
 
 
