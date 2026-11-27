@@ -1,0 +1,21 @@
+openfeature-sdk 0.9.0 | openfeature-provider-flagsmith 1.0.0 | flagsmith 6.7.0
+== part 1: the plain OpenFeature API (no exposure, no events)
+provider: FlagsmithProvider
+ex05:task-00  variant=lanes_v1  delegate=claude-haiku-5-5   reason=SPLIT; weight=50.0
+ex05:task-01  variant=control   delegate=claude-sonnet-5-5  reason=TARGETING_MATCH; segment=experiment-2-rollout
+ex05:task-02  variant=control   delegate=claude-sonnet-5-5  reason=TARGETING_MATCH; segment=experiment-2-rollout
+routing_kill: value=False
+== part 2: the kit's loop over the same OpenFeature client (exposure and events sent with track())
+ex05:task-00  arm=lanes_v1  delegate=claude-haiku-5-5   $0.1578  solved=True   exposed=True  source=experiment
+ex05:task-01  arm=control   delegate=claude-sonnet-5-5  $0.3818  solved=True   exposed=True  source=experiment
+ex05:task-02  arm=control   delegate=claude-sonnet-5-5  $0.2280  solved=True   exposed=True  source=experiment
+ex05:task-03  arm=lanes_v1  delegate=claude-haiku-5-5   $0.2538  solved=True   exposed=True  source=experiment
+ex05:task-04  arm=lanes_v1  delegate=claude-haiku-5-5   $0.3165  solved=False  exposed=True  source=experiment
+ex05:task-05  arm=control   delegate=claude-sonnet-5-5  $0.2696  solved=False  exposed=True  source=experiment
+ex05:task-06  arm=lanes_v1  delegate=claude-haiku-5-5   $0.1888  solved=False  exposed=True  source=experiment
+ex05:task-07  arm=control   delegate=claude-sonnet-5-5  $0.4675  solved=False  exposed=True  source=experiment
+== check: the Flagsmith SDK on its own serves the same arms (get_identity_flags, no exposure)
+same variant from both paths: 8 of 8
+arms Flagsmith served: {'control': 4, 'lanes_v1': 4}  (simulated tasks, illustrative prices)
+sent to Flagsmith: 8 exposures + 28 task events = 36
+events sent: 36; rows in Flagsmith's events table for ex05:*: 36 ($flag_exposure 8, task_cost 8, task_seconds 8, task_solved 4, task_turns 8)

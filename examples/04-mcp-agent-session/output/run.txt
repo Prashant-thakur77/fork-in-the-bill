@@ -1,0 +1,21 @@
+saved the environment document to work/environment.json (4 feature states)
+server: forkbill-mcp 0.1.0, protocol 2025-06-18
+tools: get_routing_policy, report_outcome, get_kill_switch, explain_assignment, price_usage
+get_kill_switch: routing_kill enabled=false
+get_routing_policy: ex04:task-0001 -> variant control (source experiment, exposure_recorded true), main claude-sonnet-5-5, delegate claude-sonnet-5-5
+price_usage: $0.42 of a $0.6 cap, over_budget=false
+report_outcome: delivered=true, events task_cost=0.42, task_solved=1, task_turns=5, task_seconds=61.5
+explain_assignment (offline, from work/environment.json):
+  agent_routing for identity ex04:task-0001
+  1. Hashing key: <api_key>_ex04:task-0001 (the environment key, an underscore, the identity).
+  2. Segment experiment-2-rollout (2): md5("2,<api_key>_ex04:task-0001") = 8d7466115713ff3de53e907e7a3c7467; as an integer mod 9999 = 7919; 7919 / 9998 x 100 = 79.2058; <= 100, inside the segment.
+  3. Feature state used: the override from segment experiment-2-rollout, id 6, enabled, experiment 2 "examples (simulated traffic, not study data)", in_experiment true.
+  4. Split: md5("6,<api_key>_ex04:task-0001") = 53e507d6f892fcd30e7cdc00740997b5; as an integer mod 9999 = 6969; 6969 / 9998 x 100 = 69.7039.
+  5. Ranges in variant id order: lanes_v1 [0, 50), control [50, 100). 69.7039 falls in control.
+  Variant: control.
+  Flagsmith's engine: variant control (TARGETING_MATCH; segment=experiment-2-rollout). The two agree.
+  This session was served control for the identity: matches.
+  md5 working and Flagsmith's engine agree: true; matches what this session was served: true
+forkbill://config: { "mode": "remote", "flags_evaluated": "by the API, one request per identity", "environment_key": "set (server-side)", "flags_api": "http://localhost:8000/api/v1/", "events_api": "http://localhost:8000/api/", "routing_flag": "agent_routing", "kill_switch_flag": "routing_kill", "exposures_recorded": "yes, for identities enrolled in a running experiment", "pricing_table": "bundled", "request_timeout_seconds": 10, "retries": 3 }
+events sent: 5; rows in Flagsmith's events table for ex04:task-0001*: 5 ($flag_exposure 1, task_cost 1, task_seconds 1, task_solved 1, task_turns 1)
+transcript: 17 JSON-RPC messages in examples/04-mcp-agent-session/output/transcript.jsonl

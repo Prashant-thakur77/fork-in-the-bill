@@ -1,0 +1,26 @@
+routing_kill starts off
+15:07:45  ex06:task-00  source=experiment   policy=lanes_v1  variant=lanes_v1  exposed=True   events sent=3
+15:07:46  ex06:task-01  source=experiment   policy=lanes_v1  variant=lanes_v1  exposed=True   events sent=3
+15:07:47  ex06:task-02  source=experiment   policy=lanes_v1  variant=lanes_v1  exposed=True   events sent=4
+15:07:48  ex06:task-03  source=experiment   policy=control   variant=control   exposed=True   events sent=4
+15:07:49  ex06:task-04  source=experiment   policy=control   variant=control   exposed=True   events sent=4
+15:07:50  ex06:task-05  source=experiment   policy=lanes_v1  variant=lanes_v1  exposed=True   events sent=3
+15:07:51  ex06:task-06  source=kill_switch  policy=control   variant=None      exposed=False  events sent=0
+15:07:51  >>> flagsmith flag enable routing_kill: {"feature":"routing_kill","enabled":true}
+15:07:52  ex06:task-07  source=kill_switch  policy=control   variant=None      exposed=False  events sent=0
+15:07:53  ex06:task-08  source=kill_switch  policy=control   variant=None      exposed=False  events sent=0
+15:07:54  ex06:task-09  source=kill_switch  policy=control   variant=None      exposed=False  events sent=0
+15:07:55  ex06:task-10  source=kill_switch  policy=control   variant=None      exposed=False  events sent=0
+15:07:57  ex06:task-11  source=kill_switch  policy=control   variant=None      exposed=False  events sent=0
+15:07:58  ex06:task-12  source=kill_switch  policy=control   variant=None      exposed=False  events sent=0
+15:07:58  >>> flagsmith flag disable routing_kill: {"feature":"routing_kill","enabled":false}
+15:07:59  ex06:task-13  source=experiment   policy=control   variant=control   exposed=True   events sent=3
+15:08:00  ex06:task-14  source=experiment   policy=lanes_v1  variant=lanes_v1  exposed=True   events sent=3
+15:08:01  ex06:task-15  source=experiment   policy=control   variant=control   exposed=True   events sent=4
+15:08:02  ex06:task-16  source=experiment   policy=lanes_v1  variant=lanes_v1  exposed=True   events sent=3
+15:08:03  ex06:task-17  source=experiment   policy=lanes_v1  variant=lanes_v1  exposed=True   events sent=4
+== what the worker ran, by where the policy came from
+experiment: 11 tasks, policies control, lanes_v1, exposures 11, events 38
+kill_switch: 7 tasks, policies control, exposures 0, events 0
+7 tasks ran under the kill switch: all on the control policy, none exposed, no events
+events sent: 49; rows in Flagsmith's events table for ex06:*: 49 ($flag_exposure 11, task_cost 11, task_seconds 11, task_solved 5, task_turns 11)
