@@ -9,7 +9,7 @@ REDIS_IMAGE := redis:8.12.0-alpine@sha256:5af80107c1eeecb484a2269b80a26d12bfa652
 ENV := set -a; [ -f .env ] && . ./.env; set +a;
 
 .PHONY: help setup check test lint services-up services-down pools validate flagsmith-setup smoke \
-        dryrun pilot power exp1 rollout exp2 analyse verify board-seed infra-up infra-down infra-ssh flags-drift
+        dryrun pilot power exp1 rollout exp2 analyse docs verify board-seed infra-up infra-down infra-ssh flags-drift
 
 help: ## List targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-16s %s\n", $$1, $$2}'
@@ -74,6 +74,11 @@ exp2: ## Main run of experiment 2
 analyse: ## Reproduce every published number from the run logs
 	$(UV) run python -m analysis.analyse --runs runs --out analysis/out
 	$(UV) run python -m analysis.charts
+	$(UV) run python -m analysis.check_consistency
+
+docs: ## Fill the paper and deck from numbers.json, then build docs/paper.pdf and docs/deck.pdf
+	$(UV) run python -m analysis.render_docs --no-regenerate
+	cd docs/build && npm ci --no-audit --no-fund && npx playwright install chromium && node build.mjs
 	$(UV) run python -m analysis.check_consistency
 
 verify: ## Re-check the hash-chained ledgers and print the Merkle roots

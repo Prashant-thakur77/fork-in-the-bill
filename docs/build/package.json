@@ -1,0 +1,16 @@
+{
+  "name": "forkbill-docs",
+  "private": true,
+  "type": "module",
+  "description": "Builds docs/paper.pdf and docs/deck.pdf from the rendered paper and deck",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "@fontsource-variable/overpass": "5.3.0",
+    "@fontsource/overpass-mono": "5.3.0",
+    "@fontsource/source-serif-4": "5.3.1",
+    "marked": "18.2.0",
+    "playwright": "1.65.1"
+  }
+}
