@@ -1,0 +1,52 @@
+wrote selfhost/.env with random secrets
+== docker compose up
+ Volume forkbill-examples_pgdata Creating 
+ Network forkbill-examples_default Creating 
+ Volume forkbill-examples_pgdata Created 
+ Network forkbill-examples_default Created 
+ Container forkbill-examples-postgres-1 Creating 
+ Container forkbill-examples-postgres-1 Created 
+ Container forkbill-examples-migrate-db-1 Creating 
+ Container forkbill-examples-migrate-db-1 Created 
+ Container forkbill-examples-flagsmith-task-processor-1 Creating 
+ Container forkbill-examples-flagsmith-1 Creating 
+ Container forkbill-examples-flagsmith-1 Created 
+ Container forkbill-examples-flagsmith-task-processor-1 Created 
+ Container forkbill-examples-postgres-1 Starting 
+ Container forkbill-examples-postgres-1 Started 
+ Container forkbill-examples-postgres-1 Waiting 
+ Container forkbill-examples-postgres-1 Healthy 
+ Container forkbill-examples-migrate-db-1 Starting 
+ Container forkbill-examples-migrate-db-1 Started 
+ Container forkbill-examples-migrate-db-1 Waiting 
+ Container forkbill-examples-migrate-db-1 Exited 
+ Container forkbill-examples-flagsmith-task-processor-1 Starting 
+ Container forkbill-examples-flagsmith-1 Starting 
+ Container forkbill-examples-flagsmith-task-processor-1 Started 
+ Container forkbill-examples-flagsmith-1 Started 
+waiting for http://localhost:8000/health/liveness/ .. up
+== first-run initialisation (flagsmith bootstrap)
+Superuser "admin@forkbill.local" created successfully.
+Organisation "Fork in the Bill (self-hosted demo)" created successfully.
+Project "forkbill-selfhost-demo" created successfully.
+admin password set
+master API key created
+== CLI auth
+Instance            http://localhost:8000
+Identity            Master API key
+Organisations       Fork in the Bill (self-hosted demo) (1)
+Credential source   $FLAGSMITH_API_KEY_localhost_8000
+== environment Demo
+created
+CLI bound: {"project":1,"apiUrl":"http://localhost:8000"}
+server-side SDK key created
+Edge Proxy key pair written (start it with: docker compose -f selfhost/docker-compose.yml --profile edge up -d)
+== warehouse: Flagsmith database (Postgres, evaluation only)
+{"name":"Flagsmith database - Demo","warehouse_type":"postgres","config":{"source":"flagsmith_database"},"status":"connected"}
+
+Self-hosted Flagsmith is up at http://localhost:8000 (dashboard: log in as admin@forkbill.local).
+Credentials file (keys and admin password, mode 600): selfhost/.state/credentials.env
+CLI config (project and client-side environment key):  selfhost/.state/flagsmith.json
+Use it from a shell:  set -a; source selfhost/.state/credentials.env; set +a
+Next: selfhost/demo.sh
+Tear down:  docker compose -f selfhost/docker-compose.yml --profile edge down -v && rm -rf selfhost/.state

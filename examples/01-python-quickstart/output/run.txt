@@ -1,0 +1,11 @@
+ex01:task-00  arm=control   delegate=claude-sonnet-5-5  $0.2671  solved=True   sent: task_cost, task_solved, task_turns, task_seconds
+ex01:task-01  arm=lanes_v1  delegate=claude-haiku-5-5   $0.1312  solved=True   sent: task_cost, task_solved, task_turns, task_seconds
+ex01:task-02  arm=lanes_v1  delegate=claude-haiku-5-5   $0.2980  solved=False  sent: task_cost, task_turns, task_seconds
+ex01:task-03  arm=control   delegate=claude-sonnet-5-5  $0.4269  solved=False  sent: task_cost, task_turns, task_seconds
+ex01:task-04  arm=lanes_v1  delegate=claude-haiku-5-5   $0.2630  solved=False  sent: task_cost, task_turns, task_seconds
+ex01:task-05  arm=lanes_v1  delegate=claude-haiku-5-5   $0.2159  solved=True   sent: task_cost, task_solved, task_turns, task_seconds
+ex01:task-06  arm=lanes_v1  delegate=claude-haiku-5-5   $0.2109  solved=True   sent: task_cost, task_solved, task_turns, task_seconds
+ex01:task-07  arm=lanes_v1  delegate=claude-haiku-5-5   $0.1927  solved=False  sent: task_cost, task_turns, task_seconds
+arms Flagsmith served: {'control': 2, 'lanes_v1': 6}  (simulated tasks, illustrative prices)
+sent to Flagsmith: 8 exposures + 28 task events = 36
+events sent: 36; rows in Flagsmith's events table for ex01:*: 36 ($flag_exposure 8, task_cost 8, task_seconds 8, task_solved 4, task_turns 8)

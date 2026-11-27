@@ -1,0 +1,21 @@
+{
+  "name": "forkbill-example-typescript-quickstart",
+  "private": true,
+  "type": "module",
+  "description": "The forkbill kit from the npm registry against a self-hosted Flagsmith, with simulated tasks",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "start": "node quickstart.ts"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "dependencies": {
+    "@flagsmith/nodejs": "^9.5.0",
+    "forkbill": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.7",
+    "typescript": "~5.9.3"
+  }
+}

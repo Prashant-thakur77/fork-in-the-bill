@@ -1,0 +1,19 @@
+== npm ci (packages come from the npm registry, not from this repository)
+
+added 24 packages in 1s
+forkbill 0.1.0 from https://registry.npmjs.org/forkbill/-/forkbill-0.1.0.tgz
+@flagsmith/nodejs 9.5.0, node v22.23.5
+== tsc --noEmit
+no type errors
+== node quickstart.ts
+ex02:task-00  arm=control   delegate=claude-sonnet-5-5  $0.1185  solved=true   sent: task_cost, task_solved, task_turns, task_seconds
+ex02:task-01  arm=control   delegate=claude-sonnet-5-5  $0.2873  solved=true   sent: task_cost, task_solved, task_turns, task_seconds
+ex02:task-02  arm=lanes_v1  delegate=claude-haiku-5-5   $0.1003  solved=false  sent: task_cost, task_turns, task_seconds
+ex02:task-03  arm=lanes_v1  delegate=claude-haiku-5-5   $0.1648  solved=true   sent: task_cost, task_solved, task_turns, task_seconds
+ex02:task-04  arm=control   delegate=claude-sonnet-5-5  $0.2838  solved=true   sent: task_cost, task_solved, task_turns, task_seconds
+ex02:task-05  arm=lanes_v1  delegate=claude-haiku-5-5   $0.2883  solved=true   sent: task_cost, task_solved, task_turns, task_seconds
+ex02:task-06  arm=control   delegate=claude-sonnet-5-5  $0.5217  solved=true   sent: task_cost, task_solved, task_turns, task_seconds
+ex02:task-07  arm=lanes_v1  delegate=claude-haiku-5-5   $0.3494  solved=true   sent: task_cost, task_solved, task_turns, task_seconds
+arms Flagsmith served: {"control":4,"lanes_v1":4}  (simulated tasks, illustrative prices)
+sent to Flagsmith: 8 exposures + 31 task events = 39
+events sent: 39; rows in Flagsmith's events table for ex02:*: 39 ($flag_exposure 8, task_cost 8, task_seconds 8, task_solved 7, task_turns 8)
