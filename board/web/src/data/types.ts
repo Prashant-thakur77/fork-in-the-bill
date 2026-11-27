@@ -17,6 +17,8 @@ export interface Snapshot {
   last_task?: { variant: string; usd: number; solved: boolean; language: string } | null;
 }
 
+import type { FlagChange } from "./flags";
+
 export type Fmt = "usd2" | "usd4" | "pct1" | "pp1" | "int" | "f3" | "prob1" | "hash12";
 
 /** One figure copied from analysis/out/numbers.json; checked like the README markers. */
@@ -49,4 +51,6 @@ export interface Board {
   flagsmithUrl: string;
   /** True once final numbers exist (seed final, or the replay reached its end). */
   final: boolean;
+  /** Flag history for the experiment flag; null when there is no worker to ask. */
+  flags: FlagChange[] | null;
 }

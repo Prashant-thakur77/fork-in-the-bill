@@ -1196,3 +1196,175 @@ a.fs-link:active {
     padding-inline: 12%;
   }
 }
+
+/* Flag history: mileposts along one painted line; a diamond per change, coloured by meaning. */
+.flags .block-head code {
+  font-family: var(--mono);
+  color: var(--text);
+}
+.flaglog {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+.flaglog-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border-radius: var(--r-small);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-weight: 800;
+  font-size: 19px;
+  line-height: 1.3;
+}
+.flaglog-tag,
+.flaglog-state {
+  font-size: var(--t-label);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  border-radius: 4px;
+  color: var(--quiet);
+  box-shadow: inset 0 0 0 2px var(--line);
+  white-space: nowrap;
+}
+.flaglog.is-unchanged .flaglog-tag {
+  background: var(--sign);
+  color: var(--sheet);
+  box-shadow: none;
+}
+.flaglog.is-changed .flaglog-tag,
+.flaglog-state {
+  background: var(--red-text);
+  color: var(--sheet);
+  box-shadow: none;
+}
+.flaglog-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 16px;
+}
+.flaglog-row,
+.flaglog-more {
+  display: grid;
+  grid-template-columns: 10.5em 14px minmax(0, 1fr) auto;
+  column-gap: 14px;
+  align-items: baseline;
+  padding-block: 7px;
+}
+.flaglog-more {
+  color: var(--quiet);
+  font-size: var(--t-small);
+  padding-left: calc(10.5em + 28px + 14px);
+  display: block;
+}
+.flaglog-time {
+  grid-column: 1;
+  font-family: var(--mono);
+  font-size: var(--t-small);
+  color: var(--quiet);
+  white-space: nowrap;
+}
+.flaglog-mark {
+  grid-column: 2;
+  align-self: stretch;
+  position: relative;
+}
+.flaglog-mark::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: -7px;
+  bottom: -7px;
+  width: 2px;
+  background: var(--line);
+}
+.flaglog-row:first-child .flaglog-mark::before {
+  top: 0.7em;
+}
+.flaglog-row:last-child .flaglog-mark::before {
+  bottom: auto;
+  height: 0.7em;
+}
+.flaglog-mark::after {
+  content: "";
+  position: absolute;
+  left: 1px;
+  top: 0.45em;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  background: var(--quiet);
+}
+.flaglog-row.is-start .flaglog-mark::after,
+.flaglog-row.is-rollout .flaglog-mark::after {
+  background: var(--sign);
+}
+.flaglog-row.is-end .flaglog-mark::after {
+  background: var(--paint-yellow);
+  box-shadow: inset 0 0 0 2px var(--text);
+}
+.flaglog-row.is-audit .flaglog-mark::after,
+.flaglog-row.is-noop .flaglog-mark::after {
+  background: var(--ground);
+  box-shadow: inset 0 0 0 2px var(--steel);
+}
+.flaglog-row.is-during .flaglog-mark::after {
+  background: var(--red);
+  box-shadow: none;
+}
+.flaglog-what {
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.flaglog-what b {
+  font-weight: 700;
+  line-height: 1.3;
+}
+.flaglog-row.is-audit .flaglog-what b,
+.flaglog-row.is-noop .flaglog-what b {
+  font-weight: 600;
+  color: var(--quiet);
+}
+.flaglog-what small {
+  font-family: var(--mono);
+  font-size: var(--t-small);
+  color: var(--quiet);
+  overflow-wrap: anywhere;
+}
+.flaglog-state {
+  grid-column: 4;
+  justify-self: end;
+}
+@media (max-width: 760px) {
+  .flaglog-list {
+    padding-inline: 4px;
+  }
+  .flaglog-row {
+    grid-template-columns: 14px minmax(0, 1fr);
+    column-gap: 12px;
+  }
+  .flaglog-mark {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+  }
+  .flaglog-time,
+  .flaglog-what,
+  .flaglog-state {
+    grid-column: 2;
+  }
+  .flaglog-state {
+    justify-self: start;
+    margin-top: 4px;
+  }
+  .flaglog-more {
+    padding-left: 30px;
+  }
+}

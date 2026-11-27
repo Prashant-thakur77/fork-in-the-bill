@@ -1,4 +1,5 @@
 import type { Board } from "../data/types";
+import { FlagHistory } from "./FlagHistory";
 import type { Phase } from "./Junction";
 
 type Tri = "pending" | "met" | "not met";
@@ -243,6 +244,7 @@ export function Sections({ board, phase }: { board: Board; phase: Phase }) {
       <Verdict board={board} phase={phase} />
       <Exp2 board={board} />
       <Proof board={board} />
+      <FlagHistory board={board} />
     </>
   );
 }

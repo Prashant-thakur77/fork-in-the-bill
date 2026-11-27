@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import seedJson from "../seed.json";
+import { EXPERIMENT_FLAG, type FlagChange } from "./flags";
 import type { Board, Connection, Seed, Snapshot } from "./types";
 
 const seed = seedJson as Seed;
@@ -35,6 +36,11 @@ function isSnapshot(v: unknown): v is Snapshot {
   return !!v && typeof v === "object" && "arms" in v && "status" in v;
 }
 
+function flagsOf(v: unknown): FlagChange[] | null {
+  if (!v || typeof v !== "object" || !("changes" in v) || !Array.isArray(v.changes)) return null;
+  return v.changes as FlagChange[];
+}
+
 export function useBoard(): { board: Board; replay: ReplayControls | null } {
   const isReplay = useMemo(() => new URLSearchParams(window.location.search).get("demo") === "replay", []);
   const live = useLive(!isReplay);
@@ -50,6 +56,7 @@ export function useBoard(): { board: Board; replay: ReplayControls | null } {
       decisions: seed.decisions,
       flagsmithUrl: live.snapshot?.flagsmith_experiment_url || seed.flagsmith_experiment_url,
       final: seed.status === "final",
+      flags: live.flags,
     },
     replay: null,
   };
@@ -59,6 +66,7 @@ function useLive(enabled: boolean) {
   const [api, setApi] = useState<string>("");
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [connection, setConnection] = useState<Connection>("none");
+  const [flags, setFlags] = useState<FlagChange[] | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
@@ -68,21 +76,42 @@ function useLive(enabled: boolean) {
       if (cancelled || !base) return;
       setApi(base);
       setConnection("connecting");
-      try {
-        const res = await fetch(`${base}/state`, { cache: "no-store" });
-        const body: unknown = await res.json();
-        if (!cancelled && isSnapshot(body)) setSnapshot(body);
-      } catch {
-        // the stream below retries on its own
-      }
+      const feature = `feature=${EXPERIMENT_FLAG}`;
+      await Promise.all([
+        fetch(`${base}/state`, { cache: "no-store" })
+          .then((res) => res.json())
+          .then((body: unknown) => {
+            if (!cancelled && isSnapshot(body)) setSnapshot(body);
+          })
+          .catch(() => {
+            // the stream below retries on its own
+          }),
+        fetch(`${base}/flags/history?${feature}`, { cache: "no-store" })
+          .then((res) => res.json())
+          .then((body: unknown) => {
+            const f = flagsOf(body);
+            if (!cancelled && f) setFlags(f);
+          })
+          .catch(() => {
+            // the stream sends the history too
+          }),
+      ]);
       if (cancelled) return;
-      es = new EventSource(`${base}/stream`);
+      es = new EventSource(`${base}/stream?${feature}`);
       es.addEventListener("open", () => setConnection("open"));
       es.addEventListener("error", () => setConnection("retrying"));
       es.addEventListener("snapshot", (ev) => {
         try {
           const body: unknown = JSON.parse((ev as MessageEvent<string>).data);
           if (isSnapshot(body)) setSnapshot(body);
+        } catch {
+          // ignore a malformed frame
+        }
+      });
+      es.addEventListener("flags", (ev) => {
+        try {
+          const f = flagsOf(JSON.parse((ev as MessageEvent<string>).data));
+          if (f) setFlags(f);
         } catch {
           // ignore a malformed frame
         }
@@ -94,7 +123,7 @@ function useLive(enabled: boolean) {
     };
   }, [enabled]);
 
-  return { api, snapshot, connection };
+  return { api, snapshot, connection, flags };
 }
 
 type Replay = Awaited<ReturnType<typeof import("../replay/fixture")["buildReplay"]>>;
@@ -139,7 +168,7 @@ function useReplay(enabled: boolean): { board: Board; controls: ReplayControls }
   if (!enabled || !data) {
     return enabled
       ? {
-          board: { mode: "replay", connection: "none", snapshot: null, figures: {}, decisions: {}, flagsmithUrl: "", final: false },
+          board: { mode: "replay", connection: "none", snapshot: null, figures: {}, decisions: {}, flagsmithUrl: "", final: false, flags: null },
           controls: { t: 0, duration: 1, playing: false, toggle() {}, seek() {}, restart() {} },
         }
       : null;
@@ -158,6 +187,7 @@ function useReplay(enabled: boolean): { board: Board; controls: ReplayControls }
       decisions: ended ? data.decisions : {},
       flagsmithUrl: "",
       final: ended,
+      flags: data.flags.filter((c) => c.at <= data.flagsBase + t / 1000),
     },
     controls: {
       t,

@@ -1,10 +1,13 @@
-import { verifySignature } from "./hmac";
+import { dedupeKey, parseFlagWebhook, type StoredFlagChange } from "./flags";
+import { verifyFlagsmithSignature, verifySignature } from "./hmac";
 import { parseSnapshot } from "./payload";
 import type { Store, StoredSnapshot } from "./store";
 
 export interface AppOptions {
   store: Store;
   secret: string;
+  /** FLAGSMITH_WEBHOOK_SECRET; the webhook route fails closed without it. */
+  flagsmithSecret?: string;
   allowedOrigins: string[];
   now?: () => number; // unix seconds
   pollMs?: number;
@@ -13,6 +16,36 @@ export interface AppOptions {
 }
 
 const MAX_BODY_BYTES = 16 * 1024;
+// Flagsmith payloads carry full feature objects (description, tags), so allow more than /ingest.
+export const MAX_WEBHOOK_BYTES = 64 * 1024;
+const FEATURE_PARAM = /^[A-Za-z0-9_.-]{1,150}$/;
+
+/** Reads a body as text, giving up (null) once it passes maxBytes, whatever Content-Length says. */
+async function readCapped(request: Request, maxBytes: number): Promise<string | null> {
+  const length = Number(request.headers.get("Content-Length") ?? "0");
+  if (length > maxBytes) return null;
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const buf = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) {
+    buf.set(c, off);
+    off += c.byteLength;
+  }
+  return new TextDecoder().decode(buf);
+}
 
 function corsHeaders(request: Request, allowed: string[]): Record<string, string> {
   const origin = request.headers.get("Origin");
@@ -37,6 +70,12 @@ function sseEvent(s: StoredSnapshot | null): string {
   const id = s ? `id: ${s.version}\n` : "";
   return `event: snapshot\n${id}data: ${JSON.stringify(s ? s.snapshot : null)}\n\n`;
 }
+
+function flagsEvent(changes: StoredFlagChange[]): string {
+  return `event: flags\ndata: ${JSON.stringify({ changes })}\n\n`;
+}
+
+const lastId = (changes: StoredFlagChange[]) => changes.reduce((m, c) => Math.max(m, c.id), 0);
 
 export function createApp(opts: AppOptions) {
   const now = opts.now ?? (() => Math.floor(Date.now() / 1000));
@@ -78,7 +117,30 @@ export function createApp(opts: AppOptions) {
     return json({ ok: true, version }, 200);
   }
 
-  function stream(request: Request, cors: Record<string, string>, experiment?: string): Response {
+  async function flagWebhook(request: Request): Promise<Response> {
+    const rawBody = await readCapped(request, MAX_WEBHOOK_BYTES);
+    if (rawBody === null) return json({ error: "body too large" }, 413);
+    const verdict = await verifyFlagsmithSignature({
+      secret: opts.flagsmithSecret ?? "",
+      signatureHeader: request.headers.get("X-Flagsmith-Signature"),
+      rawBody,
+    });
+    if (!verdict.ok) return json({ error: verdict.reason }, verdict.status);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(rawBody);
+    } catch {
+      return json({ error: "body is not JSON" }, 400);
+    }
+    const nowS = now();
+    const change = await parseFlagWebhook(parsed, nowS);
+    if (!change.ok) return json({ error: change.error }, 400);
+    const stored = await store.addFlagChange(change.value, await dedupeKey(change.value), nowS);
+    // A duplicate is answered 200 so Flagsmith does not keep retrying a delivery we already hold.
+    return json({ ok: true, stored }, 200);
+  }
+
+  function stream(request: Request, cors: Record<string, string>, experiment?: string, feature?: string): Response {
     const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
     const writer = writable.getWriter();
     const enc = new TextEncoder();
@@ -101,6 +163,8 @@ export function createApp(opts: AppOptions) {
       await write("retry: 3000\n\n");
       let current = await store.latest(experiment);
       await write(sseEvent(current));
+      let flags = await store.flagHistory({ feature });
+      await write(flagsEvent(flags));
       let lastVersion = await store.version();
       let lastBeat = Date.now();
       while (!closed && Date.now() - started < maxStreamMs) {
@@ -114,6 +178,12 @@ export function createApp(opts: AppOptions) {
             if (next && (!current || next.version !== current.version)) {
               current = next;
               await write(sseEvent(current));
+              lastBeat = Date.now();
+            }
+            const nextFlags = await store.flagHistory({ feature });
+            if (lastId(nextFlags) !== lastId(flags)) {
+              flags = nextFlags;
+              await write(flagsEvent(flags));
               lastBeat = Date.now();
             }
           }
@@ -153,6 +223,8 @@ export function createApp(opts: AppOptions) {
       const cors = corsHeaders(request, opts.allowedOrigins);
       const experimentParam = url.searchParams.get("experiment") ?? undefined;
       const experiment = experimentParam && /^[a-z0-9_-]{1,32}$/.test(experimentParam) ? experimentParam : undefined;
+      const featureParam = url.searchParams.get("feature") ?? undefined;
+      const feature = featureParam && FEATURE_PARAM.test(featureParam) ? featureParam : undefined;
 
       if (request.method === "OPTIONS") {
         return new Response(null, { status: 204, headers: cors });
@@ -160,6 +232,15 @@ export function createApp(opts: AppOptions) {
       if (url.pathname === "/ingest") {
         if (request.method !== "POST") return json({ error: "method not allowed" }, 405, { Allow: "POST" });
         return ingest(request);
+      }
+      if (url.pathname === "/flagsmith/webhook") {
+        if (request.method !== "POST") return json({ error: "method not allowed" }, 405, { Allow: "POST" });
+        return flagWebhook(request);
+      }
+      if (url.pathname === "/flags/history" && request.method === "GET") {
+        const limitParam = Number(url.searchParams.get("limit") ?? "");
+        const limit = Number.isInteger(limitParam) && limitParam > 0 ? limitParam : undefined;
+        return json({ changes: await store.flagHistory({ feature, limit }) }, 200, cors);
       }
       if (url.pathname === "/state" && request.method === "GET") {
         const s = await store.latest(experiment);
@@ -169,12 +250,12 @@ export function createApp(opts: AppOptions) {
         });
       }
       if (url.pathname === "/stream" && request.method === "GET") {
-        const res = stream(request, cors, experiment);
+        const res = stream(request, cors, experiment, feature);
         ctx?.waitUntil((res as Response & { done: Promise<void> }).done);
         return res;
       }
       if (url.pathname === "/" && request.method === "GET") {
-        return json({ ok: true, endpoints: ["POST /ingest", "GET /state", "GET /stream"] }, 200, cors);
+        return json({ ok: true, endpoints: ["POST /ingest", "POST /flagsmith/webhook", "GET /state", "GET /flags/history", "GET /stream"] }, 200, cors);
       }
       return json({ error: "not found" }, 404, cors);
     },

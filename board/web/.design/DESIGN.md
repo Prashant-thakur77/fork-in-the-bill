@@ -48,7 +48,7 @@ Score:
 - Reduced motion: no travel, no scans or tweens; cars drawn static at their positions; numbers and states still update.
 
 ## Components
-Masthead (wordmark, VMS status LED, mode badge: Live / Not started / Final numbers / Replay, Flagsmith link), Junction (gantry beam, guide signs with exit tab, LED meter and three stats; lane-use signals; plan-view road), Rule list (diamond numbers, figure, state tag), Verdict sign with rate table, Work-zone board with rate table, Receipt, Footer.
+Masthead (wordmark, VMS status LED, mode badge: Live / Not started / Final numbers / Replay, Flagsmith link), Junction (gantry beam, guide signs with exit tab, LED meter and three stats; lane-use signals; plan-view road), Rule list (diamond numbers, figure, state tag), Verdict sign with rate table, Work-zone board with rate table, Receipt, Flag history (summary plate with state tag, then mileposts on one painted line: green diamond start or rollout, yellow end, hollow audit or no-op save, red a change during the run), Footer.
 
 ## States
 Awaiting run: signals dark, LED `$---.--`, stats dashes, verdict/exp2/receipt read "pending". Running, ended (yellow X both lanes), rolled out (winner green arrow, loser red X + cones + plate). Replay: orange "Replay · fixture data" badge and an orange-outlined control bar (play, pause, scrub).

@@ -94,6 +94,20 @@ The board seed (`board/web/src/seed.json`) and the captions file (`video/caption
 
 `GET /stream` is SSE, emitting one `snapshot` event with the same aggregate shape on connect and after each ingest. `GET /state` returns the latest snapshot.
 
+## Flag history (Flagsmith webhooks)
+
+`POST https://<board>/flagsmith/webhook` takes Flagsmith's environment webhook (`{"event_type": "FLAG_UPDATED", "data": {...}}`) and its audit-log webhook (`{created_date, log, author, environment, project, related_object_*}`). The header `X-Flagsmith-Signature` must be `hex(hmac_sha256(FLAGSMITH_WEBHOOK_SECRET, raw_body))`; a bad or missing signature gets 401, a body over 64 KiB gets 413. Each delivery is reduced to one row of `flag_changes` (migration `0002`):
+
+```json
+{"id": 1, "at": 0, "received_at": 0, "source": "flag|audit", "event_type": "FLAG_UPDATED",
+ "feature": "agent_routing", "environment": "Production", "scope": "environment|segment|identity",
+ "segment": null, "enabled_before": true, "enabled_after": true,
+ "weights_before": [{"option_id": 37431, "pct": 50}], "weights_after": [{"option_id": 37431, "pct": 100}],
+ "value_sha256_before": "...", "value_sha256_after": "..."}
+```
+
+Never stored: `changed_by`, `author`, identity identifiers, the audit `log` text and raw flag values (they hold policies). A value is kept as the sha256 of the string itself, or of `JSON.stringify(value)` for non-strings. A repeated delivery is stored once. `GET /flags/history?feature=agent_routing[&limit=N]` returns `{"changes": [...]}`, oldest first (at most 100), and `/stream?feature=agent_routing` sends the same body as a `flags` event on connect and after each new change.
+
 ## Budget
 
 `BUDGET_USD_TOTAL` is the hard global cap. It is a Redis key `budget:spent_usd`, incremented with INCRBYFLOAT before each call's committed cost is recorded. Before each model call the worker reserves the call's worst-case cost (max input estimate plus max_tokens output at list price) with a Lua script that refuses the reservation if `spent + reserved + worst_case > cap`. When the call returns, the reservation is settled at actual cost. With no Redis (unit tests, dry runs), a file-locked JSON counter in `runs/budget.json` does the same job.

@@ -13,4 +13,5 @@ database_name = "board"
 database_id = "00000000-0000-0000-0000-000000000000"
 migrations_dir = "migrations"
 
-# Secret (not in this file): wrangler secret put BOARD_INGEST_SECRET
+# Secrets (not in this file): wrangler secret put BOARD_INGEST_SECRET
+#                            wrangler secret put FLAGSMITH_WEBHOOK_SECRET  (the Flagsmith webhook's signing secret)

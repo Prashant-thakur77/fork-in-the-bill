@@ -4,6 +4,7 @@
 // The page shows a "Replay" badge whenever this module drives it.
 
 import { format } from "../data/format";
+import type { FlagChange } from "../data/flags";
 import type { Snapshot, Status } from "../data/types";
 
 export interface ReplayFrame {
@@ -36,7 +37,51 @@ const MODEL: Record<string, ArmModel> = {
   lanes_v1: { costMean: 1.02, solveRate: 0.41 },
 };
 
-export function buildReplay(): { frames: ReplayFrame[]; figures: Record<string, string>; decisions: Record<string, string> } {
+/** Fixture clock for flag changes: unix seconds at replay time 0. */
+const FLAGS_BASE = 1_800_000_000;
+
+function fixtureFlags(): FlagChange[] {
+  const base = {
+    feature: "agent_routing",
+    environment: "Production",
+    scope: "environment" as const,
+    segment: null,
+    enabled_before: true,
+    enabled_after: true,
+    value_sha256_before: "5f1c0a9b".padEnd(64, "0"),
+    value_sha256_after: "5f1c0a9b".padEnd(64, "0"),
+  };
+  const at = (ms: number) => FLAGS_BASE + Math.floor(ms / 1000);
+  const audit = (id: number, ms: number): FlagChange => ({
+    ...base,
+    id,
+    at: at(ms),
+    received_at: at(ms),
+    source: "audit",
+    event_type: "AUDIT_FEATURE_STATE",
+    scope: null,
+    enabled_before: null,
+    enabled_after: null,
+    weights_before: null,
+    weights_after: null,
+    value_sha256_before: null,
+    value_sha256_after: null,
+  });
+  return [
+    { ...base, id: 1, at: at(0), received_at: at(0), source: "flag", event_type: "FLAG_UPDATED", weights_before: [{ option_id: 37431, pct: 0 }], weights_after: [{ option_id: 37431, pct: 50 }] },
+    audit(2, 0),
+    { ...base, id: 3, at: at(RUN_MS + 6000), received_at: at(RUN_MS + 6000), source: "flag", event_type: "FLAG_UPDATED", weights_before: [{ option_id: 37431, pct: 50 }], weights_after: [{ option_id: 37431, pct: 100 }] },
+    audit(4, RUN_MS + 6000),
+  ];
+}
+
+export function buildReplay(): {
+  frames: ReplayFrame[];
+  figures: Record<string, string>;
+  decisions: Record<string, string>;
+  flags: FlagChange[];
+  flagsBase: number;
+} {
   const rand = mulberry32(20261127);
   type Ev = { at: number; arm: string; usd: number; solved: boolean; language: string; start: number };
   const events: Ev[] = [];
@@ -131,7 +176,7 @@ export function buildReplay(): { frames: ReplayFrame[]; figures: Record<string, 
   put("integrity.env_snapshot_distinct_hashes", 1, "int");
   put("spend.total_usd", c.usd + l.usd, "usd2");
 
-  return { frames, figures: f, decisions: {
+  return { frames, figures: f, flags: fixtureFlags(), flagsBase: FLAGS_BASE, decisions: {
       "exp1.decision.ship": "lanes_v1",
       "exp1.decision.rule_met.flagsmith_95": "true",
       "exp1.decision.rule_met.guardrail_90": "true",

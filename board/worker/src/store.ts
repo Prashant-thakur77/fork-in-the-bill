@@ -1,3 +1,4 @@
+import type { FlagChange, StoredFlagChange } from "./flags";
 import type { Snapshot } from "./payload";
 
 export interface StoredSnapshot {
@@ -13,7 +14,56 @@ export interface Store {
   /** Latest snapshot, for one experiment or the most recently updated one. */
   latest(experiment?: string): Promise<StoredSnapshot | null>;
   version(): Promise<number>;
+  /** Records a flag change; returns false if the same change was already stored (a replay). */
+  addFlagChange(change: FlagChange, dedupe: string, nowSeconds: number): Promise<boolean>;
+  /** The most recent flag changes, oldest first, optionally for one feature. */
+  flagHistory(opts?: { feature?: string; limit?: number }): Promise<StoredFlagChange[]>;
 }
+
+export const HISTORY_LIMIT = 100;
+
+interface FlagRow {
+  id: number;
+  at: number;
+  received_at: number;
+  source: string;
+  event_type: string;
+  feature: string | null;
+  environment: string | null;
+  scope: string | null;
+  segment: string | null;
+  enabled_before: number | null;
+  enabled_after: number | null;
+  weights_before: string | null;
+  weights_after: string | null;
+  value_sha256_before: string | null;
+  value_sha256_after: string | null;
+}
+
+const bool = (v: number | null) => (v === null ? null : v === 1);
+const fromBool = (v: boolean | null) => (v === null ? null : v ? 1 : 0);
+
+function rowToChange(r: FlagRow): StoredFlagChange {
+  return {
+    id: r.id,
+    at: r.at,
+    received_at: r.received_at,
+    source: r.source as StoredFlagChange["source"],
+    event_type: r.event_type,
+    feature: r.feature,
+    environment: r.environment,
+    scope: r.scope as StoredFlagChange["scope"],
+    segment: r.segment,
+    enabled_before: bool(r.enabled_before),
+    enabled_after: bool(r.enabled_after),
+    weights_before: r.weights_before ? JSON.parse(r.weights_before) : null,
+    weights_after: r.weights_after ? JSON.parse(r.weights_after) : null,
+    value_sha256_before: r.value_sha256_before,
+    value_sha256_after: r.value_sha256_after,
+  };
+}
+
+const clampLimit = (n?: number) => Math.max(1, Math.min(HISTORY_LIMIT, n ?? HISTORY_LIMIT));
 
 // Signatures older than this are pruned; the 60 s timestamp window already rejects them.
 const KEEP_SIGNATURES_SECONDS = 300;
@@ -72,6 +122,51 @@ export class D1Store implements Store {
     const row = await this.db.prepare("SELECT version FROM meta WHERE id = 1").first<{ version: number }>();
     return row?.version ?? 0;
   }
+
+  async addFlagChange(c: FlagChange, dedupe: string, nowSeconds: number): Promise<boolean> {
+    const insert = await this.db
+        .prepare(
+          `INSERT INTO flag_changes (dedupe, at, received_at, source, event_type, feature, environment, scope, segment,
+             enabled_before, enabled_after, weights_before, weights_after, value_sha256_before, value_sha256_after)
+           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)
+           ON CONFLICT (dedupe) DO NOTHING`,
+        )
+        .bind(
+          dedupe,
+          c.at,
+          nowSeconds,
+          c.source,
+          c.event_type,
+          c.feature,
+          c.environment,
+          c.scope,
+          c.segment,
+          fromBool(c.enabled_before),
+          fromBool(c.enabled_after),
+          c.weights_before ? JSON.stringify(c.weights_before) : null,
+          c.weights_after ? JSON.stringify(c.weights_after) : null,
+          c.value_sha256_before,
+          c.value_sha256_after,
+        )
+        .run();
+    if ((insert.meta.changes ?? 0) !== 1) return false;
+    // Bump the change counter so /stream notices the new row.
+    await this.db.prepare("UPDATE meta SET version = version + 1 WHERE id = 1").run();
+    return true;
+  }
+
+  async flagHistory(opts: { feature?: string; limit?: number } = {}): Promise<StoredFlagChange[]> {
+    const limit = clampLimit(opts.limit);
+    const cols = `id, at, received_at, source, event_type, feature, environment, scope, segment, enabled_before,
+      enabled_after, weights_before, weights_after, value_sha256_before, value_sha256_after`;
+    const stmt = opts.feature
+      ? this.db
+          .prepare(`SELECT ${cols} FROM flag_changes WHERE feature = ? ORDER BY at DESC, id DESC LIMIT ?`)
+          .bind(opts.feature, limit)
+      : this.db.prepare(`SELECT ${cols} FROM flag_changes ORDER BY at DESC, id DESC LIMIT ?`).bind(limit);
+    const { results } = await stmt.all<FlagRow>();
+    return results.map(rowToChange).reverse();
+  }
 }
 
 /** In-memory store with the same semantics, used by the tests. */
@@ -79,6 +174,8 @@ export class MemoryStore implements Store {
   private seen = new Map<string, number>();
   private snaps = new Map<string, StoredSnapshot>();
   private v = 0;
+  private flags: StoredFlagChange[] = [];
+  private dedupes = new Set<string>();
 
   async claimSignature(signature: string, ts: number, nowSeconds: number): Promise<boolean> {
     for (const [s, t] of this.seen) if (t < nowSeconds - KEEP_SIGNATURES_SECONDS) this.seen.delete(s);
@@ -105,5 +202,20 @@ export class MemoryStore implements Store {
 
   async version(): Promise<number> {
     return this.v;
+  }
+
+  async addFlagChange(change: FlagChange, dedupe: string, nowSeconds: number): Promise<boolean> {
+    if (this.dedupes.has(dedupe)) return false;
+    this.dedupes.add(dedupe);
+    this.flags.push({ ...structuredClone(change), id: this.flags.length + 1, received_at: nowSeconds });
+    this.v += 1;
+    return true;
+  }
+
+  async flagHistory(opts: { feature?: string; limit?: number } = {}): Promise<StoredFlagChange[]> {
+    const rows = this.flags
+      .filter((c) => !opts.feature || c.feature === opts.feature)
+      .sort((a, b) => a.at - b.at || a.id - b.id);
+    return rows.slice(-clampLimit(opts.limit));
   }
 }
