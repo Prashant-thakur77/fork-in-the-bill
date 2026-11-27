@@ -102,7 +102,7 @@ jobs:
           npx tsc --noEmit
 
   kit-ts:
-    name: kit TypeScript build
+    name: kit TypeScript build and tests
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -111,9 +111,38 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: kit/ts/package-lock.json
-      - name: build
-        working-directory: kit/ts
+          cache-dependency-path: kit/package-lock.json
+      - name: build and test
+        working-directory: kit
         run: |
           npm ci
-          npm run build
+          npm run build --workspace forkbill
+          npm test --workspace forkbill
+
+  kit-mcp:
+    name: MCP server build and tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      # The tests use a fake Flagsmith only. No key is present, so nothing can reach a real one.
+      FLAGSMITH_SERVER_KEY: ""
+      FLAGSMITH_ENVIRONMENT_KEY: ""
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: kit/package-lock.json
+      - name: build and test
+        working-directory: kit
+        run: |
+          npm ci
+          npm run build --workspace forkbill
+          npm run build --workspace forkbill-mcp
+          npm test --workspace forkbill-mcp
+      - name: package contents
+        working-directory: kit
+        run: |
+          npm pack --dry-run --workspace forkbill
+          npm pack --dry-run --workspace forkbill-mcp

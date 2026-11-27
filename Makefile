@@ -18,7 +18,7 @@ setup: ## Install Python and Node dependencies
 	$(UV) sync --group dev
 	cd board/web && npm ci
 	cd board/worker && npm ci
-	cd kit/ts && npm ci
+	cd kit && npm ci
 
 lint: ## ruff + pyright
 	$(UV) run ruff check .

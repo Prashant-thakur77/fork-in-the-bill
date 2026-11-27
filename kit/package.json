@@ -1,0 +1,13 @@
+{
+  "name": "forkbill-kit",
+  "private": true,
+  "description": "Workspace for the two npm packages: the TypeScript kit (ts) and the MCP server (mcp)",
+  "workspaces": [
+    "ts",
+    "mcp"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace forkbill && npm run build --workspace forkbill-mcp",
+    "test": "npm test --workspace forkbill && npm test --workspace forkbill-mcp"
+  }
+}

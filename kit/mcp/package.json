@@ -1,0 +1,61 @@
+{
+  "name": "forkbill-mcp",
+  "version": "0.1.0",
+  "description": "MCP server that puts an agent's model routing behind a Flagsmith experiment: Flagsmith picks the arm, the agent reports the outcome, and the assignment can be re-checked offline",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "forkbill-mcp": "dist/src/cli.js"
+  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    }
+  },
+  "files": [
+    "dist/src",
+    "dist/pricing.json"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Prashant-thakur77/fork-in-the-bill.git",
+    "directory": "kit/mcp"
+  },
+  "homepage": "https://forkbill.prashantthakur.dev",
+  "bugs": {
+    "url": "https://github.com/Prashant-thakur77/fork-in-the-bill/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "flagsmith",
+    "feature-flags",
+    "experimentation",
+    "ab-testing",
+    "llm",
+    "model-routing"
+  ],
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.json && node scripts/copy-pricing.mjs",
+    "test": "npm run build && node --test \"dist/test/**/*.test.js\"",
+    "prepublishOnly": "npm test"
+  },
+  "dependencies": {
+    "@flagsmith/nodejs": "^9.5.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "forkbill": "^0.1.0",
+    "pino": "^10.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.7",
+    "typescript": "~5.9.3"
+  }
+}
