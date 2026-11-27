@@ -55,6 +55,8 @@ packages = ["harness", "runner", "integrity", "analysis", "tasks", "otel_setup",
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+extend-exclude = ["video"]
+force-exclude = true
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]

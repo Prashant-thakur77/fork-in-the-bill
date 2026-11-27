@@ -41,3 +41,8 @@ analysis/out/parquet/
 # Document builder sources (the build/ rule above would hide them)
 !docs/build/
 runs/*/.done
+
+# Demo video: only the on-screen figures and the timed script are tracked; sources, renders and intermediates stay local
+video/*
+!video/captions.json
+!video/script_timed.md

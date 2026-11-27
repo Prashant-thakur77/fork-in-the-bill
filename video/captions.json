@@ -1,0 +1,290 @@
+{
+  "note": "Every figure the film shows or speaks. Filled by analysis/render_docs.py from analysis/out/numbers.json.",
+  "numbers": {
+    "share_control": {
+      "key": "exp1.arms.control.delegate_share_cost",
+      "fmt": "prob1",
+      "text": "62.5%"
+    },
+    "share_v1": {
+      "key": "exp1.arms.lanes_v1.delegate_share_cost",
+      "fmt": "prob1",
+      "text": "11.5%"
+    },
+    "n_control": {
+      "key": "exp1.arms.control.n_exposed",
+      "fmt": "int",
+      "text": "76"
+    },
+    "n_v1": {
+      "key": "exp1.arms.lanes_v1.n_exposed",
+      "fmt": "int",
+      "text": "69"
+    },
+    "cps_control": {
+      "key": "exp1.arms.control.cost_per_solve",
+      "fmt": "usd4",
+      "text": "$0.1753"
+    },
+    "cps_v1": {
+      "key": "exp1.arms.lanes_v1.cost_per_solve",
+      "fmt": "usd4",
+      "text": "$0.0837"
+    },
+    "cps_delta": {
+      "key": "exp1.delta.cost_per_solve_pct",
+      "fmt": "pct1",
+      "text": "−52.2%"
+    },
+    "cost_control": {
+      "key": "exp1.arms.control.cost_mean",
+      "fmt": "usd4",
+      "text": "$0.0784"
+    },
+    "cost_v1": {
+      "key": "exp1.arms.lanes_v1.cost_mean",
+      "fmt": "usd4",
+      "text": "$0.0340"
+    },
+    "cost_delta": {
+      "key": "exp1.delta.cost_mean_pct",
+      "fmt": "pct1",
+      "text": "−56.7%"
+    },
+    "fs_lift": {
+      "key": "exp1.flagsmith.lift_cost",
+      "fmt": "prob1",
+      "text": "−56.6%"
+    },
+    "fs_ci_lo": {
+      "key": "exp1.flagsmith.ci_cost.0",
+      "fmt": "prob1",
+      "text": "−68.8%"
+    },
+    "fs_ci_hi": {
+      "key": "exp1.flagsmith.ci_cost.1",
+      "fmt": "prob1",
+      "text": "−44.3%"
+    },
+    "fs_chance": {
+      "key": "exp1.flagsmith.chance_to_beat_control_cost",
+      "fmt": "prob1",
+      "text": "100.0%"
+    },
+    "fs_guardrail": {
+      "key": "exp1.flagsmith.solve_rate_status",
+      "fmt": "str",
+      "text": "inconclusive"
+    },
+    "agree_control": {
+      "key": "exp1.agreement.cost_mean_abs_diff.control",
+      "fmt": "usd4",
+      "text": "$0.0000"
+    },
+    "agree_v1": {
+      "key": "exp1.agreement.cost_mean_abs_diff.lanes_v1",
+      "fmt": "usd4",
+      "text": "$0.0001"
+    },
+    "solve_control": {
+      "key": "exp1.arms.control.solve_rate",
+      "fmt": "prob1",
+      "text": "44.7%"
+    },
+    "solve_v1": {
+      "key": "exp1.arms.lanes_v1.solve_rate",
+      "fmt": "prob1",
+      "text": "40.6%"
+    },
+    "solves_control": {
+      "key": "exp1.arms.control.solves",
+      "fmt": "int",
+      "text": "34"
+    },
+    "solves_v1": {
+      "key": "exp1.arms.lanes_v1.solves",
+      "fmt": "int",
+      "text": "28"
+    },
+    "solve_delta": {
+      "key": "exp1.delta.solve_rate_pp",
+      "fmt": "pp1",
+      "text": "−4.2 pp"
+    },
+    "solve_ci_lo": {
+      "key": "exp1.delta.solve_rate_ci.0",
+      "fmt": "pp1",
+      "text": "−19.8 pp"
+    },
+    "solve_ci_hi": {
+      "key": "exp1.delta.solve_rate_ci.1",
+      "fmt": "pp1",
+      "text": "+11.8 pp"
+    },
+    "p_within": {
+      "key": "exp1.delta.p_solve_drop_within_m",
+      "fmt": "prob1",
+      "text": "97.7%"
+    },
+    "bar_flagsmith": {
+      "key": "exp1.decision.bars.flagsmith_chance",
+      "fmt": "prob1",
+      "text": "95.0%"
+    },
+    "bar_guardrail": {
+      "key": "exp1.decision.bars.guardrail_posterior",
+      "fmt": "prob1",
+      "text": "90.0%"
+    },
+    "margin": {
+      "key": "exp1.prereg.m",
+      "fmt": "prob1",
+      "text": "20.0%"
+    },
+    "ship": {
+      "key": "exp1.decision.ship",
+      "fmt": "str",
+      "text": "lanes_v1"
+    },
+    "rule1": {
+      "key": "exp1.decision.rule_met.flagsmith_95",
+      "fmt": "str",
+      "text": "True"
+    },
+    "rule2": {
+      "key": "exp1.decision.rule_met.guardrail_90",
+      "fmt": "str",
+      "text": "True"
+    },
+    "rule3": {
+      "key": "exp1.decision.rule_met.no_guardrail_loss",
+      "fmt": "str",
+      "text": "True"
+    },
+    "srm_p": {
+      "key": "exp1.srm.p",
+      "fmt": "f3",
+      "text": "0.561"
+    },
+    "split_a": {
+      "key": "exp1.srm.expected_split.0",
+      "fmt": "prob1",
+      "text": "50.0%"
+    },
+    "split_b": {
+      "key": "exp1.srm.expected_split.1",
+      "fmt": "prob1",
+      "text": "50.0%"
+    },
+    "rollout_n": {
+      "key": "rollout.n",
+      "fmt": "int",
+      "text": "13"
+    },
+    "rollout_cost": {
+      "key": "rollout.cost_mean",
+      "fmt": "usd4",
+      "text": "$0.0369"
+    },
+    "rollout_solve": {
+      "key": "rollout.solve_rate",
+      "fmt": "prob1",
+      "text": "53.8%"
+    },
+    "fresh_n_control": {
+      "key": "exp1.by_tier.fresh.control.n",
+      "fmt": "int",
+      "text": "54"
+    },
+    "fresh_n_v1": {
+      "key": "exp1.by_tier.fresh.lanes_v1.n",
+      "fmt": "int",
+      "text": "40"
+    },
+    "fresh_solve_control": {
+      "key": "exp1.by_tier.fresh.control.solve_rate",
+      "fmt": "prob1",
+      "text": "50.0%"
+    },
+    "fresh_solve_v1": {
+      "key": "exp1.by_tier.fresh.lanes_v1.solve_rate",
+      "fmt": "prob1",
+      "text": "37.5%"
+    },
+    "fresh_solve_delta": {
+      "key": "exp1.by_tier.fresh.delta.solve_rate_pp",
+      "fmt": "pp1",
+      "text": "−12.5 pp"
+    },
+    "fresh_p_within": {
+      "key": "exp1.by_tier.fresh.delta.p_solve_drop_within_m",
+      "fmt": "prob1",
+      "text": "78.9%"
+    },
+    "fresh_cps_delta": {
+      "key": "exp1.by_tier.fresh.delta.cost_per_solve_pct",
+      "fmt": "pct1",
+      "text": "−40.9%"
+    },
+    "ledger_tasks": {
+      "key": "integrity.task_done_records",
+      "fmt": "int",
+      "text": "146"
+    },
+    "assign_matched": {
+      "key": "integrity.assignment.matched",
+      "fmt": "int",
+      "text": "146"
+    },
+    "assign_checked": {
+      "key": "integrity.assignment.checked",
+      "fmt": "int",
+      "text": "146"
+    },
+    "merkle12": {
+      "key": "integrity.merkle_root",
+      "fmt": "hash12",
+      "text": "7ed364648c75"
+    },
+    "merkle": {
+      "key": "integrity.merkle_root",
+      "fmt": "str",
+      "text": "7ed364648c7513ef22280eaed97a2ab77e92d91b8f88f5bbfab08d747a989929"
+    },
+    "env_snapshots": {
+      "key": "integrity.env_snapshots",
+      "fmt": "int",
+      "text": "56"
+    },
+    "env_distinct": {
+      "key": "integrity.env_snapshot_distinct_hashes",
+      "fmt": "int",
+      "text": "1"
+    },
+    "engine": {
+      "key": "integrity.assignment.flag_engine_version",
+      "fmt": "str",
+      "text": "11.1.2"
+    },
+    "prereg12": {
+      "key": "exp1.prereg.sha256",
+      "fmt": "hash12",
+      "text": "44d715bd6bd7"
+    },
+    "prereg_sha": {
+      "key": "exp1.prereg.sha256",
+      "fmt": "str",
+      "text": "44d715bd6bd7f8580e8bb1950a21ea852dfea4daaf040c84009f391bf56e19c2"
+    },
+    "prereg_tag": {
+      "key": "exp1.prereg.tag",
+      "fmt": "str",
+      "text": "prereg-exp1"
+    },
+    "spend": {
+      "key": "spend.total_usd",
+      "fmt": "usd2",
+      "text": "$11.87"
+    }
+  }
+}
