@@ -45,6 +45,12 @@ jobs:
         run: uv run pytest -m "not docker" --record-mode=none
       - name: consistency gate
         run: uv run python -m analysis.check_consistency
+      - name: relative links in the Markdown files
+        run: >-
+          uv run python tools/check_links.py README.md docs CHANGELOG.md CONTRIBUTING.md
+          SECURITY.md CODE_OF_CONDUCT.md .github/actions/verify-run/README.md
+      - name: registration files match their published hashes
+        run: sha256sum -c prereg/HASHES.txt
       - name: ledgers and assignments of committed runs
         uses: ./.github/actions/verify-run
         with:

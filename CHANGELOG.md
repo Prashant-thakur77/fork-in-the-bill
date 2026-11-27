@@ -16,6 +16,7 @@ Notable changes to this project, newest first. Versions are git tags. Result fig
 - `docs/reproduce.md`, a walk from clone to verified ledgers and re-derived numbers, with the output to expect.
 - `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CITATION.cff`, issue forms for bugs and replication reports, and a pull request template.
 - `.editorconfig` and `.gitattributes`. Run logs and lockfiles are marked as generated, and text files check out with LF so the registration hashes hold on every platform.
+- CI checks that relative links in the Markdown files resolve (`tools/check_links.py`) and that `prereg/HASHES.txt` verifies.
 
 ### Fixed
 

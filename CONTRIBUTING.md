@@ -24,9 +24,10 @@ No key is needed for anything on this page. To run tasks you would copy `.env.ex
 make check                          # ruff, pyright, unit tests, consistency gate
 make verify                         # ledgers and assignments of every committed run
 sha256sum -c prereg/HASHES.txt      # registration files are unchanged
+uv run python tools/check_links.py  # relative links in README.md and docs/ resolve
 ```
 
-CI runs the first two, a secret scan over the full history, and the board and kit builds. If you touched `board/` or the TypeScript under `kit/`, also run the steps of the matching job in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+CI runs the same four, a secret scan over the full history, and the board and kit builds. If you touched `board/` or the TypeScript under `kit/`, also run the steps of the matching job in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 The unit tests replay recorded model responses. They make no network calls and spend nothing. A test that needs Docker carries the `docker` marker and is skipped by `make check`.
 
