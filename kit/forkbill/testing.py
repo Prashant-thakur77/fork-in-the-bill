@@ -28,6 +28,7 @@ class FakeFlag:
     variant: str | None = None
     experiment: FakeExperiment | None = None
     is_default: bool = False
+    reason: str | None = None
 
 
 @dataclass
@@ -81,9 +82,13 @@ class FakeFlagsmith:
             feature_name=self.flag,
             variant=key,
             experiment=FakeExperiment(id=1, name="fake", in_experiment=True),
+            # as the engine reports it: SPLIT for a named variant, the rollout segment for control
+            reason="TARGETING_MATCH; segment=experiment-1-rollout" if key == "control" else "SPLIT; weight=50.0",
         )
 
-    def get_identity_flags(self, identifier: str, traits: Mapping[str, Any] | None = None) -> FakeFlags:
+    def get_identity_flags(
+        self, identifier: str, traits: Mapping[str, Any] | None = None, *, transient: bool = False
+    ) -> FakeFlags:
         self.calls.append(f"get_identity_flags:{identifier}")
         if "get_identity_flags" in self.fail_on:
             raise ConnectionError("fake API unavailable")
@@ -128,3 +133,24 @@ class FakeFlagsmith:
 
     def close(self, timeout_seconds: float = 0) -> None:
         self.flush_events()
+
+
+class ProviderFakeFlagsmith(FakeFlagsmith):
+    """A FakeFlagsmith that `openfeature_flagsmith.FlagsmithProvider` can wrap.
+
+    The provider checks `_event_processor` before it tracks anything and records exposures with
+    `track_exposure_event`, which lands in `exposures` here (value = variant key).
+    """
+
+    _event_processor: object = "fake event processor"
+
+    def track_exposure_event(
+        self,
+        feature_name: str,
+        identifier: str | None = None,
+        value: str | int | float | bool | None = None,
+        traits: Mapping[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
+        if identifier:
+            self.exposures.append((feature_name, identifier, str(value)))

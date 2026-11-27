@@ -734,6 +734,10 @@ dependencies = [
 litellm = [
     { name = "litellm" },
 ]
+openfeature = [
+    { name = "openfeature-provider-flagsmith" },
+    { name = "openfeature-sdk" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -758,6 +762,8 @@ requires-dist = [
     { name = "litellm", marker = "extra == 'litellm'", specifier = ">=1.55" },
     { name = "matplotlib", specifier = ">=3.9" },
     { name = "numpy", specifier = ">=2.1" },
+    { name = "openfeature-provider-flagsmith", marker = "extra == 'openfeature'", specifier = ">=1.0,<2" },
+    { name = "openfeature-sdk", marker = "extra == 'openfeature'", specifier = ">=0.9" },
     { name = "opentelemetry-api", specifier = ">=1.28" },
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.28" },
     { name = "opentelemetry-sdk", specifier = ">=1.28" },
@@ -769,7 +775,7 @@ requires-dist = [
     { name = "scipy", specifier = ">=1.14" },
     { name = "typer", specifier = ">=0.15" },
 ]
-provides-extras = ["litellm"]
+provides-extras = ["litellm", "openfeature"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1889,6 +1895,28 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/3d/25/e8930142b7d668fac78b1d7bd278f7142ea32c233ef762f9aebef0c07ea6/openai-3.60.0.tar.gz", hash = "sha256:077657587f7d2d55b943a135c3e183f87cf7dc66644caa3c0bbc2bde1fe65de9", size = 2430829, upload-time = "2026-11-26T07:10:37.418Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/33/c3/8190c2a9bc1776056b6d08b7d8d1782ad843ca3dc049b52de0f2053b546d/openai-3.60.0-py3-none-any.whl", hash = "sha256:476e79f256a4ce74848b7abae9f074352a69dca6e7e8987d565ee883a3b7e496", size = 2455657, upload-time = "2026-11-26T07:10:35.78Z" },
+]
+
+[[package]]
+name = "openfeature-provider-flagsmith"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "flagsmith" },
+    { name = "openfeature-sdk" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f2/c2/73618a78380b3996cecb71827ee58dcaab699f54b428b40ed1a037fe1fbc/openfeature_provider_flagsmith-1.0.0.tar.gz", hash = "sha256:21b3ef02e6c0716a81500e39b1f489028765e13ccf76df191fc2d2315ae2bbee", size = 8177, upload-time = "2026-08-07T16:18:54.076Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/74/7b/1ded625a9c1bacc0564378fe309c8af19282474e4e35d3f1fa71db99a2c5/openfeature_provider_flagsmith-1.0.0-py3-none-any.whl", hash = "sha256:9cc510ec288ae38a1ae8b7d0cad38ea46a802c8b5a20e7df197d5c8dfc1a01bd", size = 10529, upload-time = "2026-08-07T16:18:52.96Z" },
+]
+
+[[package]]
+name = "openfeature-sdk"
+version = "0.9.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/50/e1/866235e4333cc2065376ff95241297a405a8ff50a8b12662844ba624ffd6/openfeature_sdk-0.9.0.tar.gz", hash = "sha256:d65ca82c3f1abc5005b0b54bb4c729db04d7a70595f05dd373b47477b6b176bf", size = 32242, upload-time = "2026-04-21T18:09:50.306Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e8/4f/3f2e32a04505bfce0a02c541830cd862581076bb6422521d4ba9ff6840f8/openfeature_sdk-0.9.0-py3-none-any.whl", hash = "sha256:511fd66fe66807e95ea5a18074b559bc18657fe8294be0de4668201e297e98ad", size = 37804, upload-time = "2026-04-21T18:09:48.967Z" },
 ]
 
 [[package]]

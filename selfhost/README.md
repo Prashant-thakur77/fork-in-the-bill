@@ -295,3 +295,43 @@ which is 67+52+60 and 53+68+60: the three exposing modes, and nothing from `edge
 
 These are fake-loop numbers; they show the three exposing modes feeding one experiment, nothing
 about real routing.
+
+## Verified run: OpenFeature (2026-11-27)
+
+Same instance, right after the four-mode run above. `forkbill demo --openfeature` puts the remote
+Python SDK client behind an OpenFeature client with `FlagsmithProvider` (`openfeature-sdk` 0.9.0,
+`openfeature-provider-flagsmith` 1.0.0); see `kit/forkbill/openfeature.py`. The policy is read
+with `get_string_details`, the kill switch with `get_boolean_details`, and the task events are sent
+with OpenFeature `track()`, all with `targeting_key` = the task's identity.
+
+**First try, with the provider's `FlagsmithExposureHook`** (`--openfeature-exposure hook`, 40
+identities `kitdemo-openfeature:*`): 25 identities resolved to `lanes_v1` and were exposed; the 15
+that resolved to `control` were not. On this instance the API answers `POST /identities/` for a
+control identity with `"variant": "control"`, `"reason": "TARGETING_MATCH; segment=experiment-1-rollout"`
+and `in_experiment: true`, and for a treatment identity with `"reason": "SPLIT; weight=50.0"`. The
+hook only records an exposure for reason `SPLIT`, so through the hook an experiment never sees its
+control arm. The database got 25 exposures and 25 of each task event, all from `lanes_v1`.
+
+**The kit's default** (`--openfeature-exposure variant`, `--experiment-id 1`, 40 identities
+`kitdemo-openfeature-variant:*`): the adapter records the exposure itself with
+`track("feature_flag.exposure", ctx, {"flag_key", "variant"})` whenever the routing flag resolved
+to a variant. Result:
+
+- arms: control 16, lanes_v1 24, all 40 exposed; the kit sent 183 events (40 exposures + 143 task events);
+- stored rows in `experimentation_sdkexperimentationevent`: 40 `$flag_exposure` (value `control` 16,
+  `lanes_v1` 24, metadata `{"experiment_id": 1}`), 40 `task_cost`, 23 `task_solved`, 40
+  `task_turns`, 40 `task_seconds`; no task event under an identifier without an exposure;
+- the variant OpenFeature served matched the native SDK's (local evaluation) for 40 of 40 identities.
+
+After a refresh, the experiment's exposures read `control 195, lanes_v1 231`: the 179 / 181 of
+the four-mode run, plus 16 control and 24 lanes_v1 from this run, plus the 25 lanes_v1 from the
+hook run and 1 from a single-identity debugging call made while finding this. Exposures without
+`experiment_id` metadata (the hook run) were counted too. `total_events_received` went from 1613
+to 1920 (118 + 6 + 183). The task_cost readout stayed at lift -0.346 [-0.388, -0.304].
+
+So an experiment run through OpenFeature with this provider should not rely on the exposure hook
+alone: its control arm is never exposed. The kit's adapter tracks the exposure explicitly, which
+treats any resolved variant as enrolled; that holds for an experiment at 100% rollout, as here.
+An identity outside a partial rollout still resolves to variant `control` (the engine's default
+bucket), so for a partial rollout use the native `get_experiment_flag` path, which checks
+`experiment.in_experiment`.

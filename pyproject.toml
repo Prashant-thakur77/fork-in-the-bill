@@ -29,6 +29,7 @@ dependencies = [
 
 [project.optional-dependencies]
 litellm = ["litellm>=1.55"]
+openfeature = ["openfeature-provider-flagsmith>=1.0,<2", "openfeature-sdk>=0.9"]
 
 [dependency-groups]
 dev = [

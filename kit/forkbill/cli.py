@@ -128,6 +128,15 @@ def demo(
         str | None, typer.Option(help="Edge Proxy SDK URL, e.g. http://localhost:8001/api/v1/.")
     ] = None,
     offline: Annotated[bool, typer.Option(help="Use an in-memory fake client (CI).")] = False,
+    openfeature: Annotated[
+        bool, typer.Option(help="Read the policy and send events through OpenFeature (FlagsmithProvider).")
+    ] = False,
+    openfeature_exposure: Annotated[
+        str, typer.Option(help="With --openfeature: 'variant' (explicit track) or 'hook' (FlagsmithExposureHook).")
+    ] = "variant",
+    experiment_id: Annotated[
+        int | None, typer.Option(help="With --openfeature: experiment id sent as exposure metadata.")
+    ] = None,
     control: Annotated[Path | None, typer.Option(help="Control policy JSON for offline.")] = None,
     variant: Annotated[list[str] | None, typer.Option(help="KEY=PATH variant policy for offline; repeatable.")] = None,
     out: Annotated[Path | None, typer.Option(help="Write tasks.jsonl and events.jsonl here.")] = None,
@@ -137,13 +146,14 @@ def demo(
     Online, the environment key is read from FLAGSMITH_SERVER_KEY or FLAGSMITH_ENVIRONMENT_KEY.
     `--mode local` and `--mode edge-local` evaluate from the environment document and need a
     server-side key; `--mode edge` and `--mode edge-local` read flags from the Edge Proxy at
-    `--edge-url`. Events always go to `--events-api-url`, the core API.
+    `--edge-url`. Events always go to `--events-api-url`, the core API. With `--openfeature` the
+    same client sits behind an OpenFeature client and `FlagsmithProvider` (the `openfeature` extra).
     """
     control_policy: RoutingPolicy | None = None
     if control is not None:
         control_policy = RoutingPolicy.model_validate_json(control.read_text())
     if offline:
-        from forkbill.testing import FakeFlagsmith
+        from forkbill.testing import FakeFlagsmith, ProviderFakeFlagsmith
 
         if control is None:
             raise _fail("--offline needs --control")
@@ -151,11 +161,22 @@ def demo(
         for item in variant or []:
             key, _, path = item.partition("=")
             variants[key] = Path(path).read_text()
-        client: Any = FakeFlagsmith(flag=flag, control=control.read_text(), variants=variants)
+        fake = ProviderFakeFlagsmith if openfeature else FakeFlagsmith
+        client: Any = fake(flag=flag, control=control.read_text(), variants=variants)
     else:
         # max_buffer_items is the buffer's capacity in SDK 6.7: a value of 1 drops events tracked
         # back to back. Keep the default capacity; RoutedLanes.finish flushes explicitly.
         client = _online_client(mode, api_url=api_url, events_api_url=events_api_url, edge_url=edge_url)
+    if openfeature:
+        try:
+            from forkbill.openfeature import OpenFeatureFlagsmith
+        except ImportError as exc:
+            raise _fail(str(exc)) from None
+        if openfeature_exposure not in ("variant", "hook"):
+            raise _fail(f"--openfeature-exposure must be 'variant' or 'hook', not {openfeature_exposure!r}")
+        client = OpenFeatureFlagsmith.from_flagsmith(
+            client, exposure=cast(Any, openfeature_exposure), experiment_id=experiment_id
+        )
     try:
         results = run_demo(
             client,
@@ -170,7 +191,12 @@ def demo(
         if hasattr(client, "close"):
             client.close(10.0)
     typer.echo("deterministic fake agent loop (no model calls, illustrative prices)")
-    summary = {"mode": "offline" if offline else mode, "identities": n, "by_variant": summarise(results)}
+    summary = {
+        "mode": "offline" if offline else mode,
+        "client": f"openfeature ({openfeature_exposure} exposure)" if openfeature else "flagsmith",
+        "identities": n,
+        "by_variant": summarise(results),
+    }
     typer.echo(json.dumps(summary, indent=2))
 
 
