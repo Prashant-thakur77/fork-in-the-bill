@@ -6,13 +6,14 @@ import { armInfo, DEFAULT_ARMS, orderArms } from "../data/arms";
 import { money } from "../data/format";
 import type { Arm, Board } from "../data/types";
 import { useTween } from "../data/useTween";
+import { batchOf, batchPhase } from "../site/batches";
 import { Road } from "./Road";
 
 export type Phase = "awaiting" | "running" | "ended" | "rolled_out";
 
 export function phaseOf(board: Board): Phase {
-  if (board.snapshot) return board.snapshot.status;
-  return board.final ? "ended" : "awaiting";
+  if (board.mode === "replay") return board.snapshot ? board.snapshot.status : "awaiting";
+  return batchPhase(batchOf(board.experiment), board.snapshot);
 }
 
 type SignalKind = "off" | "open" | "closing" | "closed";
@@ -52,8 +53,11 @@ function LiveMeter({ arm }: { arm: Arm }) {
 }
 
 function Sign({ armKey, arm, board, phase, closed }: { armKey: string; arm?: Arm; board: Board; phase: Phase; closed: boolean }) {
-  const info = armInfo(armKey);
-  const f = (k: string) => board.figures[`exp1.arms.${armKey}.${k}`];
+  const exp = board.experiment;
+  const info = armInfo(armKey, board.mode === "replay" ? undefined : exp);
+  const f = (k: string) => board.figures[`${exp}.arms.${armKey}.${k}`];
+  // A finished batch reads its sign from the analysis output, so it matches the results page.
+  const fromBuild = board.final && board.mode !== "replay";
   let meterLabel = "Spent so far";
   let meter = <Led text="STANDBY" cols={50} label="No spend yet: the run has not started" />;
   let stats: [string, string][] = [
@@ -61,7 +65,24 @@ function Sign({ armKey, arm, board, phase, closed }: { armKey: string; arm?: Arm
     ["Solved", "—"],
     ["Per solve", "—"],
   ];
-  if (arm) {
+  if (fromBuild && exp === "rollout" && board.figures["rollout.cost_mean"]) {
+    const mean = board.figures["rollout.cost_mean"]!;
+    meterLabel = "Mean cost per task · final";
+    meter = <Led text={mean} cols={50} label={`${mean} mean cost per task`} />;
+    stats = [
+      ["Tasks", board.figures["rollout.n"] ?? "—"],
+      ["Solve rate", board.figures["rollout.solve_rate"] ?? "—"],
+      ["Batch spend", board.figures["spend.by_experiment.rollout"] ?? "—"],
+    ];
+  } else if (fromBuild && f("cost_per_solve")) {
+    meterLabel = "Cost per solved task · final";
+    meter = <Led text={f("cost_per_solve")!} cols={50} label={`${f("cost_per_solve")} per solved task`} />;
+    stats = [
+      ["Tasks", f("n_analysed") ?? "—"],
+      ["Solved", f("solves") ?? "—"],
+      ["Solve rate", f("solve_rate") ?? "—"],
+    ];
+  } else if (arm) {
     meter = <LiveMeter arm={arm} />;
     if (phase !== "running") meterLabel = "Spent";
     stats = [
@@ -102,10 +123,11 @@ function Sign({ armKey, arm, board, phase, closed }: { armKey: string; arm?: Arm
 export function Junction({ board }: { board: Board }) {
   const phase = phaseOf(board);
   const s = board.snapshot;
-  // Experiment 1 always has both lanes on the road, even before one of them reports a task.
-  const known = s ? Object.keys(s.arms) : [];
-  const keys = orderArms(!s || s.experiment === "exp1" ? [...new Set([...known, ...DEFAULT_ARMS])] : known).slice(0, 2);
-  const winner = s?.experiment === "exp1" || !s ? board.decisions["exp1.decision.ship"] : undefined;
+  // A batch always has its registered lanes on the road, even before one of them reports a task.
+  const batch = board.mode === "replay" ? undefined : batchOf(board.experiment);
+  const known = s && batch?.state !== "final" ? Object.keys(s.arms) : [];
+  const keys = orderArms([...new Set([...(batch?.arms.length ? batch.arms : DEFAULT_ARMS), ...known])]).slice(0, 2);
+  const winner = batch?.id === "rollout" ? batch.arms[0] : board.decisions[`${board.experiment}.decision.ship`];
   const isClosed = (k: string) => phase === "rolled_out" && !!winner && k !== winner;
   const signal = (k: string): SignalKind =>
     phase === "awaiting" ? "off" : phase === "running" ? "open" : phase === "ended" ? "closing" : isClosed(k) ? "closed" : "open";
@@ -133,7 +155,7 @@ export function Junction({ board }: { board: Board }) {
   }, [closedKey]);
 
   return (
-    <div className="junction" data-phase={phase} ref={root}>
+    <div className="junction" data-phase={phase} data-lanes={keys.length} ref={root}>
       <div className="gantry">
         <div className="beam" aria-hidden="true">
           <svg viewBox="0 0 1000 24" preserveAspectRatio="none">
@@ -162,7 +184,7 @@ export function Junction({ board }: { board: Board }) {
       )}
       <div className="queue-label">
         <span>Task queue</span>
-        <span>Flagsmith splits 50 / 50</span>
+        <span>{keys.length === 1 ? `Flagsmith serves ${keys[0]} to every task` : "Flagsmith splits 50 / 50"}</span>
       </div>
     </div>
   );

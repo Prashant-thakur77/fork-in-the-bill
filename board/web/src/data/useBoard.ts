@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import seedJson from "../seed.json";
 import { EXPERIMENT_FLAG, type FlagChange } from "./flags";
 import type { Board, Connection, Seed, Snapshot } from "./types";
+import { repo } from "../site/data";
+import { CURRENT, batchOf } from "../site/batches";
 
 const seed = seedJson as Seed;
 
@@ -12,10 +14,6 @@ export interface ReplayControls {
   toggle(): void;
   seek(ms: number): void;
   restart(): void;
-}
-
-function seedFigures(): Record<string, string> {
-  return Object.fromEntries(seed.numbers.map((n) => [n.key, n.text]));
 }
 
 /** API base: runtime /board-config.json wins over the build-time VITE_BOARD_API. */
@@ -33,16 +31,16 @@ export async function resolveApi(): Promise<string> {
 }
 
 /**
- * The experiment the site reads. The board API keeps the latest totals of every batch that posts
- * to it (dry runs, the rollout batch, experiment 2), so the site asks for experiment 1 by name.
- * A `?experiment=` query on the page reads another batch instead.
+ * The batch the live board opens on. The board API keeps the latest totals of every batch that
+ * posts to it, so each is asked for by name. Without a `?experiment=` query the board shows the
+ * batch that is running now.
  */
 export function boardExperiment(): string {
   if (typeof window !== "undefined") {
     const q = new URLSearchParams(window.location.search).get("experiment");
     if (q && /^[a-z0-9_-]{1,32}$/.test(q)) return q;
   }
-  return "exp1";
+  return CURRENT;
 }
 
 function isSnapshot(v: unknown): v is Snapshot {
@@ -54,32 +52,34 @@ function flagsOf(v: unknown): FlagChange[] | null {
   return v.changes as FlagChange[];
 }
 
-export function useBoard(): { board: Board; replay: ReplayControls | null } {
+export function useBoard(experiment: string = CURRENT): { board: Board; replay: ReplayControls | null } {
   // Read after mount so the prerendered page and the first client render agree.
   const [mode, setMode] = useState<"pending" | "live" | "replay">("pending");
   useEffect(() => {
     setMode(new URLSearchParams(window.location.search).get("demo") === "replay" ? "replay" : "live");
   }, []);
-  const live = useLive(mode === "live");
+  const live = useLive(mode === "live", experiment);
   const replay = useReplay(mode === "replay");
 
   if (replay) return { board: replay.board, replay: replay.controls };
   return {
     board: {
       mode: live.api ? "live" : "seed",
+      experiment,
       connection: live.connection,
       snapshot: live.snapshot,
-      figures: seedFigures(),
-      decisions: seed.decisions,
-      flagsmithUrl: live.snapshot?.flagsmith_experiment_url || seed.flagsmith_experiment_url,
-      final: seed.status === "final",
+      // Read from analysis/out/numbers.json when the site is built (the seed is the fallback).
+      figures: repo.figures,
+      decisions: repo.decisions,
+      flagsmithUrl: live.snapshot?.flagsmith_experiment_url || (experiment === seed.experiment ? seed.flagsmith_experiment_url : ""),
+      final: batchOf(experiment)?.state === "final",
       flags: live.flags,
     },
     replay: null,
   };
 }
 
-function useLive(enabled: boolean) {
+function useLive(enabled: boolean, experiment: string) {
   const [api, setApi] = useState<string>("");
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [connection, setConnection] = useState<Connection>("none");
@@ -89,12 +89,13 @@ function useLive(enabled: boolean) {
     if (!enabled) return;
     let es: EventSource | null = null;
     let cancelled = false;
+    setSnapshot(null);
     void resolveApi().then(async (base) => {
       if (cancelled || !base) return;
       setApi(base);
       setConnection("connecting");
       const feature = `feature=${EXPERIMENT_FLAG}`;
-      const exp = `experiment=${boardExperiment()}`;
+      const exp = `experiment=${experiment}`;
       await Promise.all([
         fetch(`${base}/state?${exp}`, { cache: "no-store" })
           .then((res) => res.json())
@@ -139,9 +140,9 @@ function useLive(enabled: boolean) {
       cancelled = true;
       es?.close();
     };
-  }, [enabled]);
+  }, [enabled, experiment]);
 
-  return { api, snapshot, connection, flags };
+  return { api, snapshot: snapshot?.experiment === experiment ? snapshot : null, connection, flags };
 }
 
 type Replay = Awaited<ReturnType<typeof import("../replay/fixture")["buildReplay"]>>;
@@ -186,7 +187,7 @@ function useReplay(enabled: boolean): { board: Board; controls: ReplayControls }
   if (!enabled || !data) {
     return enabled
       ? {
-          board: { mode: "replay", connection: "none", snapshot: null, figures: {}, decisions: {}, flagsmithUrl: "", final: false, flags: null },
+          board: { mode: "replay", experiment: "exp1", connection: "none", snapshot: null, figures: {}, decisions: {}, flagsmithUrl: "", final: false, flags: null },
           controls: { t: 0, duration: 1, playing: false, toggle() {}, seek() {}, restart() {} },
         }
       : null;
@@ -199,6 +200,7 @@ function useReplay(enabled: boolean): { board: Board; controls: ReplayControls }
   return {
     board: {
       mode: "replay",
+      experiment: "exp1",
       connection: "none",
       snapshot: frame.snapshot,
       figures: ended ? data.figures : pick(data.figures, ["exp1.prereg.sha256", "exp1.prereg.m"]),

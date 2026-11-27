@@ -1,0 +1,290 @@
+/* The live board's batch rail, state chips and the facts under a finished batch. */
+
+/* ---------- which run: three plates hung from one rail ---------- */
+.batch-switch {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(8px, 1.4vw, 20px);
+  max-width: 1040px;
+  margin-top: 14px;
+  padding-top: 20px;
+}
+.bs-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--steel);
+  box-shadow: inset 0 -3px 0 rgba(27, 33, 30, 0.16);
+}
+.bs-tab {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  min-height: 44px;
+  padding: 12px 16px 13px;
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--line);
+  color: var(--text);
+  text-decoration: none;
+  /* no transform transition here: the tabs are hung by script on load */
+  transition:
+    background-color 160ms,
+    box-shadow 160ms;
+}
+.bs-tab::before,
+.bs-tab::after {
+  content: "";
+  position: absolute;
+  top: -12px;
+  width: 4px;
+  height: 12px;
+  background: var(--steel);
+}
+.bs-tab::before {
+  left: 22px;
+}
+.bs-tab::after {
+  right: 22px;
+}
+.bs-tab:hover {
+  box-shadow: inset 0 0 0 2px var(--text);
+}
+.bs-tab:active {
+  background: var(--inset);
+}
+.bs-tab.is-active:active {
+  background: var(--sign-deep);
+}
+.bs-tab.is-active {
+  background: var(--sign);
+  color: var(--sheet);
+  box-shadow:
+    inset 0 0 0 3px var(--sign),
+    inset 0 0 0 5px var(--sheet);
+}
+.bs-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--t-label);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--quiet);
+}
+.bs-tab.is-active .bs-state {
+  color: var(--sheet);
+}
+.bs-state i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--quiet);
+}
+.bs-tab.is-final .bs-state i,
+.bs-tab.is-done .bs-state i {
+  border-radius: 2px;
+  transform: rotate(45deg);
+  background: var(--sign);
+}
+.bs-tab.is-live .bs-state {
+  color: var(--green-text);
+}
+.bs-tab.is-live .bs-state i {
+  background: var(--sign);
+  animation: blink 1.6s steps(2, jump-none) infinite;
+}
+.bs-tab.is-active .bs-state,
+.bs-tab.is-active.is-live .bs-state {
+  color: var(--sheet);
+}
+.bs-tab.is-active .bs-state i {
+  background: var(--sheet);
+}
+.bs-tab.is-active.is-live .bs-state i {
+  background: #3bd67a;
+}
+.bs-name {
+  font-weight: 900;
+  font-size: clamp(17px, 1.55vw, 23px);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+.bs-sub {
+  font-size: var(--t-small);
+  color: var(--quiet);
+  line-height: 1.3;
+}
+.bs-tab.is-active .bs-sub {
+  color: var(--sheet);
+}
+
+/* one lane (the rollout batch): the sign and its signal sit over the single road */
+.junction[data-lanes="1"] .signs,
+.junction[data-lanes="1"] .signals {
+  grid-template-columns: minmax(0, 46%);
+  justify-content: center;
+}
+
+/* ---------- the batch's state under the lead ---------- */
+.batch-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  font-size: var(--t-small);
+  color: var(--quiet);
+  max-width: 44ch;
+}
+.batch-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  font-size: var(--t-label);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--quiet);
+  white-space: nowrap;
+}
+.batch-chip i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.batch-chip.is-live {
+  color: var(--green-text);
+}
+.batch-chip.is-live i {
+  animation: blink 1.6s steps(2, jump-none) infinite;
+}
+.batch-chip.is-final,
+.batch-chip.is-done {
+  background: var(--sign);
+  border-color: var(--sign);
+  color: var(--sheet);
+}
+.batch-chip.is-final i,
+.batch-chip.is-done i {
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+
+/* ---------- what happened next (under experiment 1) ---------- */
+.next-rows {
+  display: grid;
+  gap: 10px;
+}
+.next-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.3fr) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 8px 20px;
+  padding: 16px 18px;
+  border-radius: var(--r-small);
+  background: var(--surface);
+  box-shadow: inset 4px 0 0 var(--sign);
+  text-decoration: none;
+  transition: background-color 160ms;
+}
+.next-row:hover {
+  background: var(--sheet);
+  box-shadow:
+    inset 4px 0 0 var(--sign),
+    inset 0 0 0 2px var(--line);
+}
+.next-k {
+  font-weight: 900;
+  font-size: var(--t-lead);
+}
+.next-v {
+  color: var(--quiet);
+}
+.next-go {
+  font-weight: 900;
+  font-size: 20px;
+  transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.next-row:hover .next-go {
+  transform: translateX(4px);
+}
+
+/* ---------- plain fact plates (rollout batch) ---------- */
+.fact-plates {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  align-items: start;
+}
+.fact-plates > div {
+  padding: 14px 16px 12px;
+  border-radius: var(--r-small);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--line);
+}
+.fact-plates dt {
+  font-size: var(--t-label);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--quiet);
+}
+.fact-plates dd {
+  margin: 4px 0 0;
+  font-weight: 900;
+  font-size: clamp(24px, 2.4vw, 36px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.prereg-when {
+  display: block;
+  margin-top: 4px;
+}
+
+@media (max-width: 760px) {
+  .batch-switch {
+    gap: 6px;
+  }
+  .bs-tab {
+    padding: 10px 10px 11px;
+  }
+  .bs-tab::before {
+    left: 12px;
+  }
+  .bs-tab::after {
+    right: 12px;
+  }
+  .bs-name {
+    font-size: 15px;
+  }
+  .bs-sub {
+    display: none;
+  }
+  .next-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .next-v {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .fact-plates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bs-tab.is-live .bs-state i,
+  .batch-chip.is-live i {
+    animation: none;
+  }
+}

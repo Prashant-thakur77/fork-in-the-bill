@@ -87,7 +87,7 @@ describe("results empty state", () => {
       exp1: { arms: { control: { cost_mean: 0.1234, solve_rate: 0.5 } }, delta: { cost_mean_pct: -31.24 }, decision: { ship: "lanes_v1" } },
     };
     const f = figuresFrom(fake, keys);
-    expect(f["exp1.arms.control.cost_mean"]).toBe("$0.12");
+    expect(f["exp1.arms.control.cost_mean"]).toBe("$0.1234");
     expect(f["exp1.arms.control.solve_rate"]).toBe("50.0%");
     expect(f["exp1.delta.cost_mean_pct"]).toBe("−31.2%");
     expect(Object.keys(f)).toHaveLength(3);

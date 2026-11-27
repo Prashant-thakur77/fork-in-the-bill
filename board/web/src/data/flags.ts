@@ -27,7 +27,7 @@ export interface FlagChange {
 export const EXPERIMENT_FLAG = "agent_routing";
 
 /** Multivariate option ids of agent_routing, as in flagsmith/ids.json (checked by a test). */
-export const VARIANT_OPTIONS: Record<number, string> = { 37431: "lanes_v1" };
+export const VARIANT_OPTIONS: Record<number, string> = { 37431: "lanes_v1", 38243: "lanes_v2" };
 
 /** Webhooks from one save (flag state + audit log) land within this many seconds of each other. */
 export const SAME_SAVE_SECONDS = 60;

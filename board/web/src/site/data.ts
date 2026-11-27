@@ -43,11 +43,107 @@ export interface PowerRow {
   power_at_pilot_cost_effect: number;
 }
 
+export type BatchId = "exp1" | "rollout" | "exp2";
+
+/** One batch the board API serves by name, with what the repo says about it at build time. */
+export interface Batch {
+  id: BatchId;
+  label: string;
+  arms: string[];
+  /** "final": numbers.json holds its result. "open": registered, no result yet. "planned": not registered. */
+  state: "final" | "open" | "planned";
+  ship: string | null;
+  preregFile: string | null;
+  preregTag: string | null;
+  preregSha: string | null;
+  /** When the pre-registration tag was created (UTC, ISO), from git. */
+  registeredAt: string | null;
+  /** When the run's first worker started (UTC, ISO), from runs/<id>/meta.json once committed. */
+  startedAt: string | null;
+  flagsmithId: string | null;
+}
+
+/** Per-arm block of numbers.json (docs/interfaces.md, ARM). */
+export interface ArmNumbers {
+  n_exposed: number;
+  n_excluded: number;
+  n_analysed: number;
+  cost_mean: number;
+  cost_mean_ci: [number, number];
+  cost_median: number;
+  solve_rate: number;
+  solve_rate_ci: [number, number];
+  solves: number;
+  cost_per_solve: number;
+  cost_per_solve_ci: [number, number];
+  delegate_share_cost: number;
+  delegate_share_tokens: number;
+  turns_mean: number;
+  seconds_mean: number;
+}
+
+export interface TraitLevel {
+  delta_cost_pct: number | null;
+  delta_solve_pp: number | null;
+  [arm: string]: { n: number; solves: number; solve_rate: number | null; cost_mean: number | null } | number | null;
+}
+
+export interface ExperimentNumbers {
+  prereg: { tag: string; sha256: string; m: number };
+  arms: Record<string, ArmNumbers>;
+  delta: {
+    treatment: string;
+    cost_mean: number;
+    cost_mean_ci: [number, number];
+    cost_mean_pct: number;
+    cost_mean_pct_ci: [number, number];
+    cost_per_solve_pct: number;
+    cost_per_solve_pct_ci: [number, number];
+    solve_rate_pp: number;
+    solve_rate_ci: [number, number];
+    p_solve_drop_within_m: number;
+    p_solve_worse: number;
+  };
+  srm: { chi2: number; p: number; flag: boolean };
+  agreement: { cost_mean_abs_diff: Record<string, number>; solve_rate_abs_diff: Record<string, number> };
+  flagsmith: { chance_to_beat_control_cost: number; lift_cost: number; ci_cost: [number, number]; solve_rate_status: string; pulled_at: string; guardrail_loss: boolean };
+  decision: { ship: string; rule_met: Record<string, boolean>; bars: { flagsmith_chance: number; guardrail_posterior: number; m: number } };
+  power: { n_per_arm: number; mde_solve_pp: number; mde_cost_pct: number; power: number };
+  by_trait: Record<string, Record<string, TraitLevel>>;
+  bootstrap_resamples: number;
+  posterior_draws: number;
+}
+
+export interface IntegrityRun {
+  ledger_ok: boolean;
+  merkle_root: string;
+  task_done_records: number;
+  env_snapshots: number;
+  env_snapshot_distinct_hashes: number;
+  assignment: { checked: number; matched: number; mismatched: number; ok: boolean; flag_engine_version: string; env_sha256: string } | null;
+}
+
+export interface Numbers {
+  generatedAt: string | null;
+  exp1: ExperimentNumbers | null;
+  exp2: ExperimentNumbers | null;
+  rollout: { n: number; cost_mean: number; solve_rate: number } | null;
+  spend: { total_usd: number; by_experiment: Record<string, number> } | null;
+  integrity: { merkle_root: string; task_done_records: number; by_experiment: Record<string, IntegrityRun> } | null;
+}
+
 export interface RepoData {
   site: { url: string; repo: string; commit: string; commitShort: string };
   figures: Record<string, string>;
   decisions: Record<string, string>;
   hasNumbers: boolean;
+  batches: Batch[];
+  currentExperiment: BatchId;
+  /** Raw values from analysis/out/numbers.json, for figures the site formats itself. */
+  numbers: Numbers | null;
+  hypothesis2: string;
+  prereg2: Record<"start" | "question" | "arms" | "units" | "decisionRule" | "power" | "exclusions" | "stopping" | "before", Block[]>;
+  power2: { m: number; power: number; sims: number; seed: number; pilot: { n: number; solve_rate: number }; grid: PowerRow[] } | null;
   hashes: { sha256: string; file: string }[];
   hypothesis: string;
   policies: Record<string, Policy>;

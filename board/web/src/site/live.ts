@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { boardExperiment, resolveApi } from "../data/useBoard";
+import { resolveApi } from "../data/useBoard";
 import type { Snapshot } from "../data/types";
+import { CURRENT, batchOf } from "./batches";
 
-// One shared read of the board API's /state for the pages that show a live line (the landing
-// teaser, the results page and the footer). GET only; refreshed every minute while a page is open.
+// Shared reads of the board API's /state, one per batch name, for the pages that show a live line
+// (the hero signs, the live strip, the results and experiment pages, the menu and the footer).
+// GET only. A batch that is still open is read again every minute while a page is visible; a
+// finished one is read once.
 
 export type LiveState =
   | { kind: "loading" }
@@ -11,50 +14,66 @@ export type LiveState =
   | { kind: "error" }
   | { kind: "ok"; snapshot: Snapshot | null; checkedAt: number };
 
-let state: LiveState = { kind: "loading" };
-const subs = new Set<(s: LiveState) => void>();
-let started = false;
-
-function set(s: LiveState) {
-  state = s;
-  subs.forEach((f) => f(s));
+interface Store {
+  state: LiveState;
+  subs: Set<(s: LiveState) => void>;
+  started: boolean;
 }
 
-async function poll(base: string) {
+const stores = new Map<string, Store>();
+
+function storeFor(experiment: string): Store {
+  let s = stores.get(experiment);
+  if (!s) {
+    s = { state: { kind: "loading" }, subs: new Set(), started: false };
+    stores.set(experiment, s);
+  }
+  return s;
+}
+
+function set(store: Store, s: LiveState) {
+  store.state = s;
+  store.subs.forEach((f) => f(s));
+}
+
+async function poll(store: Store, base: string, experiment: string) {
   try {
-    const res = await fetch(`${base}/state?experiment=${boardExperiment()}`, { cache: "no-store" });
-    if (res.status === 404 || res.status === 204) return set({ kind: "ok", snapshot: null, checkedAt: Date.now() });
+    const res = await fetch(`${base}/state?experiment=${experiment}`, { cache: "no-store" });
+    if (res.status === 404 || res.status === 204) return set(store, { kind: "ok", snapshot: null, checkedAt: Date.now() });
     if (!res.ok) throw new Error(String(res.status));
     const body = (await res.json()) as unknown;
     const snap = body && typeof body === "object" && "arms" in body ? (body as Snapshot) : null;
-    set({ kind: "ok", snapshot: snap, checkedAt: Date.now() });
+    set(store, { kind: "ok", snapshot: snap, checkedAt: Date.now() });
   } catch {
-    set({ kind: "error" });
+    set(store, { kind: "error" });
   }
 }
 
-function start() {
-  if (started) return;
-  started = true;
+function start(store: Store, experiment: string) {
+  if (store.started) return;
+  store.started = true;
   void resolveApi().then((base) => {
-    if (!base) return set({ kind: "none" });
-    void poll(base);
+    if (!base) return set(store, { kind: "none" });
+    void poll(store, base, experiment);
+    if (batchOf(experiment)?.state === "final") return;
     window.setInterval(() => {
-      if (document.visibilityState === "visible") void poll(base);
+      if (document.visibilityState === "visible") void poll(store, base, experiment);
     }, 60_000);
   });
 }
 
-export function useLiveState(): LiveState {
+/** The latest totals of one batch (default: the batch that is running now). */
+export function useLiveState(experiment: string = CURRENT): LiveState {
   const [s, setS] = useState<LiveState>({ kind: "loading" });
   useEffect(() => {
-    subs.add(setS);
-    setS(state);
-    start();
+    const store = storeFor(experiment);
+    store.subs.add(setS);
+    setS(store.state);
+    start(store, experiment);
     return () => {
-      subs.delete(setS);
+      store.subs.delete(setS);
     };
-  }, []);
+  }, [experiment]);
   return s;
 }
 

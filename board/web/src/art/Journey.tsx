@@ -66,7 +66,8 @@ const STEP_X = [70, 374, 620, 806, 1010, 1060, 1150];
 export function Journey({ steps, id, compact = false }: { steps: JourneyStep[]; id: string; compact?: boolean }) {
   const root = useRef<HTMLDivElement>(null);
   const N = steps.length;
-  const live = useLiveState();
+  // The journey draws experiment 1's two lanes, so its counts are that batch's.
+  const live = useLiveState("exp1");
   const arms = live.kind === "ok" ? live.snapshot?.arms : undefined;
   const lastStep = useRef(-1);
 

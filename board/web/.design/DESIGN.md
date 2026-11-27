@@ -150,4 +150,16 @@ Reduced motion: no travel or tweens; states still change.
 `src/art/car.ts`: plan-view sedan, estate, hatch and van in four sheeting tones (sheet, concrete, steel, graphite), a flat offset shadow, panel lines, pale head lights, red tail lights and an amber toll tag (amber = money). Cars fade out as they pass under the gantry. On a lane closure, cars still on the shared trunk merge into the open lane, cars already in the closed lane clear it, then the cones are placed behind the last one.
 
 ## Live data
-The site reads `/state?experiment=exp1` (a `?experiment=` query on the page reads another batch), because the board API keeps the latest totals of every batch that posts to it. Experiment 1 always draws both lanes; when nothing is running, a plate on the asphalt says so.
+The board API keeps the latest totals of every batch that posts to it, so each is read by name: `/state?experiment=exp1 | rollout | exp2`.
+
+**Batches (`src/site/batches.ts`, built by `batchesFrom` in `scripts/repo-data.mjs`).** Whether a batch is finished is decided at build time from the repository, never from the API's `status` field, because nothing posts a final status when a run stops:
+| Batch | Finished when | Shown as |
+|---|---|---|
+| `exp1` | `numbers.json` has `exp1.decision.ship` | Final: the losing lane is closed (the signature moment, with real numbers), signs read cost per solved task from the build |
+| `rollout` | `numbers.json` has `rollout.n` | Done: one lane, one sign, mean cost per task from the build |
+| `exp2` | `numbers.json` has `exp2.decision.ship` | until then Live (totals posted), Registered (hash in `prereg/HASHES.txt`, no totals) or Ended (API says so, analysis pending) |
+The batch the site reads live (hero signs, live strip, menu, footer line) is the newest one that is registered and not finished. No experiment 2 figure from `numbers.json` and no verdict wording appears until that file holds its decision; running totals carry the line "Running totals, not the result".
+
+**Batch rail (live board).** Three plates hung from one steel rail above the board: state chip (green diamond = final or done, blinking green dot = live), name, one line of what it compares. The active plate is a green guide sign. Picking one swaps the board in place (signs re-hang, 600 ms), updates the URL (`/live?experiment=exp1`) and works with back and forward. Status LED per batch: `EXP1 · FINAL · LANES_V1 SHIPPED`, `ROLLOUT · DONE · 13 TASKS`, `EXP2 · RUNNING · 50/50`.
+
+**Figures.** Per-task costs are shown to four decimals (`$0.0784`), as in the README, because they are cents. The board and every page read `analysis/out/numbers.json` at build through `virtual:repo-data` (`figures` formatted per `src/data/keys.json`, `numbers` raw for intervals and per-trait tables).

@@ -7,25 +7,27 @@ import { LogoMark } from "./Logo";
 import { ROUTES } from "./routes";
 import { ghFile, repo } from "./data";
 import { totals, useLiveState, utcTime } from "./live";
+import { CURRENT, batchOf, batchStatus } from "./batches";
 import { prefersReducedMotion } from "../motion";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-const STATUS_WORD: Record<string, string> = { running: "running", ended: "ended", rolled_out: "rolled out" };
-
 export function StatusLine() {
-  const live = useLiveState();
+  const live = useLiveState(CURRENT);
+  const batch = batchOf(CURRENT);
+  const name = batch?.label ?? CURRENT;
   let dot = "is-off";
   let text = "Checking the run…";
   if (live.kind === "none") text = "Run status shows on the deployed site.";
   if (live.kind === "error") text = "Live numbers are not reachable right now.";
   if (live.kind === "ok") {
     const s = live.snapshot;
-    if (!s) text = "No run data posted yet.";
+    const st = batch ? batchStatus(batch, s) : null;
+    if (!s) text = `${name}: no totals posted yet.`;
     else {
       const t = totals(s);
-      dot = s.status === "running" ? "is-on" : "is-amber";
-      text = `${s.experiment} ${STATUS_WORD[s.status] ?? s.status} · ${t.done.toLocaleString("en-US")} tasks done · checked ${utcTime(live.checkedAt)}`;
+      dot = st?.key === "live" ? "is-on" : "is-amber";
+      text = `${name} · ${st?.label.toLowerCase() ?? s.status} · ${t.done.toLocaleString("en-US")} tasks done · checked ${utcTime(live.checkedAt)}`;
     }
   }
   return (

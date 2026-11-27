@@ -13,6 +13,7 @@ import { Code, Kinetic, Md, useReveals } from "../site/ui";
 import { ghFile, pct, repo } from "../site/data";
 import { LivePanel } from "../site/LivePanel";
 import { useLiveState } from "../site/live";
+import { CURRENT, batchOf, batchStatus } from "../site/batches";
 import { money } from "../data/format";
 import { useTween } from "../data/useTween";
 import { prefersReducedMotion } from "../motion";
@@ -40,8 +41,21 @@ function shortModel(id: string | undefined): string {
 
 /* ---------- hero: the junction, with steady traffic split by the Flagsmith gantry ---------- */
 
-function HeroSign({ armKey, legend, sub, worker, priceIn }: { armKey: string; legend: string; sub: string; worker: string; priceIn: string }) {
-  const live = useLiveState();
+interface HeroLane {
+  key: string;
+  legend: string;
+  sub: string;
+  /** What the sign's panel reads when it is not showing live spend. */
+  word: string;
+  wordCaption: string;
+  wordLabel: string;
+  /** A fixed fact for the sign's first cell; without it the sign shows done and solved. */
+  stat?: [string, string];
+}
+
+function HeroSign({ lane }: { lane: HeroLane }) {
+  const { key: armKey, legend, sub, word: worker } = lane;
+  const live = useLiveState(CURRENT);
   const arm = live.kind === "ok" ? live.snapshot?.arms[armKey] : undefined;
   const spent = useTween(arm?.usd ?? 0);
   // Like a real message sign, the panel alternates: the worker's model, then this lane's live spend.
@@ -62,20 +76,28 @@ function HeroSign({ armKey, legend, sub, worker, priceIn }: { armKey: string; le
         <p className="sign-sub">{sub}</p>
         <div className="led-housing">
           <span className="led-caption">
-            {showSpend ? "Spent, live" : "Worker model"}
+            {showSpend ? "Spent, live" : lane.wordCaption}
             {hasArm && <i className="led-live" aria-hidden="true" />}
           </span>
-          <Led text={text} cols={46} align="center" scan={!showSpend} label={showSpend ? `${money(arm.usd)} spent so far` : `Worker lane runs on ${worker.toLowerCase()}`} />
+          <Led text={text} cols={46} align="center" scan={!showSpend} label={showSpend ? `${money(arm.usd)} spent so far` : lane.wordLabel} />
         </div>
         <dl className="sign-stats">
-          <div>
-            <dt>Worker input, $/MTok</dt>
-            <dd>{priceIn}</dd>
-          </div>
+          {lane.stat && (
+            <div>
+              <dt>{lane.stat[0]}</dt>
+              <dd>{lane.stat[1]}</dd>
+            </div>
+          )}
           <div>
             <dt>Done, live</dt>
             <dd>{arm ? arm.done.toLocaleString("en-US") : "—"}</dd>
           </div>
+          {!lane.stat && (
+            <div>
+              <dt>Solved, live</dt>
+              <dd>{arm ? arm.solved.toLocaleString("en-US") : "—"}</dd>
+            </div>
+          )}
         </dl>
       </div>
     </article>
@@ -86,15 +108,77 @@ function prefersReducedMotionSafe(): boolean {
   return typeof window !== "undefined" && prefersReducedMotion();
 }
 
+const priceIn = (m?: { input: number }) => (m ? `$${m.input.toFixed(2)}` : "—");
+
+// The hero signs read the batch that is running now, and say which one it is.
+const HERO_SIGNS: Record<string, HeroLane[]> = {
+  exp1: [
+    {
+      key: "control",
+      legend: "Frontier everywhere",
+      sub: "One model plans, patches and does the grunt work.",
+      word: shortModel(C?.delegate.model),
+      wordCaption: "Worker model",
+      wordLabel: `Worker lane runs on ${shortModel(C?.delegate.model).toLowerCase()}`,
+      stat: ["Worker input, $/MTok", priceIn(big)],
+    },
+    {
+      key: "lanes_v1",
+      legend: "Small delegate",
+      sub: "Same planner. A small model does the grunt work.",
+      word: shortModel(V?.delegate.model),
+      wordCaption: "Worker model",
+      wordLabel: `Worker lane runs on ${shortModel(V?.delegate.model).toLowerCase()}`,
+      stat: ["Worker input, $/MTok", priceIn(small)],
+    },
+  ],
+  exp2: [
+    {
+      key: "control",
+      legend: "Small model reads",
+      sub: "The experiment 1 winner, rolled out. The frontier model writes every edit.",
+      word: "READS",
+      wordCaption: "Small model's job",
+      wordLabel: "In control the small model reads and reports",
+    },
+    {
+      key: "lanes_v2",
+      legend: "Small model drafts",
+      sub: "The small model writes a first patch. The frontier model reviews it.",
+      word: "DRAFTS",
+      wordCaption: "Small model's job",
+      wordLabel: "In lanes_v2 the small model drafts the patch",
+    },
+  ],
+};
+const HERO_BATCH = batchOf(HERO_SIGNS[CURRENT] ? CURRENT : "exp1")!;
+const HERO_SET = HERO_SIGNS[HERO_BATCH.id]!;
+
 const HERO_LANES = [
-  { key: "control", x: 250, cars: 4, closed: false },
-  { key: "lanes_v1", x: 750, cars: 4, closed: false },
+  { key: HERO_SET[0]!.key, x: 250, cars: 4, closed: false },
+  { key: HERO_SET[1]!.key, x: 750, cars: 4, closed: false },
 ];
 
+function HeroBatchPlate() {
+  const live = useLiveState(CURRENT);
+  const st = batchStatus(HERO_BATCH, live.kind === "ok" ? live.snapshot : null);
+  return (
+    <Link to="/live" className="hero-batch">
+      <span className={`batch-chip is-${st.key}`}>
+        <i aria-hidden="true" />
+        {st.label}
+      </span>
+      <span>
+        <b>{HERO_BATCH.label}</b> is what these signs read<span aria-hidden="true"> →</span>
+      </span>
+    </Link>
+  );
+}
+
 function HeroJunction() {
-  const priceIn = (m?: { input: number }) => (m ? `$${m.input.toFixed(2)}` : "—");
   return (
     <div className="junction hero-junction" data-phase="running">
+      <HeroBatchPlate />
       <div className="gantry">
         <div className="beam" aria-hidden="true">
           <svg viewBox="0 0 1000 24" preserveAspectRatio="none">
@@ -104,8 +188,9 @@ function HeroJunction() {
           </svg>
         </div>
         <div className="signs">
-          <HeroSign armKey="control" legend="Frontier everywhere" sub="One model plans, patches and does the grunt work." worker={shortModel(C?.delegate.model)} priceIn={priceIn(big)} />
-          <HeroSign armKey="lanes_v1" legend="Small delegate" sub="Same planner. A small model does the grunt work." worker={shortModel(V?.delegate.model)} priceIn={priceIn(small)} />
+          {HERO_SET.map((lane) => (
+            <HeroSign key={lane.key} lane={lane} />
+          ))}
         </div>
         <div className="signals" aria-hidden="true">
           {[0, 1].map((i) => (
@@ -127,7 +212,10 @@ function HeroJunction() {
           <span className="fs-gantry-cap">{split !== null ? `splits ${100 - split} / ${split}` : "splits the traffic"}</span>
         </div>
       </div>
-      <p className="hero-art-note">The road is an illustration: each car is a task, each lane an arm. The signs read live from the run.</p>
+      <p className="hero-art-note">
+        The road is an illustration: each car is a task, each lane an arm. The signs read live from {HERO_BATCH.label.toLowerCase()}
+        {HERO_BATCH.state === "open" ? ", which is running now" : ""}.
+      </p>
     </div>
   );
 }

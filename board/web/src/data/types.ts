@@ -43,6 +43,8 @@ export type Connection = "connecting" | "open" | "retrying" | "none";
 
 export interface Board {
   mode: Mode;
+  /** The batch this board shows: exp1, rollout or exp2. */
+  experiment: string;
   connection: Connection;
   snapshot: Snapshot | null;
   /** key -> display text, from the seed (or the replay fixture in replay mode). */

@@ -8,6 +8,8 @@ import "./site/site.css";
 import "./site/pages.css";
 import "./site/round2.css";
 import "./site/play.css";
+import "./site/live.css";
+import "./site/results.css";
 import { Site } from "./site/Shell";
 
 const root = document.getElementById("root")!;

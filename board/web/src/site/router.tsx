@@ -83,6 +83,12 @@ export function RouterProvider({ initialPath, children }: { initialPath: string;
         return;
       }
       window.history.pushState(null, "", url.pathname + url.search + url.hash);
+      if (target === path && !url.search) {
+        // Same page with its query dropped (the board showing another batch): the page listens for this.
+        window.dispatchEvent(new PopStateEvent("popstate"));
+        window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+        return;
+      }
       // The live board reads ?demo=replay once on load; a full load keeps that behaviour exact.
       if (url.search) {
         window.location.reload();

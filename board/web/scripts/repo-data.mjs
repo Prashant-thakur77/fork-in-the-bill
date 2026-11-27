@@ -272,6 +272,78 @@ function wranglerHost(root) {
   return m ? `https://${m[1]}` : "";
 }
 
+function isoSecond(t) {
+  if (!t) return null;
+  const d = new Date(t);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString().replace(/\.\d+Z$/, "Z");
+}
+
+function tagTime(root, tag) {
+  return isoSecond(git(root, `for-each-ref refs/tags/${tag} --format='%(creatordate:iso-strict)'`));
+}
+
+/**
+ * The batches the board API serves by name, with what the repository says about each at build
+ * time. A batch is finished when numbers.json holds its result; the API's own status field is
+ * not used for that, because nothing posts a final status when a run stops.
+ */
+export function batchesFrom(root, numbers, hashes) {
+  const sha = (file) => hashes.find((h) => h.file === file)?.sha256 ?? null;
+  const meta = (run) => readJson(root, `runs/${run}/meta.json`);
+  const ship1 = getPath(numbers, "exp1.decision.ship") ?? null;
+  const ship2 = getPath(numbers, "exp2.decision.ship") ?? null;
+  const rolloutN = getPath(numbers, "rollout.n") ?? null;
+  const exp2Registered = !!sha("prereg/experiment-2.md");
+  const m1 = meta("exp1");
+  const mr = meta("rollout");
+  const m2 = meta("exp2");
+  const batches = [
+    {
+      id: "exp1",
+      label: "Experiment 1",
+      arms: ["control", "lanes_v1"],
+      state: ship1 ? "final" : "open",
+      ship: ship1,
+      preregFile: "prereg/experiment-1.md",
+      preregTag: "prereg-exp1",
+      preregSha: sha("prereg/experiment-1.md"),
+      registeredAt: tagTime(root, "prereg-exp1"),
+      startedAt: isoSecond(m1?.started_at),
+      flagsmithId: m1?.flagsmith_experiment_id ?? null,
+    },
+    {
+      id: "rollout",
+      label: "Rollout batch",
+      arms: ship1 ? [ship1] : [],
+      state: rolloutN ? "final" : "open",
+      ship: null,
+      preregFile: null,
+      preregTag: null,
+      preregSha: null,
+      registeredAt: null,
+      startedAt: isoSecond(mr?.started_at),
+      flagsmithId: null,
+    },
+    {
+      id: "exp2",
+      label: "Experiment 2",
+      arms: ["control", "lanes_v2"],
+      state: ship2 ? "final" : exp2Registered ? "open" : "planned",
+      ship: ship2,
+      preregFile: "prereg/experiment-2.md",
+      preregTag: "prereg-exp2",
+      preregSha: sha("prereg/experiment-2.md"),
+      registeredAt: exp2Registered ? tagTime(root, "prereg-exp2") : null,
+      startedAt: isoSecond(m2?.started_at),
+      flagsmithId: m2?.flagsmith_experiment_id ?? null,
+    },
+  ];
+  // The batch the site reads live: the newest one that is registered and not finished.
+  const newest = [...batches].reverse();
+  const open = newest.find((b) => b.state === "open");
+  return { batches, current: (open ?? newest.find((b) => b.state === "final" && b.id !== "rollout") ?? batches[0]).id };
+}
+
 export function loadRepoData(root = REPO_ROOT) {
   const keys = readJson(root, "board/web/src/data/keys.json") ?? [];
   const numbers = readJson(root, "analysis/out/numbers.json");
@@ -287,6 +359,11 @@ export function loadRepoData(root = REPO_ROOT) {
     .map((l) => /^([0-9a-f]{64})\s+(\S+)$/.exec(l.trim()))
     .filter(Boolean)
     .map((m) => ({ sha256: m[1], file: m[2] }));
+
+  const { batches, current } = batchesFrom(root, numbers, hashes);
+  const prereg2Text = read(root, "prereg/experiment-2.md");
+  const prereg2 = sections(prereg2Text);
+  const hypothesis2 = (/<!-- hypothesis:start -->\s*([\s\S]*?)\s*<!-- hypothesis:end -->/.exec(prereg2Text ?? "") ?? [])[1] ?? "";
 
   const policies = {};
   for (const name of ["control", "lanes_v1", "lanes_v2"]) {
@@ -338,6 +415,31 @@ export function loadRepoData(root = REPO_ROOT) {
     figures,
     decisions,
     hasNumbers: !!numbers,
+    batches,
+    currentExperiment: current,
+    numbers: numbers
+      ? {
+          generatedAt: numbers.generated_at ?? null,
+          exp1: numbers.exp1 ?? null,
+          exp2: numbers.exp2 ?? null,
+          rollout: numbers.rollout ?? null,
+          spend: numbers.spend ?? null,
+          integrity: numbers.integrity ?? null,
+        }
+      : null,
+    hypothesis2,
+    prereg2: {
+      start: blocks(prereg2["Where this starts"]),
+      question: blocks(prereg2["Question"]),
+      arms: blocks(prereg2["Arms"]),
+      units: blocks(prereg2["Units and pool"]),
+      decisionRule: blocks(prereg2["Decision rule"]),
+      power: blocks(prereg2["Power"]),
+      exclusions: blocks(prereg2["Exclusions"]),
+      stopping: blocks(prereg2["Stopping"]),
+      before: blocks(prereg2["Before the run"]),
+    },
+    power2: readJson(root, "analysis/out/power-exp2/power.json"),
     hashes,
     hypothesis,
     policies,
