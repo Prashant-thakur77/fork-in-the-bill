@@ -62,6 +62,19 @@ resource "aws_vpc_security_group_ingress_rule" "ssh" {
   tags = local.tags
 }
 
+# The operator's connection alternates between addresses; each extra one gets its own rule.
+resource "aws_vpc_security_group_ingress_rule" "ssh_extra" {
+  for_each          = toset(var.operator_extra_cidrs)
+  security_group_id = aws_security_group.runner.id
+  description       = "SSH from operator (alternate address)"
+  cidr_ipv4         = each.value
+  ip_protocol       = "tcp"
+  from_port         = 22
+  to_port           = 22
+
+  tags = local.tags
+}
+
 resource "aws_vpc_security_group_egress_rule" "all_ipv4" {
   security_group_id = aws_security_group.runner.id
   description       = "Outbound for package installs, registries, model and Flagsmith APIs"

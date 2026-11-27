@@ -116,3 +116,14 @@ variable "validator_volume_gb" {
   type        = number
   default     = 800
 }
+
+variable "operator_extra_cidrs" {
+  description = "Further /32 addresses the operator connects from. None may be 0.0.0.0/0."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = alltrue([for c in var.operator_extra_cidrs : can(cidrhost(c, 0)) && c != "0.0.0.0/0"])
+    error_message = "Each entry must be a valid CIDR and must not be 0.0.0.0/0."
+  }
+}

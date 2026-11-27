@@ -17,3 +17,4 @@ prepull_images = [
 
 budget_usd   = 50 # AWS spend only; model spend is capped separately (BUDGET_USD_TOTAL)
 budget_email = "alerts@example.com"
+# operator_extra_cidrs = ["198.51.100.9/32"] # further addresses you connect from, if your IP alternates

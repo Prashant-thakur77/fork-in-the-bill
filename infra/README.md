@@ -8,7 +8,7 @@ Nothing here runs automatically. `make infra-up` creates billable resources, so 
 
 | Resource | Notes |
 |---|---|
-| `aws_security_group.runner` | Ingress: TCP 22 from `operator_cidr` only. Egress: all (package mirrors, registries, model and Flagsmith APIs). |
+| `aws_security_group.runner` | Ingress: TCP 22 from `operator_cidr` and any `operator_extra_cidrs` only. Egress: all (package mirrors, registries, model and Flagsmith APIs). |
 | `aws_key_pair.operator` | From `ssh_public_key`. |
 | `aws_instance.runner` | Ubuntu 24.04, `m7i.4xlarge` by default, one-time spot (`use_spot = true`) that terminates on interruption, IMDSv2 only, encrypted gp3 root volume (400 GiB by default). |
 | `aws_budgets_budget.monthly` | Monthly cost budget at `budget_usd`, email at 80% forecast and 100% actual. |
