@@ -15,30 +15,26 @@ const N1 = N?.exp1 ?? null;
 const refs = new Map(repo.references.map((r) => [r.id, r]));
 const integ = N?.integrity?.by_experiment.exp1 ?? null;
 const hasChart = (f: string) => repo.charts.includes(f);
-const sec = (k: string): Record<string, unknown> | null => {
-  const v = N1?.secondary?.[k];
-  return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
-};
+const AV = N1?.secondary?.always_valid ?? null;
+const MV = N1?.secondary?.multiverse ?? null;
+const FR = N?.frontier ?? null;
+const PR = N?.integrity?.proofs ?? null;
+const p3 = (v: number) => format(v, "p3");
 
-/** The plain values of an analysis block, shown under their own key names. Nothing when the block is absent. */
-function Block({ data, source }: { data: Record<string, unknown> | null; source: string }) {
-  if (!data) return null;
-  const rows = Object.entries(data).filter(([, v]) => ["number", "string", "boolean"].includes(typeof v)) as [string, number | string | boolean][];
-  if (!rows.length) return null;
-  const show = (v: number | string | boolean) => (typeof v === "number" ? (Number.isInteger(v) ? v.toLocaleString("en-US") : v.toPrecision(4).replace(/\.?0+$/, "")) : String(v));
+/** A short table of readings inside a card. */
+function Readings({ rows, note }: { rows: [string, ReactNode][]; note?: ReactNode }) {
   return (
-    <dl className="rs-block">
-      {rows.slice(0, 8).map(([k, v]) => (
-        <div key={k}>
-          <dt>
-            <code>
-              {source}.{k}
-            </code>
-          </dt>
-          <dd>{show(v)}</dd>
-        </div>
-      ))}
-    </dl>
+    <div className="rs-read">
+      <dl className="rs-block">
+        {rows.map(([k, v]) => (
+          <div key={k}>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+      {note && <p className="rs-read-note">{note}</p>}
+    </div>
   );
 }
 
@@ -67,8 +63,6 @@ interface Card {
 }
 
 const usd4 = (v: number) => format(v, "usd4");
-const frontier = N?.frontier && typeof N.frontier === "object" ? (N.frontier as Record<string, unknown>) : null;
-const proofs = N?.integrity?.proofs && typeof N.integrity.proofs === "object" ? (N.integrity.proofs as Record<string, unknown>) : null;
 
 export const CARDS: Card[] = [
   {
@@ -131,12 +125,49 @@ export const CARDS: Card[] = [
         Cost per solved task {usd4(N1.arms.control!.cost_per_solve)} for control, {usd4(N1.arms.lanes_v1!.cost_per_solve)} for lanes_v1.
       </>
     ) : null,
-    extra: (
+    extra: FR ? (
       <>
-        <Block data={frontier} source="frontier" />
+        <div className="table-wrap" tabIndex={0} role="region" aria-label="Every arm that has run: cost and solve rate">
+          <table className="data-table">
+            <caption className="sr-only">Mean cost per task and solve rate of every arm that has run, with the frontier marked</caption>
+            <thead>
+              <tr>
+                <th scope="col">Arm</th>
+                <th scope="col" className="num">
+                  Tasks
+                </th>
+                <th scope="col" className="num">
+                  Mean cost
+                </th>
+                <th scope="col" className="num">
+                  Solve rate
+                </th>
+                <th scope="col">On the frontier</th>
+              </tr>
+            </thead>
+            <tbody>
+              {FR.order.map((k) => {
+                const arm = FR.arms[k];
+                if (!arm) return null;
+                return (
+                  <tr key={k} className={arm.on_frontier ? "is-hl" : ""}>
+                    <th scope="row">{arm.label}</th>
+                    <td className="num">{arm.n}</td>
+                    <td className="num">{usd4(arm.cost_mean)}</td>
+                    <td className="num">{format(arm.solve_rate, "prob1")}</td>
+                    <td>{arm.on_frontier ? "yes" : "no: another arm is cheaper and solves more"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p className="rs-read-note">
+          {FR.n_on_frontier} of {FR.n_arms} arms are on the frontier. This reading is descriptive: {FR.note.charAt(0).toLowerCase() + FR.note.slice(1)}
+        </p>
         <Chart file="frontier.png" alt="Cost against solve rate for every arm that has run, with the frontier marked." />
       </>
-    ),
+    ) : undefined,
   },
   {
     ids: ["kohavi-tang-2020", "tang-agarwal-2010", "flagsmith-nd", "flagsmith-nd-2"],
@@ -173,12 +204,27 @@ export const CARDS: Card[] = [
         The decision was read once, on {N1.arms.control!.n_analysed + N1.arms.lanes_v1!.n_analysed} analysed tasks, after the last one finished.
       </>
     ) : null,
-    extra: (
+    extra: AV ? (
       <>
-        <Block data={sec("always_valid")} source="exp1.secondary.always_valid" />
-        <Chart file="exp1-always-valid.png" alt="The always-valid p-value over the run, which stays valid however often it is looked at." />
+        <Readings
+          rows={[
+            ["Cost: first below " + AV.alpha, AV.cost.crossed && AV.cost.first_cross_at ? `task ${AV.cost.first_cross_at} of ${AV.n_tasks}` : "never"],
+            ["Cost: at the end", `p ${p3(AV.cost.p_final)}`],
+            ["Cost: interval at the end", `${usd4(AV.cost.ci_final[0])} to ${usd4(AV.cost.ci_final[1])}`],
+            ["Solve rate: below " + AV.alpha, AV.solve.crossed ? "yes" : `never (p ${p3(AV.solve.p_final)})`],
+            [`When the board went public (${AV.board_live_after_tasks} tasks in)`, `cost p ${p3(AV.cost.p_at_board_live)}, solve p ${p3(AV.solve.p_at_board_live)}`],
+          ]}
+          note={
+            <>
+              Added after experiment 1 and labelled secondary; it did not enter the decision. An always-valid p-value stays valid however often it is looked at, so it
+              answers the question a live board raises. The cost reading crossed the line and holds under continuous watching; the solve-rate reading never crossed
+              in either direction. Method: {AV.method}.
+            </>
+          }
+        />
+        <Chart file="exp1-always-valid.png" alt="The always-valid p-value for cost and for solve rate, task by task, against the 0.05 line." />
       </>
-    ),
+    ) : undefined,
   },
   {
     ids: ["nosek-ebersole-2018", "gelman-loken-2013"],
@@ -191,12 +237,29 @@ export const CARDS: Card[] = [
         sha256 <code>{N1.prereg.sha256.slice(0, 16)}…</code>, tag <code>{N1.prereg.tag}</code>; all three registered conditions held.
       </>
     ) : null,
-    extra: (
+    extra: MV ? (
       <>
-        <Block data={sec("multiverse")} source="exp1.secondary.multiverse" />
-        <Chart file="exp1-specification-curve.png" alt="The cost effect under every reasonable analysis choice, sorted: a specification curve." />
+        <Readings
+          rows={[
+            ["Specifications run", String(MV.n_specs)],
+            ["Cost per solved task lower", `${MV.cost_direction} of ${MV.n_specs}`],
+            ["Its change, across all of them", `${format(MV.cps_change_pct_range[0], "pct1")} to ${format(MV.cps_change_pct_range[1], "pct1")}`],
+            ["Guardrail passes", `${MV.guardrail_pass} of ${MV.n_specs}`],
+            ["Guardrail fails", MV.guardrail_fail_only_fresh ? `${MV.guardrail_fail}, all on the fresh tier alone` : String(MV.guardrail_fail)],
+            ["Guardrail probability, lowest to highest", `${format(MV.guardrail_posterior_range[0], "prob1")} to ${format(MV.guardrail_posterior_range[1], "prob1")}`],
+          ]}
+          note={
+            <>
+              The forking paths, walked on purpose: every combination of {Object.entries(MV.choices).map(([k, v]) => `${v.length} choices of ${k.replace(/_/g, " ")}`).join(", ")}
+              . The registered analysis is one of the {MV.n_specs}. The cost finding does not depend on the choice. The solve-rate check does: it fails in every
+              specification that uses the fresh tier alone ({MV.fresh_specs_failing} of {MV.fresh_specs}) and in none of the others. Added after experiment 1 and labelled
+              secondary.
+            </>
+          }
+        />
+        <Chart file="exp1-specification-curve.png" alt="The change in cost per solved task under each of the specifications, sorted, with the analysis choices marked beneath." />
       </>
-    ),
+    ) : undefined,
   },
   {
     ids: ["u-s-food-and-drug-administration-2016"],
@@ -273,7 +336,20 @@ export const CARDS: Card[] = [
         Root <code>{integ.merkle_root.slice(0, 16)}…</code> over {integ.task_done_records} finished tasks of experiment 1. <Link to="/verify#proof">Prove one task</Link>.
       </>
     ) : null,
-    extra: <Block data={proofs} source="integrity.proofs" />,
+    extra: PR ? (
+      <Readings
+        rows={Object.entries(PR).flatMap(([run, v]): [string, ReactNode][] => [
+          [`${run}: proofs that verify`, `${v.verified} of ${v.leaves}`],
+          [`${run}: longest path`, `${v.path_length_max} hashes`],
+        ])}
+        note={
+          <>
+            One inclusion proof per task is exported with the analysis (<a href={ghFile("analysis/out/proofs/exp1.json")}>analysis/out/proofs</a>). Each is the task's
+            hash and at most {Math.max(...Object.values(PR).map((v) => v.path_length_max))} neighbours; <Link to="/verify#proof">the verify page checks any of them in your browser</Link>.
+          </>
+        }
+      />
+    ) : undefined,
   },
 ];
 

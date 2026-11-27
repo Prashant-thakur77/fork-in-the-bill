@@ -18,6 +18,10 @@ const n = (v: number) => v.toLocaleString("en-US");
 const roots = N?.integrity ? Object.keys(N.integrity.by_experiment).length : 0;
 const ciJobs = S.ci.reduce((k, w) => k + w.jobs.length, 0);
 const testFns = S.tests.python + S.tests.typescript;
+const byResult = S.testsByResult;
+const byKind = S.tokensByKind;
+const PROJ = N?.projection ?? null;
+const PRICE = N?.pricing ?? null;
 
 export interface Figure {
   /** The count's name; when numbers.json supplied it, the source link points there. */
@@ -31,8 +35,13 @@ export interface Figure {
 
 /** The figures the home page strip shows; the same values as on this page. */
 export const HEADLINE: Figure[] = [
-  { field: "tests", value: n(T.tests), label: "test results read by the grader", counts: "Every test the grader ran in a fresh container after an agent stopped, summed over all task attempts.", src: "runs" },
-  { field: "attempts", value: n(T.attempts), label: "task attempts on real bug fixes", counts: "One line in a run's tasks.jsonl is one attempt at one real issue.", src: "runs" },
+  { field: "tests", value: n(T.tests), label: "test results read by the grader",
+    counts: byResult
+      ? `Every test the grader ran in a fresh container after an agent stopped: ${n(byResult.pass ?? 0)} passed, ${n(byResult.fail ?? 0)} failed, ${n(byResult.skip ?? 0)} skipped.`
+      : "Every test the grader ran in a fresh container after an agent stopped, summed over all task records.",
+    src: "runs",
+  },
+  { field: "attempts", value: n(T.attempts), label: "task attempts on real bug fixes", counts: "Each attempt at one real issue, with a task record or a published transcript.", src: "runs" },
   { field: "calls", value: n(T.calls), label: "model calls, each one priced", counts: "One line in a run's calls.jsonl is one call, with its tokens and its cost.", src: "runs" },
   { value: n(S.code.lines), label: "lines of code and docs", counts: "Lines in the files git tracks, leaving out data, generated output and lock files.", src: "board/web/scripts/scale-data.mjs" },
 ];
@@ -59,11 +68,17 @@ function Fig({ f, big = false }: { f: Figure; big?: boolean }) {
 }
 
 const RUN_FIGS: Figure[] = [
-  { field: "tasks", value: n(T.tasks), label: "tasks run", counts: "Tasks per run, added up over the runs; a dry run can repeat a task from an earlier one.", src: "tasks/pools" },
+  { field: "tasks", value: n(T.tasks), label: "tasks graded to a record", counts: "Finished-task records in the run ledgers. A few first attempts were cut off before their record was written and were run again.", src: "runs" },
   { field: "repos", value: n(T.repos), label: "repositories", counts: "Open-source repositories the issues come from.", src: "tasks/pools/manifest.json" },
   { field: "languages", value: n(T.languageCount), label: "languages", counts: T.languages.length ? T.languages.join(", ") : "Programming languages of the issues' repositories.", src: "tasks/pools/manifest.json" },
   { value: n(T.solved), label: "attempts graded as solved", counts: "Every target test passes and no passing test broke, in a fresh container.", src: "runner/grading.py" },
-  { field: "tokens", value: n(T.tokens), label: "tokens through the models", counts: "Input, cached and output tokens over every recorded call.", src: "harness/pricing.json", srcLabel: "priced with harness/pricing.json" },
+  { field: "tokens", value: n(T.tokens), label: "tokens through the models",
+    counts: byKind
+      ? `${n(byKind.cache_read ?? 0)} read from cache, ${n((byKind.cache_write_5m ?? 0) + (byKind.cache_write_1h ?? 0))} written to cache, ${n(byKind.input ?? 0)} fresh input, ${n(byKind.output ?? 0)} output.`
+      : "Input, cached and output tokens over every recorded call.",
+    src: "harness/pricing.json",
+    srcLabel: "priced with harness/pricing.json",
+  },
   { field: "events", value: n(T.events), label: "events sent to Flagsmith", counts: "Cost, turns, seconds and solves, each with the identity that was exposed.", src: "harness/events.py" },
 ];
 
@@ -86,7 +101,7 @@ const PROOF_FIGS: Figure[] = [
 ];
 
 const BUILD_FIGS: Figure[] = [
-  { value: n(testFns), label: "test functions", counts: `${n(S.tests.python)} in Python and ${n(S.tests.typescript)} in TypeScript, counted by name in the test files.`, src: "tests" },
+  { field: "unitTests", value: n(testFns), label: "test functions", counts: `${n(S.tests.python)} in Python and ${n(S.tests.typescript)} in TypeScript, counted by name in the test files.`, src: "tests" },
   { value: n(ciJobs), label: "CI jobs", counts: S.ci.flatMap((w) => w.jobs).join(", "), src: ".github/workflows" },
   { field: "exampleCount", value: n(S.exampleCount), label: "runnable examples", counts: "Each with a script and its captured output.", src: "examples" },
   { field: "packageCount", value: n(S.packageCount), label: "npm packages", counts: S.packages.map((p) => `${p.name} ${p.version}`).join(", "), src: "kit" },
@@ -134,6 +149,7 @@ export default function Scale() {
                 <tr>
                   <th scope="col">Batch</th>
                   <th scope="col">Attempts</th>
+                  <th scope="col">Graded</th>
                   <th scope="col">Solved</th>
                   <th scope="col">Tests read</th>
                   <th scope="col">Model calls</th>
@@ -149,6 +165,7 @@ export default function Scale() {
                       {g.runs.length > 1 && <small> {g.runs.length} runs</small>}
                     </th>
                     <td>{n(g.attempts)}</td>
+                    <td>{n(g.tasks)}</td>
                     <td>{n(g.solved)}</td>
                     <td>{n(g.tests)}</td>
                     <td>{n(g.calls)}</td>
@@ -161,6 +178,7 @@ export default function Scale() {
                 <tr>
                   <th scope="row">All {T.runs} runs</th>
                   <td>{n(T.attempts)}</td>
+                  <td>{n(T.tasks)}</td>
                   <td>{n(T.solved)}</td>
                   <td>{n(T.tests)}</td>
                   <td>{n(T.calls)}</td>
@@ -214,6 +232,68 @@ export default function Scale() {
                 </div>
               </dl>
             </div>
+          </div>
+        </section>
+      )}
+
+      {(PROJ || PRICE) && (
+        <section className="sc-sec" aria-labelledby="sc-proj">
+          <div className="x2-copy wide">
+            <p className="eyebrow-sign">At a larger size</p>
+            <Kinetic id="sc-proj" text="What the measured gap adds up to" />
+            <p>These two blocks are sums and ratios of figures on this site. Neither is a new measurement.</p>
+          </div>
+          <div className="sc-proj">
+            {PROJ && (
+              <div className="sc-note" data-reveal="hang">
+                <span className="sc-note-tab">Arithmetic on measured figures, not a measurement</span>
+                <h3>Per 1,000 solved bugs</h3>
+                <dl>
+                  <div>
+                    <dt>control</dt>
+                    <dd data-count="">{format(PROJ.per_1000_solved.control, "usd2")}</dd>
+                  </div>
+                  <div>
+                    <dt>lanes_v1</dt>
+                    <dd data-count="">{format(PROJ.per_1000_solved.lanes_v1, "usd2")}</dd>
+                  </div>
+                  <div className="is-saved">
+                    <dt>difference</dt>
+                    <dd data-count="">{format(PROJ.per_1000_solved.saved, "usd2")}</dd>
+                  </div>
+                </dl>
+                <p>
+                  Experiment 1's cost per solved task in each arm, multiplied by 1,000. It assumes the same agent, models, prices and kind of task, and it carries the
+                  same uncertainty as the figures it is made from. <Link to="/results">The measured figures and their intervals</Link>.
+                </p>
+              </div>
+            )}
+            {PRICE && (
+              <div className="sc-note is-fact" data-reveal="hang">
+                <span className="sc-note-tab">List prices, from the pricing file</span>
+                <h3>
+                  <span data-count="">{PRICE.frontier_to_small_ratio.toLocaleString("en-US")}</span> times the price per token
+                </h3>
+                <dl>
+                  <div>
+                    <dt>frontier model, input and output per million tokens</dt>
+                    <dd>
+                      {format(PRICE.frontier_input_per_mtok, "usd2")} · {format(PRICE.frontier_output_per_mtok, "usd2")}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>small model, input and output per million tokens</dt>
+                    <dd>
+                      {format(PRICE.small_input_per_mtok, "usd2")} · {format(PRICE.small_output_per_mtok, "usd2")}
+                    </dd>
+                  </div>
+                </dl>
+                <p>
+                  The price gap is {PRICE.frontier_to_small_ratio.toLocaleString("en-US")} to 1; the measured saving per task is smaller, because only the worker lane changed model and the planner still runs on the
+                  frontier one. <a href={ghFile("harness/pricing.json")}>harness/pricing.json</a>
+                </p>
+              </div>
+            )}
           </div>
         </section>
       )}

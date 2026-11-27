@@ -610,6 +610,8 @@ export function loadRepoData(root = REPO_ROOT) {
           generatedAt: numbers.generated_at ?? null,
           exp1: numbers.exp1 ?? null,
           frontier: numbers.frontier ?? null,
+          projection: numbers.projection ?? null,
+          pricing: numbers.pricing ?? null,
           exp2: numbers.exp2 ?? null,
           rollout: numbers.rollout ?? null,
           spend: numbers.spend ?? null,

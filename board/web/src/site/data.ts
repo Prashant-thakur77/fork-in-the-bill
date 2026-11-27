@@ -93,6 +93,44 @@ export interface TierNumbers {
   [arm: string]: { n: number; solves: number; solve_rate: number; cost_mean: number; cost_per_solve: number } | TierNumbers["delta"];
 }
 
+/** Always-valid sequential p-values (mSPRT), computed after the decision as a secondary reading. */
+export interface AlwaysValid {
+  alpha: number;
+  n_tasks: number;
+  board_live_after_tasks: number;
+  first_evaluated_at: number;
+  method: string;
+  cost: { crossed: boolean; first_cross_at: number | null; estimate: number; ci_final: [number, number]; p_final: number; p_at_board_live: number };
+  solve: { crossed: boolean; crossed_harmful: boolean; estimate_pp: number; ci_final_pp: [number, number]; p_final: number; p_at_board_live: number };
+}
+
+/** The specification curve: the same question under every reasonable analysis choice. */
+export interface Multiverse {
+  n_specs: number;
+  guardrail_pass: number;
+  guardrail_fail: number;
+  guardrail_fail_only_fresh: boolean;
+  fresh_specs: number;
+  fresh_specs_failing: number;
+  non_fresh_specs_failing: number;
+  cost_direction: number;
+  cps_ci_below_zero: number;
+  both: number;
+  guardrail_bar: number;
+  cps_change_pct_range: [number, number];
+  guardrail_posterior_range: [number, number];
+  choices: Record<string, string[]>;
+  registered: { cps_change_pct: number; guardrail_posterior: number };
+}
+
+export interface Frontier {
+  n_arms: number;
+  n_on_frontier: number;
+  note: string;
+  order: string[];
+  arms: Record<string, { label: string; batch: string; n: number; cost_mean: number; solve_rate: number; on_frontier: boolean }>;
+}
+
 export interface ExperimentNumbers {
   prereg: { tag: string; sha256: string; m: number };
   arms: Record<string, ArmNumbers>;
@@ -116,8 +154,8 @@ export interface ExperimentNumbers {
   power: { n_per_arm: number; mde_solve_pp: number; mde_cost_pct: number; power: number };
   cuped?: { variance_reduction_pct: number | null; note?: string };
   by_trait: Record<string, Record<string, TraitLevel>>;
-  /** Analyses added after the decision; each key appears when the analysis has written it. */
-  secondary?: Record<string, unknown>;
+  /** Analyses added after the decision, each labelled secondary; a key appears when the analysis has written it. */
+  secondary?: { always_valid?: AlwaysValid; multiverse?: Multiverse };
   /** The same estimates for the fresh tier and the pre-cutoff tier alone; reported, not part of the decision. */
   by_tier?: Record<string, TierNumbers>;
   bootstrap_resamples: number;
@@ -138,10 +176,13 @@ export interface Numbers {
   exp1: ExperimentNumbers | null;
   exp2: ExperimentNumbers | null;
   rollout: { n: number; cost_mean: number; solve_rate: number } | null;
-  /** Cost and solve rate of every arm on one chart, when the analysis has written it. */
-  frontier: unknown;
+  /** Cost and solve rate of every arm that has run; descriptive across batches. */
+  frontier: Frontier | null;
+  /** Arithmetic on measured figures, labelled as such in numbers.json. */
+  projection: { basis: string; label: string; per_1000_solved: { control: number; lanes_v1: number; saved: number } } | null;
+  pricing: { frontier_model: string; small_model: string; frontier_input_per_mtok: number; small_input_per_mtok: number; frontier_output_per_mtok: number; small_output_per_mtok: number; frontier_to_small_ratio: number } | null;
   spend: { total_usd: number; by_experiment: Record<string, number> } | null;
-  integrity: { merkle_root: string; task_done_records: number; by_experiment: Record<string, IntegrityRun>; proofs?: unknown } | null;
+  integrity: { merkle_root: string; task_done_records: number; by_experiment: Record<string, IntegrityRun>; proofs?: Record<string, { leaves: number; verified: number; path_length_max: number; root: string; file: string; bytes: number }> } | null;
 }
 
 /** What a run's first environment snapshot says about the experiment flag. */
@@ -235,6 +276,9 @@ export interface ScaleData {
   packageCount: number;
   exampleCount: number;
   preregCount: number;
+  /** From numbers.json when present: test results by outcome, tokens by kind. */
+  testsByResult: Record<string, number> | null;
+  tokensByKind: Record<string, number> | null;
   code: { byLang: { lang: string; files: number; lines: number }[]; files: number; lines: number; tracked: number };
   tests: { python: number; pythonFiles: number; typescript: number; typescriptFiles: number };
   ci: { file: string; jobs: string[] }[];

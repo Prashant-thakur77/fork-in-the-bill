@@ -39,7 +39,24 @@ describe("build-time counters", () => {
     expect(rollout.tasks).toBe(numbers.rollout.n);
     const exp1 = runStats(REPO, "exp1");
     expect(exp1.solved).toBe(numbers.exp1.arms.control.solves + numbers.exp1.arms.lanes_v1.solves);
-    expect(exp1.tasks).toBe(numbers.exp1.arms.control.n_analysed + numbers.exp1.arms.lanes_v1.n_analysed);
+    expect(exp1.tasks).toBeGreaterThanOrEqual(numbers.exp1.arms.control.n_analysed + numbers.exp1.arms.lanes_v1.n_analysed);
+    // the site's own count and the analysis output's scale block agree on what both count from the same files
+    if (numbers.scale) {
+      const own = scaleFrom(REPO);
+      expect(own.totals.tasks).toBe(numbers.scale.tasks_run);
+      expect(own.totals.tests).toBe(numbers.scale.tests_executed);
+      expect(own.totals.calls).toBe(numbers.scale.model_calls);
+      expect(own.totals.tokens).toBe(numbers.scale.tokens);
+      expect(own.totals.ledger).toBe(numbers.scale.ledger_records);
+      expect(own.totals.events).toBe(numbers.scale.events_sent);
+      expect(own.totals.envSnapshots).toBe(numbers.scale.env_snapshots);
+      expect(own.totals.transcripts).toBe(numbers.scale.transcripts);
+      // and the shipped page uses the block's values wherever it has a key
+      expect(data.scale.totals.attempts).toBe(numbers.scale.task_attempts);
+      expect(data.scale.totals.repos).toBe(numbers.scale.repos);
+      expect(data.scale.tests.python + data.scale.tests.typescript).toBe(numbers.scale.unit_tests);
+      expect(data.scale.fromNumbers).toEqual(expect.arrayContaining(["tasks", "attempts", "tests", "unitTests"]));
+    }
   });
 
   it("groups runs into batches and adds them up", () => {
@@ -48,7 +65,7 @@ describe("build-time counters", () => {
     expect(groupOf("exp1")).toBe("exp1");
     const s = scaleFrom(REPO);
     const sum = (k: string) => s.groups.reduce((n: number, g: Record<string, number>) => n + g[k]!, 0);
-    for (const k of ["attempts", "tests", "calls", "tokens", "ledger"]) expect(sum(k), k).toBe(s.totals[k]);
+    for (const k of ["attempts", "tasks", "tests", "calls", "tokens", "ledger"]) expect(sum(k), k).toBe(s.totals[k]);
     expect(s.totals.distinctTasks).toBeLessThanOrEqual(s.totals.tasks);
   });
 
@@ -69,15 +86,18 @@ describe("build-time counters", () => {
     const plain = withNumbersScale(own, undefined);
     expect(plain.fromNumbers).toEqual([]);
     expect(plain.totals.tests).toBe(own.totals.tests);
-    const over = withNumbersScale(own, { tests_executed: 7, model_calls: 9, languages: ["go", "c"], npm_packages: 2, unit_tests_python: 3, tasks_by_batch: { exp1: 5, rollout: 4 }, unknown_key: 1 });
+    const over = withNumbersScale(own, { tests_executed: 7, model_calls: 9, languages: ["go", "c"], npm_packages: 2, unit_tests_python: 3, unit_tests_ts: 4, tasks_by_batch: { exp1: 5, rollout: 4 }, tests_by_result: { pass: 6, fail: 1 }, unknown_key: 1 });
     expect(over.totals.tests).toBe(7);
     expect(over.totals.calls).toBe(9);
     expect(over.totals.attempts).toBe(own.totals.attempts);
     expect(over.totals.languages).toEqual(["c", "go"]);
     expect(over.totals.languageCount).toBe(2);
     expect(over.tests.python).toBe(3);
+    expect(over.tests.typescript).toBe(4);
+    expect(over.testsByResult).toEqual({ pass: 6, fail: 1 });
+    expect(plain.testsByResult).toBeNull();
     expect(over.groups.find((g: { key: string }) => g.key === "exp1").tasks).toBe(5);
-    expect(over.fromNumbers).toEqual(expect.arrayContaining(["tests", "calls", "languages", "packageCount", "unitTestsPython", "tasksByBatch"]));
+    expect(over.fromNumbers).toEqual(expect.arrayContaining(["tests", "calls", "languages", "packageCount", "unitTests", "tasksByBatch"]));
     expect(own.totals.tests).not.toBe(7); // the input is not changed
   });
 });
@@ -115,14 +135,39 @@ describe("the pages", () => {
     expect(page).toContain(data.scale.totals.tokens.toLocaleString("en-US"));
     expect(page).toContain(`${data.scale.code.lines.toLocaleString("en-US")} lines`);
     expect(render("/scale")).toContain("data-count");
+    const proj = data.numbers?.projection;
+    if (proj) {
+      expect(page).toContain("Arithmetic on measured figures, not a measurement");
+      expect(page).toContain("Per 1,000 solved bugs");
+      expect(page).toContain(`$${proj.per_1000_solved.saved.toFixed(2)}`);
+    } else expect(page).not.toContain("Per 1,000 solved bugs");
+    if (data.numbers?.pricing) expect(page).toContain(`${data.numbers.pricing.frontier_to_small_ratio} times the price per token`);
   });
 
-  it("renders no placeholder for analyses that are not in numbers.json yet", () => {
+  it("shows the four later analyses from numbers.json, and nothing for one that is absent", () => {
     const html = render("/research");
-    const has = (k: string) => !!data.numbers?.exp1?.secondary?.[k];
-    if (!has("always_valid")) expect(html).not.toContain("exp1.secondary.always_valid");
-    if (!has("multiverse")) expect(html).not.toContain("exp1.secondary.multiverse");
-    if (!data.charts.includes("frontier.png")) expect(html).not.toContain("/figures/frontier.png");
+    const page = text("/research");
+    const sec = data.numbers?.exp1?.secondary ?? {};
+    if (sec.always_valid) {
+      expect(page).toContain(`task ${sec.always_valid.cost.first_cross_at} of ${sec.always_valid.n_tasks}`);
+      expect(page).toContain(`${sec.always_valid.board_live_after_tasks} tasks in`);
+      expect(page).toContain("labelled secondary");
+    } else expect(page).not.toContain("always-valid p-value stays valid");
+    if (sec.multiverse) {
+      expect(page).toContain(`${sec.multiverse.guardrail_pass} of ${sec.multiverse.n_specs}`);
+      expect(page).toContain(`${sec.multiverse.cost_direction} of ${sec.multiverse.n_specs}`);
+      if (sec.multiverse.guardrail_fail_only_fresh) expect(page).toContain(`${sec.multiverse.guardrail_fail}, all on the fresh tier alone`);
+    } else expect(page).not.toContain("Specifications run");
+    if (data.numbers?.frontier) {
+      expect(page).toContain("This reading is descriptive");
+      expect(page).toContain(`${data.numbers.frontier.n_on_frontier} of ${data.numbers.frontier.n_arms} arms`);
+    } else expect(page).not.toContain("On the frontier");
+    if (data.numbers?.integrity?.proofs?.exp1) expect(page).toContain(`${data.numbers.integrity.proofs.exp1.verified} of ${data.numbers.integrity.proofs.exp1.leaves}`);
+    for (const f of ["frontier.png", "exp1-always-valid.png", "exp1-specification-curve.png"]) {
+      if (data.charts.includes(f)) expect(html).toContain(`/figures/${f}`);
+      else expect(html).not.toContain(`/figures/${f}`);
+    }
+    expect(page).not.toMatch(/exp1\.secondary\.|integrity\.proofs\./); // readings carry plain labels, not key names
     expect(text("/research")).not.toMatch(/coming soon|placeholder|to be added/i);
     expect(text("/research")).toContain("What we took");
   });

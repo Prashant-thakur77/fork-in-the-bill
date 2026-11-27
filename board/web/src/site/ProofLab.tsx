@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { repo } from "./data";
 import { batchOf } from "./batches";
-import { climb, inclusionPath, type PathStep } from "./ledger";
+import { climb, inclusionPath, proofOf, type PathStep } from "./ledger";
 import { format } from "../data/format";
 
 // Prove one task is under the published root. The page fetches the leaves of a run's Merkle tree
@@ -79,10 +79,11 @@ export function ProofLab() {
         set.leaves.map((l) => l.leaf),
         leaf.i,
       );
-      const sib = p.map((s) => s.sibling);
-      const real = await climb(leaf.leaf, leaf.i, sib);
-      const now = tampered ? await climb(nudge(leaf.leaf), leaf.i, sib) : real;
-      if (off) return;
+      const proof = proofOf(p);
+      const size = set.leaves.length;
+      const real = await climb(leaf.leaf, leaf.i, size, proof);
+      const now = tampered ? await climb(nudge(leaf.leaf), leaf.i, size, proof) : real;
+      if (off || !real || !now) return;
       setPath(p);
       setTruth(real);
       setNodes(now);
@@ -95,7 +96,8 @@ export function ProofLab() {
   if (!runs.length) return null;
   const rebuilt = nodes ? nodes[nodes.length - 1]! : null;
   const ok = !!rebuilt && !!set?.root && rebuilt === set.root;
-  const sameAsExported = leaf?.published && path ? leaf.published.join() === path.map((s) => s.sibling).join() : null;
+  const sameAsExported = leaf?.published && path ? leaf.published.join() === proofOf(path).join() : null;
+  const hashed = path ? proofOf(path).length : 0;
 
   return (
     <section className="vf-sec pf" id="proof" aria-labelledby="pf-h">
@@ -228,11 +230,11 @@ export function ProofLab() {
               {path && rebuilt && (
                 <p className={`pf-verdict ${ok ? "is-ok" : "is-bad"}`} role="status">
                   {ok
-                    ? `${path.length} hashes took this task to the root that covers all ${set!.leaves.length}. The task is in the published result, unchanged.`
+                    ? `${hashed} neighbour hashes took this task to the root that covers all ${set!.leaves.length}. The task is in the published result, unchanged.`
                     : tampered
                       ? "With one character changed, every hash above the task changes and the climb ends at a different root. An edited record cannot be passed off as part of the result."
                       : "The climb does not end at the published root."}
-                  {sameAsExported !== null && !tampered ? (sameAsExported ? " The path matches the proof the analysis exported for this task." : " The path differs from the proof the analysis exported for this task.") : ""}
+                  {sameAsExported !== null && !tampered ? (sameAsExported ? " It is the same proof the repository's own tool exports for this task (python -m integrity.prove)." : " It differs from the proof the repository's own tool exports for this task.") : ""}
                 </p>
               )}
             </>

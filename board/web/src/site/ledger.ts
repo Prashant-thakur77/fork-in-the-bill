@@ -224,36 +224,61 @@ export async function inclusionPath(hexLeaves: string[], index: number): Promise
   return path;
 }
 
+/** A proof as integrity/merkle.py writes it: sibling hashes, leaf level first, with no entry where a node is paired with itself. */
+export function proofOf(path: PathStep[]): string[] {
+  return path.filter((s) => !s.self).map((s) => s.sibling);
+}
+
+const isDigest = (h: unknown): h is string => typeof h === "string" && /^[0-9a-f]{64}$/.test(h);
+
 /**
- * Climbs from a leaf to the root with the siblings of an audit path. Returns the node at every
- * level, the last one being the root. The side at each level follows from the leaf's index.
+ * Climbs from a leaf to the root with a proof, as `root_from_path` in integrity/merkle.py does:
+ * at each level the node takes the next sibling, on the side its index says, unless it is the
+ * last node of an odd level, where it is paired with itself. Returns the node at every level
+ * (the last one is the root), or null when the proof is malformed, too short or too long.
  */
-export async function climb(leafHex: string, index: number, siblings: string[]): Promise<string[]> {
+export async function climb(leafHex: string, index: number, size: number, proof: string[]): Promise<string[] | null> {
+  if (!isDigest(leafHex) || !Number.isInteger(size) || size < 1 || !Number.isInteger(index) || index < 0 || index >= size) return null;
   let node = unhex(leafHex);
   let i = index;
+  let n = size;
+  let used = 0;
   const nodes = [leafHex];
-  for (const s of siblings) {
-    const sib = unhex(s);
+  while (n > 1) {
     const pair = new Uint8Array(64);
-    if (i % 2 === 0) {
-      pair.set(node, 0);
-      pair.set(sib, 32);
+    if (i % 2 === 1 || i + 1 < n) {
+      const s = proof[used++];
+      if (!isDigest(s)) return null;
+      const sib = unhex(s);
+      if (i % 2 === 1) {
+        pair.set(sib, 0);
+        pair.set(node, 32);
+      } else {
+        pair.set(node, 0);
+        pair.set(sib, 32);
+      }
     } else {
-      pair.set(sib, 0);
+      pair.set(node, 0);
       pair.set(node, 32);
     }
     node = new Uint8Array(await sha256(pair));
     nodes.push(hex(node.buffer as ArrayBuffer));
     i = Math.floor(i / 2);
+    n = Math.floor((n + 1) / 2);
   }
-  return nodes;
+  return used === proof.length ? nodes : null;
 }
 
-/** True when the leaf at `index`, with these siblings, hashes up to `rootHex`. */
-export async function verifyInclusion(leafHex: string, index: number, siblings: string[], rootHex: string): Promise<boolean> {
-  if (!/^[0-9a-f]{64}$/.test(leafHex) || siblings.some((s) => !/^[0-9a-f]{64}$/.test(s))) return false;
-  const nodes = await climb(leafHex, index, siblings);
-  return nodes[nodes.length - 1] === rootHex;
+/** The root a proof leads to, or null when the proof is malformed (`root_from_path`). */
+export async function rootFromPath(leafHex: string, index: number, size: number, proof: string[]): Promise<string | null> {
+  const nodes = await climb(leafHex, index, size, proof);
+  return nodes ? nodes[nodes.length - 1]! : null;
+}
+
+/** True if `proof` shows `leafHex` as leaf `index` of a `size`-leaf tree with this root (`verify_inclusion`). */
+export async function verifyInclusion(leafHex: string, index: number, size: number, proof: string[], rootHex: string): Promise<boolean> {
+  if (!isDigest(rootHex)) return false;
+  return (await rootFromPath(leafHex, index, size, proof)) === rootHex;
 }
 
 export interface RecordCheck {

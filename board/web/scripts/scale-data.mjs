@@ -58,7 +58,8 @@ export function runStats(root, run) {
     if (r.traits?.repo) repos.add(r.traits.repo);
     if (typeof r.usd === "number") out.usd += r.usd;
   }
-  out.tasks = ids.size;
+  // a task record is one graded task; an attempt cut off before its record was written is not here
+  out.tasks = out.attempts;
   out.ids = [...ids];
   out.languages = [...langs].sort();
   out.repos = [...repos].sort();
@@ -205,6 +206,8 @@ export function scaleFrom(root) {
 
 // numbers.json key -> where it lands in the counts above. When the analysis has written a `scale`
 // block, its values replace the site's own counts, so the site, the paper and the film agree.
+// Definitions are in docs/interfaces.md: tasks_run counts task records in the ledgers,
+// task_attempts counts (task, attempt) pairs with a record or a transcript.
 const FROM_NUMBERS = {
   tasks_run: "tasks",
   task_attempts: "attempts",
@@ -229,6 +232,8 @@ export function withNumbersScale(scale, block) {
   out.packageCount = scale.packages.length;
   out.exampleCount = scale.examples.length;
   out.preregCount = scale.tags.prereg.length;
+  out.testsByResult = null;
+  out.tokensByKind = null;
   if (!block || typeof block !== "object") return out;
   for (const [key, field] of Object.entries(FROM_NUMBERS)) {
     if (typeof block[key] === "number" && Number.isFinite(block[key])) {
@@ -254,16 +259,26 @@ export function withNumbersScale(scale, block) {
       out.fromNumbers.push(field);
     }
   }
-  if (typeof block.unit_tests_python === "number") {
+  if (typeof block.unit_tests_python === "number" && typeof block.unit_tests_ts === "number") {
     out.tests.python = block.unit_tests_python;
-    out.fromNumbers.push("unitTestsPython");
+    out.tests.typescript = block.unit_tests_ts;
+    out.fromNumbers.push("unitTests");
   }
-  if (block.tasks_by_batch && typeof block.tasks_by_batch === "object") {
+  for (const [key, field, name] of [
+    ["tasks_by_batch", "tasks", "tasksByBatch"],
+    ["task_attempts_by_batch", "attempts", "attemptsByBatch"],
+    ["tests_executed_by_batch", "tests", "testsByBatch"],
+  ]) {
+    const per = block[key];
+    if (!per || typeof per !== "object") continue;
     for (const g of out.groups) {
-      const vals = g.runs.map((r) => block.tasks_by_batch[r]).filter((v) => typeof v === "number");
-      if (vals.length === g.runs.length && vals.length > 0) g.tasks = vals.reduce((a, b) => a + b, 0);
+      const vals = g.runs.map((r) => per[r]).filter((v) => typeof v === "number");
+      if (vals.length === g.runs.length && vals.length > 0) g[field] = vals.reduce((a, b) => a + b, 0);
     }
-    out.fromNumbers.push("tasksByBatch");
+    out.fromNumbers.push(name);
   }
+  const counts = (o) => (o && typeof o === "object" ? Object.fromEntries(Object.entries(o).filter(([, v]) => typeof v === "number")) : null);
+  out.testsByResult = counts(block.tests_by_result);
+  out.tokensByKind = counts(block.tokens_by_kind);
   return out;
 }

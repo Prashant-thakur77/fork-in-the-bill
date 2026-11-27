@@ -53,7 +53,7 @@ export function proofFile(root, run, publishedRoot) {
   if (existsSync(exportedPath)) {
     try {
       const j = JSON.parse(readFileSync(exportedPath, "utf8"));
-      exported = Array.isArray(j) ? j : Array.isArray(j.proofs) ? j.proofs : null;
+      exported = Array.isArray(j) ? j : Array.isArray(j.leaves) ? j.leaves : Array.isArray(j.proofs) ? j.proofs : null;
     } catch {
       exported = null;
     }

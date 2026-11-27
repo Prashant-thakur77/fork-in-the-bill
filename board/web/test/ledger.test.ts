@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { canonicalJson, climb, inclusionPath, merkleRoot, parseKeepingNumbers, pyFloat, recordHash, tamper, verifyInclusion, verifyLedger, GENESIS, type RecordCheck } from "../src/site/ledger";
+import { canonicalJson, climb, inclusionPath, merkleRoot, parseKeepingNumbers, proofOf, pyFloat, recordHash, rootFromPath, tamper, verifyInclusion, verifyLedger, GENESIS, type RecordCheck } from "../src/site/ledger";
 // @ts-expect-error plain ESM build script without types
 import { pathHashes, proofFile, taskLeaves } from "../scripts/proof-data.mjs";
 
@@ -127,47 +127,67 @@ describe("one task's path to the root", () => {
     it(`climbs from every task of runs/${run} to the published root`, async () => {
       const leaves = taskLeaves(REPO, run) as { i: number; leaf: string; identity: string }[];
       const hashes = leaves.map((l) => l.leaf);
+      const size = hashes.length;
       const root = await merkleRoot(hashes);
       if (numbers) expect(root).toBe(numbers.integrity.by_experiment[run].merkle_root);
-      const depth = Math.ceil(Math.log2(hashes.length));
+      const depth = Math.ceil(Math.log2(size));
       for (const l of leaves) {
         const path = await inclusionPath(hashes, l.i);
         expect(path).toHaveLength(depth);
-        const sib = path.map((s) => s.sibling);
-        expect(await verifyInclusion(l.leaf, l.i, sib, root), l.identity).toBe(true);
-        // a different hash, a different position or a missing step does not reach the root
+        const proof = proofOf(path);
+        expect(await verifyInclusion(l.leaf, l.i, size, proof, root), l.identity).toBe(true);
+        // a different hash, a different position, a short or a long proof does not reach the root
         const changed = ((parseInt(l.leaf[0]!, 16) + 1) % 16).toString(16) + l.leaf.slice(1);
-        expect(await verifyInclusion(changed, l.i, sib, root)).toBe(false);
-        expect(await verifyInclusion(l.leaf, l.i, sib.slice(1), root)).toBe(false);
+        expect(await verifyInclusion(changed, l.i, size, proof, root)).toBe(false);
+        expect(await rootFromPath(l.leaf, l.i, size, proof.slice(1))).toBeNull();
+        expect(await rootFromPath(l.leaf, l.i, size, [...proof, proof[0]!])).toBeNull();
       }
       const first = await inclusionPath(hashes, 0);
-      expect((await climb(hashes[0]!, 0, first.map((s) => s.sibling))).at(-1)).toBe(root);
+      expect((await climb(hashes[0]!, 0, size, proofOf(first)))!.at(-1)).toBe(root);
     }, 60_000);
   }
 
-  it("pairs the last node of an odd level with itself, as integrity/merkle.py does", async () => {
+  it("pairs the last node of an odd level with itself and leaves it out of the proof, as integrity/merkle.py does", async () => {
     const leaves = ["aa", "bb", "cc"].map((b) => b.repeat(32));
+    const root = await merkleRoot(leaves);
     const path = await inclusionPath(leaves, 2);
     expect(path[0]).toMatchObject({ sibling: leaves[2], self: true, side: "right" });
-    expect(await verifyInclusion(leaves[2]!, 2, path.map((s) => s.sibling), await merkleRoot(leaves))).toBe(true);
+    expect(proofOf(path)).toHaveLength(1);
+    expect(await verifyInclusion(leaves[2]!, 2, 3, proofOf(path), root)).toBe(true);
+    expect(await verifyInclusion(leaves[2]!, 2, 4, proofOf(path), root)).toBe(false);
+    expect(await rootFromPath(leaves[0]!, 3, 3, [])).toBeNull();
+    expect(await rootFromPath("zz", 0, 1, [])).toBeNull();
+    expect(await rootFromPath(leaves[0]!, 0, 1, [])).toBe(leaves[0]);
     await expect(inclusionPath(leaves, 3)).rejects.toThrow(RangeError);
     expect(await inclusionPath([leaves[0]!], 0)).toEqual([]);
   });
 
-  it("reproduces the proofs the analysis exports, when it has exported them", async () => {
+  it("verifies every proof the repository exports and builds the same proofs itself", async () => {
+    let checked = 0;
     for (const run of ["exp1", "rollout", "exp2"]) {
       const file = resolve(REPO, `analysis/out/proofs/${run}.json`);
-      if (!existsSync(file)) continue; // not exported in this checkout yet
-      const data = proofFile(REPO, run, numbers?.integrity?.by_experiment?.[run]?.merkle_root) as { root: string; leaves: { i: number; leaf: string; identity: string; published?: string[] }[] };
-      const hashes = data.leaves.map((l) => l.leaf);
-      const withProof = data.leaves.filter((l) => l.published);
-      expect(withProof.length, `${run}: exported proofs read`).toBe(data.leaves.length);
-      for (const l of withProof) {
-        expect(await verifyInclusion(l.leaf, l.i, l.published!, data.root), l.identity).toBe(true);
-        expect((await inclusionPath(hashes, l.i)).map((s) => s.sibling)).toEqual(l.published);
+      if (!existsSync(file)) continue;
+      const exported = JSON.parse(readFileSync(file, "utf8")) as { size: number; root: string; leaves: { identity: string; index: number; leaf: string; path: string[] }[] };
+      expect(exported.leaves).toHaveLength(exported.size);
+      if (numbers?.integrity?.proofs?.[run]) {
+        expect(numbers.integrity.proofs[run].verified).toBe(exported.size);
+        expect(numbers.integrity.proofs[run].root).toBe(exported.root);
       }
+      const hashes = [...exported.leaves].sort((a, b) => a.index - b.index).map((l) => l.leaf);
+      expect(await merkleRoot(hashes)).toBe(exported.root);
+      for (const l of exported.leaves) {
+        expect(await verifyInclusion(l.leaf, l.index, exported.size, l.path, exported.root), l.identity).toBe(true);
+        expect(proofOf(await inclusionPath(hashes, l.index)), l.identity).toEqual(l.path);
+        checked++;
+      }
+      // what the site ships for this run carries the exported proof for every task
+      const shipped = proofFile(REPO, run, exported.root) as { exported: boolean; leaves: { leaf: string; published?: string[] }[] };
+      expect(shipped.exported).toBe(true);
+      expect(shipped.leaves.every((l) => Array.isArray(l.published))).toBe(true);
+      expect(shipped.leaves.map((l) => l.leaf)).toEqual(hashes);
     }
+    if (existsSync(resolve(REPO, "analysis/out/proofs/exp1.json"))) expect(checked).toBeGreaterThan(100);
     expect(pathHashes(["ab".repeat(32), { hash: "cd".repeat(32), side: "left" }, ["right", "ef".repeat(32)]])).toEqual(["ab".repeat(32), "cd".repeat(32), "ef".repeat(32)]);
     expect(pathHashes([{ nothing: 1 }])).toBeNull();
-  }, 60_000);
+  }, 120_000);
 });
