@@ -1,0 +1,349 @@
+/* Play pieces: split lab, rollout preview, share guess. */
+
+/* ---------- shared ---------- */
+.sl-badge,
+.rollout-badge {
+  justify-self: start;
+  background: var(--orange);
+  color: var(--text);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.sl-h,
+.rollout-h {
+  font-weight: 900;
+  font-size: var(--t-h3, clamp(19px, 1.5vw, 23px));
+  line-height: 1.1;
+  margin: 0;
+}
+
+/* hero: the next section's rule and heading come up into the first screen */
+.home-hero {
+  padding-bottom: clamp(12px, 2vh, 28px);
+}
+
+/* ---------- split lab ---------- */
+.splitlab {
+  margin-top: clamp(28px, 4vw, 48px);
+  display: grid;
+  gap: 14px;
+  padding: clamp(18px, 3vw, 32px);
+  border-radius: var(--r-sign);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.sl-head {
+  display: grid;
+  gap: 10px;
+  max-width: 70ch;
+}
+.sl-head p {
+  margin: 0;
+}
+.sl-road {
+  touch-action: pan-y;
+}
+.sl-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  cursor: ew-resize;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.sl-plate {
+  fill: var(--sign);
+  stroke: var(--sheet);
+  stroke-width: 3;
+  transition: width 120ms;
+}
+.sl-plate-t {
+  fill: var(--sheet);
+  font: 800 19px var(--font);
+}
+.sl-asphalt {
+  fill: var(--asphalt);
+}
+.sl-edge {
+  stroke: var(--paint);
+  stroke-width: 3;
+}
+.sl-tick {
+  stroke: var(--quiet);
+  stroke-width: 2;
+}
+.sl-tick-t {
+  fill: var(--quiet);
+  font: 600 17px var(--mono);
+}
+.sl-was {
+  stroke: rgba(244, 245, 239, 0.5);
+  stroke-width: 3;
+  stroke-dasharray: 10 10;
+}
+.sl-div {
+  stroke: var(--paint-yellow);
+  stroke-width: 6;
+}
+.sl-handle {
+  cursor: ew-resize;
+  outline: none;
+}
+.sl-handle-b {
+  fill: var(--paint-yellow);
+  stroke: var(--text);
+  stroke-width: 3;
+}
+.sl-handle:focus-visible .sl-handle-b {
+  stroke-width: 6;
+}
+.sl-handle-t {
+  fill: var(--text);
+  font: 900 24px var(--font);
+}
+.sl-car {
+  transition: opacity 160ms;
+}
+.sl-ring {
+  fill: none;
+  stroke: var(--paint-yellow);
+  stroke-width: 7;
+}
+.sl-car.is-probe .sl-ring {
+  stroke: var(--led);
+  stroke-dasharray: 10 8;
+}
+.sl-status {
+  margin: 0;
+  font-weight: 700;
+  min-height: 3em;
+  max-width: 75ch;
+}
+.sl-reset {
+  justify-self: start;
+}
+.sl-probe {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 2px solid var(--line);
+}
+.sl-probe-l {
+  font-weight: 800;
+}
+.sl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sl-chip {
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--inset);
+  color: var(--text);
+  font: 600 14px var(--mono);
+  cursor: pointer;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.sl-chip.is-on {
+  background: var(--text);
+  color: var(--ground);
+}
+.sl-chip:focus-visible {
+  box-shadow: var(--focus);
+}
+.sl-input {
+  min-height: 44px;
+  max-width: 520px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid var(--text);
+  border-radius: 6px;
+  background: var(--ground);
+  color: var(--text);
+  font: 600 15px var(--mono);
+}
+.sl-steps {
+  list-style: none;
+  margin: 0;
+  padding: 14px 16px;
+  display: grid;
+  gap: 10px;
+  background: var(--housing);
+  color: #e4e6e0;
+  border-radius: 8px;
+}
+.sl-steps li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+}
+.sl-steps span {
+  font-size: 14px;
+  color: #c4c7c0;
+  overflow-wrap: anywhere;
+}
+.sl-steps code {
+  background: none;
+  padding: 0;
+  font: 600 16px var(--mono);
+  color: var(--led);
+  overflow-wrap: anywhere;
+}
+.sl-steps code.is-v,
+.sl-steps code.is-c {
+  color: #3bd67a;
+}
+.sl-src {
+  margin: 0;
+  font-size: 14px;
+  color: var(--quiet);
+  max-width: 90ch;
+}
+
+/* ---------- rollout preview, full width ---------- */
+.rollout {
+  margin-top: clamp(28px, 4vw, 48px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.rollout-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "badge btns" "h btns" "p btns";
+  gap: 10px 32px;
+  align-items: start;
+}
+.rollout-head .rollout-badge {
+  grid-area: badge;
+}
+.rollout-head .rollout-h {
+  grid-area: h;
+}
+.rollout-head p {
+  grid-area: p;
+  margin: 0;
+  max-width: 60ch;
+}
+.rollout-head .rollout-btns {
+  grid-area: btns;
+  align-self: end;
+  justify-content: flex-end;
+}
+.rollout-junction .sign-face {
+  padding: clamp(12px, 1.4vw, 20px);
+}
+.rollout-junction .sign-legend {
+  font-size: var(--t-legend);
+}
+.rollout-junction .led-housing {
+  position: relative;
+}
+.rollout-junction .sign-stats {
+  grid-template-columns: minmax(0, 1fr);
+}
+/* the plate is hung over the closed lane's stats row, below its LED */
+.rollout-junction .sign.is-closed .sign-stats {
+  visibility: hidden;
+}
+.rollout-junction .sign .closed-plate {
+  position: absolute;
+  inset: auto auto clamp(14px, 1.6vw, 22px) 50%;
+  transform: translateX(-50%) rotate(-3deg);
+  font-size: clamp(14px, 1.5vw, 22px);
+  white-space: nowrap;
+  z-index: 3;
+}
+.rollout-junction .road {
+  margin-top: -8px;
+  max-height: none;
+}
+.rollout-stakes {
+  display: grid;
+  gap: 8px;
+}
+.rollout-stakes > p:first-child {
+  margin: 0;
+  font-weight: 700;
+  font-size: var(--t-lead);
+  max-width: 70ch;
+  min-height: 3em;
+}
+.rollout-src {
+  margin: 0;
+  font-size: 14px;
+  color: var(--quiet);
+}
+@media (max-width: 900px) {
+  .rollout-head {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "badge" "h" "p" "btns";
+  }
+  .rollout-head .rollout-btns {
+    justify-content: flex-start;
+  }
+}
+
+/* ---------- share guess ---------- */
+.sg-guess {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.sg-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 52px;
+  gap: 12px;
+  align-items: center;
+}
+.sg-row input[type="range"] {
+  width: 100%;
+  min-height: 44px;
+  accent-color: var(--paint-yellow);
+}
+.sg-out {
+  font-weight: 900;
+  font-size: 20px;
+  text-align: right;
+}
+.sg-mark {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 4px;
+  margin-left: -2px;
+  background: var(--paint-yellow);
+  box-shadow: 0 0 0 2px var(--text);
+  z-index: 2;
+}
+.share-track {
+  overflow: visible;
+}
+.share-fill {
+  border-radius: 4px 0 0 4px;
+}
+.sg-verdict {
+  margin: 4px 0 10px;
+  font-weight: 700;
+  min-height: 0;
+}
+.js .share.is-guessing .share-fill,
+.js .share.is-guessing .share-v {
+  visibility: hidden;
+}
+html:not(.js) .sg-guess {
+  display: none;
+}
+.share.is-shown .sg-guess .sg-btns {
+  display: none;
+}

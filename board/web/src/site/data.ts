@@ -55,6 +55,7 @@ export interface RepoData {
   ids: { features: Record<string, number>; metrics: Record<string, number> } | null;
   metrics: { name: string; aggregation: string; direction: string; role: string; description: string }[];
   split: number | null;
+  exp1Tasks: string[];
   manifest: {
     seed: number;
     stratum: { min_gold_files: number; max_gold_files: number; max_gold_lines: number; max_problem_chars: number };

@@ -345,6 +345,7 @@ export function loadRepoData(root = REPO_ROOT) {
     ids: readJson(root, "flagsmith/ids.json"),
     metrics: readJson(root, "flagsmith/metrics.json")?.metrics ?? [],
     split,
+    exp1Tasks: (read(root, "tasks/pools/exp1.txt") ?? "").split("\n").map((s) => s.trim()).filter(Boolean),
     manifest,
     pilot: readJson(root, "analysis/out/pilot.json"),
     power: readJson(root, "analysis/out/power.json"),

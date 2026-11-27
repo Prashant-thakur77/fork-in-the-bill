@@ -7,6 +7,7 @@ import "./styles.css";
 import "./site/site.css";
 import "./site/pages.css";
 import "./site/round2.css";
+import "./site/play.css";
 import { Site } from "./site/Shell";
 
 const root = document.getElementById("root")!;

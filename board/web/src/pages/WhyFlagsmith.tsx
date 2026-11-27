@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { Journey } from "../art/Journey";
 import { RolloutPreview } from "../art/RolloutPreview";
+import { SplitLab } from "../art/SplitLab";
 import { Link } from "../site/router";
 import { Kinetic, OnThisPage, PageHead, useReveals } from "../site/ui";
 import { ghFile, repo, type Snippet } from "../site/data";
@@ -181,7 +182,7 @@ export default function WhyFlagsmith() {
             <Kinetic id="journey-h" text="A task's journey through Flagsmith" />
             <p className="doc-kicker">Scroll to drive two tasks from the queue to the rollout. Every step below is a Flagsmith feature doing real work.</p>
             <Journey steps={JOURNEY_STEPS} id="why-journey" />
-            <h3>The rollout, played out</h3>
+            <SplitLab />
             <RolloutPreview />
           </section>
 

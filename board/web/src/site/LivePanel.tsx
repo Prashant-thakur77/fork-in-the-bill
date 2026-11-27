@@ -19,7 +19,7 @@ export function LivePanel({ cta = true }: { cta?: boolean }) {
 
   let note = "Connecting to the board…";
   if (live.kind === "none") note = "This build has no board API configured, so there are no live numbers here.";
-  if (live.kind === "error") note = "The board API did not answer. The live board retries on its own.";
+  if (live.kind === "error") note = "The live numbers are not reachable right now. This panel tries again every minute.";
   if (live.kind === "ok" && !snap) note = "The run has not posted any totals yet.";
   if (snap) note = `${snap.experiment} · ${snap.status.replace("_", " ")} · read ${utcTime(live.kind === "ok" ? live.checkedAt : Date.now())}`;
 
@@ -36,8 +36,8 @@ export function LivePanel({ cta = true }: { cta?: boolean }) {
                 <span className="lp-legend">{info.legend}</span>
               </header>
               <div className="led-housing">
-                <span className="led-caption">{arm ? "Spent so far" : "Standing by"}</span>
-                {arm ? <Meter arm={arm} /> : <Led text="STANDBY" cols={46} label="No live numbers" />}
+                <span className="led-caption">{arm ? "Spent so far" : live.kind === "error" ? "Signal lost" : "Standing by"}</span>
+                {arm ? <Meter arm={arm} /> : <Led text={live.kind === "error" ? "NO SIGNAL" : "STANDBY"} cols={46} label="No live numbers" />}
               </div>
               <dl className="lp-stats">
                 <div>
@@ -59,6 +59,12 @@ export function LivePanel({ cta = true }: { cta?: boolean }) {
       </div>
       <p className="lp-note" aria-live="polite">
         {note}
+        {live.kind === "error" && (
+          <>
+            {" "}
+            <a href="/live?demo=replay">Watch the replay</a>: the same board, run on recorded fixture data and labelled as such.
+          </>
+        )}
       </p>
       <p className="lp-caveat">
         Running totals, not the result. The verdict comes from the analysis script and the pre-registered rule once every task is done.

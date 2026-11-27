@@ -6,6 +6,8 @@ import { textColumns } from "../led/font";
 import { Road } from "../components/Road";
 import { Journey } from "../art/Journey";
 import { RolloutPreview } from "../art/RolloutPreview";
+import { SplitLab } from "../art/SplitLab";
+import { ShareGuess } from "../art/ShareGuess";
 import { Link } from "../site/router";
 import { Code, Kinetic, Md, useReveals } from "../site/ui";
 import { ghFile, pct, repo } from "../site/data";
@@ -261,8 +263,6 @@ export default function Home() {
           .from(".hero-junction .road .lane-centre, .hero-junction .road .road-dash", { strokeDashoffset: 400, duration: 1.2, ease: "power2.out" }, 0.5)
           .from(".fs-gantry", { y: 16, opacity: 0, duration: 0.5 }, 0.9);
 
-        // Problem: the share bar fills to the pilot's worker share as it enters.
-        gsap.from(".share-fill", { scaleX: 0, transformOrigin: "left center", duration: 1.4, ease: "power3.out", stagger: 0.2, scrollTrigger: { trigger: ".share", start: "top 80%", once: true } });
         // Two lanes: the lane lines draw down the page.
         gsap.from(".idea-lane-line", { scaleY: 0, transformOrigin: "50% 0%", ease: "none", scrollTrigger: { trigger: ".idea", start: "top 70%", end: "bottom 60%", scrub: 0.6 } });
         // Closing sign: the arrow nudges toward the exit.
@@ -353,30 +353,7 @@ export default function Home() {
               Source: <a href={ghFile("harness/pricing.json")}>harness/pricing.json</a>
             </p>
           </div>
-          {pilotC && pilotV && (
-            <div className="share">
-              <p className="share-h">Share of each arm's spend that went to the worker lane, pilot</p>
-              {[
-                ["control", pilotC],
-                ["lanes_v1", pilotV],
-              ].map(([k, a]) => {
-                const arm = a as typeof pilotC;
-                return (
-                  <div className="share-row" key={k as string}>
-                    <span className="share-k">{k as string}</span>
-                    <span className="share-track">
-                      <span className={`share-fill ${k === "control" ? "is-big" : ""}`} style={{ transform: `scaleX(${arm.delegate_share})` }} />
-                    </span>
-                    <span className="share-v">{pct(arm.delegate_share)}</span>
-                  </div>
-                );
-              })}
-              <p className="share-foot">
-                Pilot only: {pilotC.n} tasks per arm, arms forced by the runner, not the result. Source:{" "}
-                <a href={ghFile("analysis/out/pilot.json")}>analysis/out/pilot.json</a>
-              </p>
-            </div>
-          )}
+          <ShareGuess />
         </div>
       </section>
 
@@ -433,6 +410,7 @@ export default function Home() {
           <p>Scroll to follow two tasks from the queue to the decision.</p>
         </div>
         <Journey steps={JOURNEY_STEPS} id="home-journey" />
+        <SplitLab />
         <RolloutPreview />
         <p className="journey-more">
           <Link to="/why-flagsmith" className="text-link">

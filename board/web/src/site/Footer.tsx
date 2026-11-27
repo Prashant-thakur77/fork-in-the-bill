@@ -18,7 +18,7 @@ export function StatusLine() {
   let dot = "is-off";
   let text = "Checking the run…";
   if (live.kind === "none") text = "Run status shows on the deployed site.";
-  if (live.kind === "error") text = "The board API did not answer. Try the live board.";
+  if (live.kind === "error") text = "Live numbers are not reachable right now.";
   if (live.kind === "ok") {
     const s = live.snapshot;
     if (!s) text = "No run data posted yet.";
